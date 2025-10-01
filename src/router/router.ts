@@ -9,6 +9,8 @@ import ForbiddenView from "@/pages/ForbiddenView.vue";
 import AdminUserRolesView from "@/pages/admin/AdminUserRolesView.vue";
 import UserManagementView from "@/pages/admin/UserManagementView.vue";
 
+import LandingPage from "@/pages/customer/LandingPage.vue";
+
 /**
  * Route definitions for the application
  */
@@ -20,6 +22,11 @@ const routes = setupLayouts([
   {
     path: "/auth",
     component: Auth,
+  },
+
+  {
+    path: "/customer/landing",
+    component: LandingPage,
   },
 
   {
@@ -35,7 +42,7 @@ const routes = setupLayouts([
   {
     path: "/admin/user-management",
     component: UserManagementView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: "/forbidden",
