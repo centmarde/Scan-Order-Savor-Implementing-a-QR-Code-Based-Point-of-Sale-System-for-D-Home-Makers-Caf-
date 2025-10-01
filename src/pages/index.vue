@@ -1,9 +1,26 @@
 <script lang="ts" setup>
-  import { onMounted } from 'vue'
+  import { onMounted, computed } from 'vue'
   import { useLandingController } from '@/controller/landingController'
   import OuterLayoutWrapper from '@/layouts/OuterLayoutWrapper.vue'
 
   const { data, loading, error, fetchLandingData } = useLandingController()
+
+  onMounted(async () => {
+    await fetchLandingData()
+  })
+
+  const heroSectionStyle = computed(() => {
+    if (data.value?.backgroundImage) {
+      return {
+        backgroundImage: `url(${data.value.backgroundImage.src})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        position: 'relative' as const
+      }
+    }
+    return {}
+  })
 
   onMounted(async () => {
     await fetchLandingData()
@@ -69,27 +86,28 @@
         <!-- Content -->
         <div v-else-if="data">
           <!-- Hero Section -->
-          <section class="hero-section">
-            <v-container>
+          <section class="hero-section" :style="heroSectionStyle">
+            <div v-if="data.backgroundImage?.overlay?.enabled" class="hero-overlay"></div>
+            <v-container class="position-relative">
               <v-row align="center" class="min-height-screen" justify="center">
                 <v-col cols="12" lg="8" md="10">
                   <div class="text-center">
-                    <h1 class="text-h2 text-md-h1 font-weight-bold mb-4">
+                    <h1 class="text-h2 text-md-h1 font-weight-bold mb-4 text-black">
                       {{ data.title }}
                     </h1>
 
-                    <h2 class="text-h4 text-md-h3 text-grey-darken-1 mb-6">
+                    <h2 class="text-h4 text-md-h3 text-black mb-6">
                       {{ data.subtitle }}
                     </h2>
 
-                    <p class="text-h6 text-md-h5 text-grey-darken-2 mb-8">
+                    <p class="text-h6 text-md-h5 text-black mb-8">
                       {{ data.description }}
                     </p>
 
                     <div
                       class="d-flex flex-column flex-sm-row gap-4 justify-center"
                     >
-                      <v-btn
+                    <!--   <v-btn
                         class="text-none"
                         color="primary"
                         size="x-large"
@@ -109,7 +127,7 @@
                       >
                         <v-icon class="me-2" icon="mdi-github" />
                         View Source
-                      </v-btn>
+                      </v-btn> -->
                     </div>
                   </div>
                 </v-col>
@@ -206,6 +224,25 @@
 </template>
 
 <style scoped>
+.hero-section {
+  position: relative;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(139, 69, 19, 0.15);
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.position-relative {
+  position: relative;
+  z-index: 2;
+}
 
 .min-height-screen {
   min-height: calc(100vh - 64px);

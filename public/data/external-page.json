@@ -3,7 +3,7 @@
   "description": "An innovative food café automation system that revolutionizes dining experiences through QR-code technology, enabling seamless ordering and payment processes based on table identification.",
   "subtitle": "Transforming Food Service with Smart QR-Code Technology",
   "backgroundImage": {
-    "src": "/images/markup.png",
+    "src": "/images/cafe.png",
     "alt": "Abstract academic background with geometric patterns",
     "overlay": {
       "enabled": true,
@@ -51,7 +51,7 @@
       "title": "D'Home Makers Café POS",
       "icon": "mdi-store",
       "logo": {
-        "src": "/src/assets/logo.svg",
+        "src": "/assets/logo1.png",
         "alt": "D'Home Makers Café Logo",
         "width": 32,
         "height": 32
@@ -157,7 +157,7 @@
       "motivationalText": "Start your digital café journey today. Every great service begins with smart technology."
     },
     "backgroundImage": {
-      "src": "/images/auth-background.jpg",
+      "src": "/images/cafe.png",
       "alt": "Modern café interior with QR codes on tables",
       "overlay": {
         "enabled": true,
