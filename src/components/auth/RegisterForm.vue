@@ -1,5 +1,19 @@
 <template>
-  <v-card-title class="text-h5 text-center py-6"> Create Account </v-card-title>
+  <!-- Logo and Title Header -->
+  <v-card-title class="text-center py-6">
+    <div class="d-flex flex-column align-center ga-3">
+      <div class="d-flex align-center ga-3">
+        <v-img
+          :src="'/assets/logo1.png'"
+          alt="D'Home Makers Café Logo"
+          width="64"
+          height="64"
+        />
+        <span class="text-h5 font-weight-medium">D'Home Makers Café POS</span>
+      </div>
+      <span class="text-h5">Create Account</span>
+    </div>
+  </v-card-title>
 
   <v-card-text class="px-6 pb-6">
     <v-form ref="formRef" v-model="formValid" @submit.prevent="handleRegister">
