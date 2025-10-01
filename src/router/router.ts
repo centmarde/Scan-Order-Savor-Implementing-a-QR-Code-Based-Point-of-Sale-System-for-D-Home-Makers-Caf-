@@ -10,6 +10,7 @@ import AdminUserRolesView from "@/pages/admin/AdminUserRolesView.vue";
 import UserManagementView from "@/pages/admin/UserManagementView.vue";
 
 import LandingPage from "@/pages/customer/LandingPage.vue";
+import Menu from "@/pages/customer/Menu.vue";
 
 /**
  * Route definitions for the application
@@ -27,6 +28,11 @@ const routes = setupLayouts([
   {
     path: "/customer/landing",
     component: LandingPage,
+  },
+
+  {
+    path: "/customer/menu",
+    component: Menu,
   },
 
   {
