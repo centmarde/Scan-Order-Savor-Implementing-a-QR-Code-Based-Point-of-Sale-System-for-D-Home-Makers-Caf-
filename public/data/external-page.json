@@ -1,0 +1,169 @@
+{
+  "title": "Scan, Order, Savor: Implementing a QR-Code Based Point of Sale System for D'Home Makers Café",
+  "description": "An innovative food café automation system that revolutionizes dining experiences through QR-code technology, enabling seamless ordering and payment processes based on table identification.",
+  "subtitle": "Transforming Food Service with Smart QR-Code Technology",
+  "backgroundImage": {
+    "src": "/images/markup.png",
+    "alt": "Abstract academic background with geometric patterns",
+    "overlay": {
+      "enabled": true,
+      "color": "rgba(139, 69, 19, 0.15)",
+      "opacity": 0.8
+    }
+  },
+  "features": [
+    {
+      "title": "QR-Code Table Ordering",
+      "description": "Customers scan unique QR codes at their tables to instantly access the digital menu and place orders directly from their smartphones.",
+      "icon": "mdi-qrcode-scan"
+    },
+    {
+      "title": "Real-Time Order Management",
+      "description": "Kitchen staff receive orders instantly with table identification, order status tracking, and preparation time estimates.",
+      "icon": "mdi-chef-hat"
+    },
+    {
+      "title": "Contactless Payment Integration",
+      "description": "Seamless payment processing through the system with multiple payment options and automated receipt generation.",
+      "icon": "mdi-contactless-payment"
+    },
+    {
+      "title": "Table Management System",
+      "description": "Efficient table tracking with occupancy status, order history, and customer service optimization for café operations.",
+      "icon": "mdi-table-chair"
+    }
+  ],
+  "version": "1.0.0",
+  "author": "D'Home Makers Café Development Team",
+  "lastUpdated": "2025-10-01",
+  "theme": {
+    "primaryColor": "#8B4513",
+    "secondaryColor": "#F4E4BC"
+  },
+  "ui": {
+    "showNavbar": true,
+    "showFooter": true,
+    "_comment": "Select the navbar component to use: 1, 2, 3, or 4",
+    "navbarComponent": "1",
+    "_footerComment": "Select the footer component to use: 1 or 2",
+    "footerComponent": "1",
+    "navbar": {
+      "title": "D'Home Makers Café POS",
+      "icon": "mdi-store",
+      "logo": {
+        "src": "/src/assets/logo.svg",
+        "alt": "D'Home Makers Café Logo",
+        "width": 32,
+        "height": 32
+      },
+      "color": "primary",
+      "elevation": 2,
+      "density": "comfortable",
+      "navigationItems": [
+        {
+          "_comment": "dont change this",
+          "label": "Features",
+          "action": "scroll",
+          "target": "features"
+        },
+        {
+          "_comment": "dont change this",
+          "label": "About",
+          "action": "scroll",
+          "target": "about"
+        }
+      ],
+      "ctaButton": {
+        "label": "Get Started",
+        "variant": "outlined",
+        "color": "on-primary",
+        "action": "navigate",
+        "_comment": "dont change this /auth cause it is linked to the auth page",
+        "target": "/auth"
+      }
+    },
+    "footer": {
+      "companyName": "D'Home Makers Café",
+      "tagline": "Smart dining through QR-code technology",
+      "icon": "mdi-coffee",
+      "color": "grey-darken-3",
+      "copyright": "D'Home Makers Café Team. All rights reserved.",
+      "socialLinks": [
+        {
+          "platform": "github",
+          "icon": "mdi-github",
+          "url": "https://github.com",
+          "label": "GitHub"
+        },
+        {
+          "platform": "twitter",
+          "icon": "mdi-twitter",
+          "url": "https://twitter.com",
+          "label": "Twitter"
+        },
+        {
+          "platform": "linkedin",
+          "icon": "mdi-linkedin",
+          "url": "https://linkedin.com",
+          "label": "LinkedIn"
+        }
+      ],
+      "technologies": [
+        {
+          "name": "QR Code",
+          "icon": "mdi-qrcode",
+          "color": "brown"
+        },
+        {
+          "name": "Point of Sale",
+          "icon": "mdi-cash-register",
+          "color": "orange"
+        }
+      ],
+      "thesisTeam": {
+        "enabled": true,
+        "title": "Development Team",
+        "subtitle": "Meet the minds behind your café automation system",
+        "members": [
+          {
+            "name": "Lead Developer",
+            "role": "System Architect",
+            "avatar": "/images/team/sarah.jpg"
+          },
+          {
+            "name": "UX Designer",
+            "role": "User Experience Specialist",
+            "avatar": "/images/team/michael.jpg"
+          },
+          {
+            "name": "QR Specialist",
+            "role": "QR Technology Expert",
+            "avatar": "/images/team/emma.jpg"
+          }
+        ]
+      }
+    }
+  },
+  "authPage": {
+    "title": "Welcome to D'Home Makers Café POS System",
+    "subtitle": "Access your QR-code based point of sale workspace",
+    "layout": {
+      "quotePosition": "right"
+    },
+    "quote": {
+      "text": "Innovation distinguishes between a leader and a follower.",
+      "author": "Steve Jobs",
+      "source": "Tech Visionary",
+      "motivationalText": "Start your digital café journey today. Every great service begins with smart technology."
+    },
+    "backgroundImage": {
+      "src": "/images/auth-background.jpg",
+      "alt": "Modern café interior with QR codes on tables",
+      "overlay": {
+        "enabled": true,
+        "color": "rgba(139, 69, 19, 0.1)",
+        "opacity": 0.9
+      }
+    }
+  }
+}
