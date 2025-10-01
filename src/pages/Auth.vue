@@ -34,6 +34,40 @@ const quoteSectionOrder = computed(() => {
   return isQuoteOnLeft.value ? 1 : 2;
 });
 
+// Computed properties for background image
+const backgroundImageStyle = computed(() => {
+  if (!authPageData.value?.backgroundImage) {
+    return {};
+  }
+
+  const bgConfig = authPageData.value.backgroundImage;
+  return {
+    backgroundImage: `url('${bgConfig.src}')`,
+    backgroundSize: 'cover' as const,
+    backgroundPosition: 'center' as const,
+    backgroundRepeat: 'no-repeat' as const,
+    position: 'relative' as const
+  };
+});
+
+const overlayStyle = computed(() => {
+  if (!authPageData.value?.backgroundImage?.overlay?.enabled) {
+    return { display: 'none' as const };
+  }
+
+  const overlay = authPageData.value.backgroundImage.overlay;
+  return {
+    position: 'absolute' as const,
+    top: '0',
+    left: '0',
+    right: '0',
+    bottom: '0',
+    backgroundColor: overlay.color,
+    opacity: overlay.opacity.toString(),
+    zIndex: '1'
+  };
+});
+
 // Methods
 const switchToRegister = () => {
   isLoginMode.value = false;
@@ -231,24 +265,28 @@ onMounted(async () => {
       lg="7"
       class="d-none d-lg-flex align-center justify-center fill-height"
       :order="quoteSectionOrder"
+      :style="backgroundImageStyle"
     >
-      <v-card-text class="text-center">
-        <v-icon size="48" color="primary" class="mb-4 d-flex justify-start">
+      <!-- Background Overlay -->
+      <div :style="overlayStyle"></div>
+
+      <v-card-text class="text-center" style="position: relative; z-index: 2;">
+        <v-icon size="48" color="black" class="mb-4 d-flex justify-start">
           mdi-format-quote-open
         </v-icon>
 
-        <div class="text-h4 font-weight-light mb-6 text-primary">
+        <div class="text-h4 font-weight-light mb-6 text-black">
           {{ authPageData.quote.text }}
         </div>
 
-        <div class="text-h6 text-primary opacity-75">
+        <div class="text-h6 text-black opacity-75">
           — {{ authPageData.quote.author }}
-          <span v-if="authPageData.quote.source" class="text-caption">
+          <span v-if="authPageData.quote.source" class="text-black">
             ({{ authPageData.quote.source }})
           </span>
         </div>
 
-        <div v-if="authPageData.quote.motivationalText" class="text-body-1 text-primary opacity-75">
+        <div v-if="authPageData.quote.motivationalText" class="text-body-1 text-black opacity-75">
           {{ authPageData.quote.motivationalText }}
         </div>
       </v-card-text>
