@@ -221,61 +221,6 @@ const getStatusText = (status: string) => {
 };
 
 // Methods
-const checkAllCartSources = () => {
-  console.log("=== CART DATA DEBUG ===");
-  console.log("1. Route meta:", route.meta);
-  console.log(
-    "2. SessionStorage reviewOrderCartItems:",
-    sessionStorage.getItem("reviewOrderCartItems")
-  );
-  console.log(
-    "3. SessionStorage cartItems:",
-    sessionStorage.getItem("cartItems")
-  );
-  console.log("4. History state:", history.state);
-  console.log("5. Current cartItems:", cartItems.value);
-  console.log("6. Display items:", displayItems.value);
-
-  // Try to recover from sessionStorage if empty
-  if (cartItems.value.length === 0) {
-    const sessionCart = sessionStorage.getItem("cartItems");
-    if (sessionCart) {
-      try {
-        const parsed = JSON.parse(sessionCart);
-        console.log("Attempting to recover from sessionStorage:", parsed);
-        cartItems.value = parsed;
-      } catch (e) {
-        console.error("Failed to parse sessionStorage cart:", e);
-      }
-    }
-  }
-};
-
-const testOrderCreation = async () => {
-  console.log("Testing order creation...");
-  console.log("Cart items:", cartItems.value);
-  console.log("Table ID:", tableId.value);
-
-  if (cartItems.value.length === 0) {
-    alert("No cart items to test with!");
-    return;
-  }
-
-  try {
-    const result = await createOrdersWithMeals(cartItems.value, tableId.value);
-    console.log("Test order created:", result);
-    alert("Test order created successfully!");
-    await fetchOrdersForTable();
-  } catch (error) {
-    console.error("Test order failed:", error);
-    alert(
-      `Test order failed: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    );
-  }
-};
-
 const fetchOrdersForTable = async () => {
   try {
     loadingOrders.value = true;
@@ -517,15 +462,10 @@ const proceedToPayment = async () => {
                       }}{{ groupedItem.item.price.toFixed(2) }} each
                     </span>
                     <span
-                      class="text-h6 font-weight-bold"
+                      class="text-body-2 font-weight-bold mr-4"
                       :style="{ color: primaryColor }"
                     >
-                      {{ APP_CONFIG.CURRENCY
-                      }}{{
-                        (groupedItem.item.price * groupedItem.quantity).toFixed(
-                          2
-                        )
-                      }}
+                      {{ groupedItem.quantity }}x
                     </span>
                   </div>
                 </v-list-item-content>
@@ -554,38 +494,6 @@ const proceedToPayment = async () => {
           </v-card-text>
         </v-card>
       </v-container>
-
-      <!-- Debug Buttons -->
-      <div class="px-4 py-2">
-        <v-row justify="center">
-          <v-col cols="6">
-            <v-btn
-              @click="checkAllCartSources"
-              variant="outlined"
-              size="small"
-              rounded="pill"
-              color="info"
-              block
-              class="text-caption"
-            >
-              DEBUG CART DATA
-            </v-btn>
-          </v-col>
-          <v-col cols="6">
-            <v-btn
-              @click="testOrderCreation"
-              variant="outlined"
-              size="small"
-              rounded="pill"
-              color="warning"
-              block
-              class="text-caption"
-            >
-              TEST ORDER
-            </v-btn>
-          </v-col>
-        </v-row>
-      </div>
 
       <!-- Bottom Action Buttons -->
       <div
