@@ -2,6 +2,11 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { supabase } from "@/lib/supabase";
+import {
+  MENU_CATEGORIES,
+  getInventoryImageUrl,
+  APP_CONFIG,
+} from "@/utils/constants";
 
 const router = useRouter();
 
@@ -32,16 +37,8 @@ const menuItems = ref<MenuItem[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-// Categories data (keeping static for now since they're not in the database)
-const categories = ref<Category[]>([
-  {
-    id: 1,
-    name: "All Items",
-    description: "View all available menu items",
-    icon: "mdi-food",
-    color: "primary",
-  },
-]);
+// Categories data from constants
+const categories = ref<Category[]>(MENU_CATEGORIES);
 
 // Fetch menu items from Supabase
 const fetchMenuItems = async () => {
@@ -58,7 +55,14 @@ const fetchMenuItems = async () => {
       throw fetchError;
     }
 
-    menuItems.value = data || [];
+    // Process the data to ensure image URLs point to Supabase storage
+    menuItems.value = (data || []).map((item) => ({
+      ...item,
+      // If image is just a filename without full URL, prepend the Supabase storage URL
+      image: item.image?.includes("http")
+        ? item.image
+        : getInventoryImageUrl(item.image || "default.jpg"),
+    }));
   } catch (err) {
     console.error("Error fetching menu items:", err);
     error.value = "Failed to load menu items. Please try again later.";
@@ -190,7 +194,7 @@ onMounted(async () => {
 
                 <div class="d-flex justify-space-between align-center">
                   <div class="text-h6 font-weight-bold text-success">
-                    ${{ item.price.toFixed(2) }}
+                    {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
                   </div>
                   <v-btn
                     @click="addToCart(item)"
@@ -300,7 +304,7 @@ onMounted(async () => {
 
                     <div class="d-flex justify-space-between align-center">
                       <div class="text-h6 font-weight-bold text-success">
-                        ${{ item.price.toFixed(2) }}
+                        {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
                       </div>
                       <v-btn
                         @click="addToCart(item)"
@@ -330,7 +334,7 @@ onMounted(async () => {
             {{ cartItems.length }} items
           </div>
           <div class="text-h6 font-weight-bold">
-            ${{ cartTotal.toFixed(2) }}
+            {{ APP_CONFIG.CURRENCY }}{{ cartTotal.toFixed(2) }}
           </div>
         </div>
         <v-btn

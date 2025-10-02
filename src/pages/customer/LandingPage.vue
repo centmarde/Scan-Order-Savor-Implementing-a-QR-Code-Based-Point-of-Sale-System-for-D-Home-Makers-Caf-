@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
+import { getInventoryImageUrl } from "@/utils/constants";
 
 const router = useRouter();
 
@@ -19,20 +20,17 @@ onUnmounted(() => {
 });
 
 // Carousel images
-
-const supabaseBaseUrl =
-  "https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory/";
 const carouselImages = [
   {
-    src: supabaseBaseUrl + "adobo.jpg",
+    src: getInventoryImageUrl("adobo.jpg"),
     alt: "Adobo Food",
   },
   {
-    src: supabaseBaseUrl + "sinigang.jpg",
+    src: getInventoryImageUrl("sinigang.jpg"),
     alt: "Delicious Meal 2",
   },
   {
-    src: supabaseBaseUrl + "caldereta.png",
+    src: getInventoryImageUrl("caldereta.png"),
     alt: "Healthy Food 3",
   },
 ];
