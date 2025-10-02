@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from "vue";
-// We import the standard 'qrcode' package after installing it via npm
 import QRCode from 'qrcode';
-// NOTE: Make sure you have created and configured this store file
+import InnerLayoutWrapper from '@/layouts/InnerLayoutWrapper.vue'
 import { useQrCodeStore } from "@/stores/qrCodeStores"; 
 
 // Define the correct type for the template reference map (canvas elements)
@@ -73,6 +72,8 @@ onMounted(() => {
 </script>
 
 <template>
+      <InnerLayoutWrapper>
+    <template #content>
     <v-app>
         <v-container class="pa-6 max-w-7xl mx-auto">
             <h1 class="text-h4 font-weight-bold mb-4" :style="{ color: 'var(--v-theme-primary)' }">
@@ -131,8 +132,6 @@ onMounted(() => {
                     <v-card class="d-flex flex-column align-center pa-4 text-center" rounded="xl" elevation="2">
                         <h3 class="text-h6 mb-3 font-weight-bold">TABLE #{{ tableId }}</h3>
                         
-                        <!-- QR Code Container: Now a <canvas> element -->
-                        <!-- The ref here connects the <canvas> to the qrCodeRefs map for generation -->
                         <div 
                             class="pa-2 border rounded-lg elevation-1"
                             style="line-height: 0; border: 2px solid #333;"
@@ -167,6 +166,8 @@ onMounted(() => {
 
         </v-container>
     </v-app>
+</template>
+  </InnerLayoutWrapper>
 </template>
 
 <style scoped>

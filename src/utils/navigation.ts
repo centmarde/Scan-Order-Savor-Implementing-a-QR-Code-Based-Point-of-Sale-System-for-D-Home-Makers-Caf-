@@ -44,12 +44,11 @@ export const navigationConfig: NavigationGroup[] = [
 				route: '/admin/user-roles',
 				permission: 'admin.roles.manage'
 			},
-			// 🚨 QR Code Generator Link 🚨
 			{
 				title: 'QR Code Generator',
 				icon: 'mdi-qrcode-scan',
 				route: '/admin/qr-generator',
-				permission: 'admin.qr.generate' // Added specific permission
+				permission: 'admin.qr.generate'
 			},
 		]
 	},

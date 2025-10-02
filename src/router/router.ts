@@ -47,14 +47,10 @@ const routes = setupLayouts([
 		component: Dashboard,
 		meta: { requiresAuth: true },
 	},
-    // The new QR Code Generator Admin Route
     {
         path: "/admin/qr-generator",
         name: "QRCodeGenerator",
         component: TableQRCodeGenerator,
-        // This meta property requires the user to be logged in. 
-        // If you have a role check (e.g., if you only want 'admin' role users to see this), 
-        // you may need to add it here (e.g., meta: { requiresAuth: true, roles: ['admin'] })
         meta: { requiresAuth: true },
     },
 	{
