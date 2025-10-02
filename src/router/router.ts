@@ -11,6 +11,7 @@ import UserManagementView from "@/pages/admin/UserManagementView.vue";
 
 import LandingPage from "@/pages/customer/LandingPage.vue";
 import Menu from "@/pages/customer/Menu.vue";
+import ReviewOrder from "@/pages/customer/ReviewOrder.vue";
 
 /**
  * Route definitions for the application
@@ -37,6 +38,10 @@ const routes = setupLayouts([
   {
     path: "/customer/menu",
     component: Menu,
+  },
+  {
+    path: "/customer/review-order",
+    component: ReviewOrder,
   },
 
   {

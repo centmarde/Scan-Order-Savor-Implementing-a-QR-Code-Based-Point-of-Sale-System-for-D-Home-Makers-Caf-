@@ -29,6 +29,7 @@ declare module 'vue-router/auto-routes' {
     '/Auth': RouteRecordInfo<'/Auth', '/Auth', Record<never, never>, Record<never, never>>,
     '/customer/LandingPage': RouteRecordInfo<'/customer/LandingPage', '/customer/LandingPage', Record<never, never>, Record<never, never>>,
     '/customer/Menu': RouteRecordInfo<'/customer/Menu', '/customer/Menu', Record<never, never>, Record<never, never>>,
+    '/customer/ReviewOrder': RouteRecordInfo<'/customer/ReviewOrder', '/customer/ReviewOrder', Record<never, never>, Record<never, never>>,
     '/ForbiddenView': RouteRecordInfo<'/ForbiddenView', '/ForbiddenView', Record<never, never>, Record<never, never>>,
     '/HomeView': RouteRecordInfo<'/HomeView', '/HomeView', Record<never, never>, Record<never, never>>,
     '/NotFound': RouteRecordInfo<'/NotFound', '/NotFound', Record<never, never>, Record<never, never>>,

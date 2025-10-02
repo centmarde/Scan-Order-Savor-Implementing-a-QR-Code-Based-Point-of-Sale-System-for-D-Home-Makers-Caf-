@@ -56,8 +56,11 @@ const cancelOrder = () => {
 };
 
 const reviewOrder = () => {
-  // Navigate to checkout/review page
-  router.push("/customer/checkout");
+  // Navigate to review order page with cart data
+  router.push({
+    path: "/customer/review-order",
+    state: { cartItems: cartItems.value },
+  });
 };
 
 // Lifecycle
