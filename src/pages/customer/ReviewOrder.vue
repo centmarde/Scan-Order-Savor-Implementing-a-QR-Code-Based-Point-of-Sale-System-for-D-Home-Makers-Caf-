@@ -37,26 +37,61 @@ const ordersWithMeals = ref<OrderWithMeals[]>([]);
 onMounted(async () => {
   await initializeTheme();
 
-  // Get cart items from multiple sources (for new orders)
-  if (route.meta?.cartItems) {
-    cartItems.value = route.meta.cartItems as MenuItem[];
-  } else if (history.state?.cartItems) {
-    cartItems.value = history.state.cartItems;
-  } else {
-    // Try to get from sessionStorage as backup
-    const storedCartItems = sessionStorage.getItem("reviewOrderCartItems");
-    if (storedCartItems) {
+  console.log("=== ReviewOrder onMounted - Loading cart data ===");
+  console.log("Route query:", route.query);
+  console.log("Route meta:", route.meta);
+  console.log("History state:", history.state);
+
+  // Try multiple methods to get cart items
+  let cartDataLoaded = false;
+
+  // Method 1: Check sessionStorage for reviewOrderCartItems (primary)
+  const storedCartItems = sessionStorage.getItem("reviewOrderCartItems");
+  if (storedCartItems) {
+    try {
+      const parsed = JSON.parse(storedCartItems);
+      console.log("Found cart data in reviewOrderCartItems:", parsed);
+      cartItems.value = parsed;
+      cartDataLoaded = true;
+      // Clear from sessionStorage after use
+      sessionStorage.removeItem("reviewOrderCartItems");
+    } catch (error) {
+      console.error("Error parsing reviewOrderCartItems:", error);
+    }
+  }
+
+  // Method 2: Check sessionStorage for general cartItems (backup)
+  if (!cartDataLoaded) {
+    const generalCartItems = sessionStorage.getItem("cartItems");
+    if (generalCartItems) {
       try {
-        cartItems.value = JSON.parse(storedCartItems);
-        // Clear from sessionStorage after use
-        sessionStorage.removeItem("reviewOrderCartItems");
+        const parsed = JSON.parse(generalCartItems);
+        console.log("Found cart data in cartItems:", parsed);
+        cartItems.value = parsed;
+        cartDataLoaded = true;
+        // Don't clear this one as it might be used elsewhere
       } catch (error) {
-        console.error("Error parsing stored cart items:", error);
+        console.error("Error parsing cartItems:", error);
       }
     }
   }
 
-  console.log("Cart items loaded:", cartItems.value);
+  // Method 3: Check route meta (fallback)
+  if (!cartDataLoaded && route.meta?.cartItems) {
+    console.log("Found cart data in route meta:", route.meta.cartItems);
+    cartItems.value = route.meta.cartItems as MenuItem[];
+    cartDataLoaded = true;
+  }
+
+  // Method 4: Check history state (fallback)
+  if (!cartDataLoaded && history.state?.cartItems) {
+    console.log("Found cart data in history state:", history.state.cartItems);
+    cartItems.value = history.state.cartItems;
+    cartDataLoaded = true;
+  }
+
+  console.log("Final cart items loaded:", cartItems.value);
+  console.log("Cart data loaded successfully:", cartDataLoaded);
 
   // Fetch existing orders for this table
   await fetchOrdersForTable();
@@ -186,6 +221,61 @@ const getStatusText = (status: string) => {
 };
 
 // Methods
+const checkAllCartSources = () => {
+  console.log("=== CART DATA DEBUG ===");
+  console.log("1. Route meta:", route.meta);
+  console.log(
+    "2. SessionStorage reviewOrderCartItems:",
+    sessionStorage.getItem("reviewOrderCartItems")
+  );
+  console.log(
+    "3. SessionStorage cartItems:",
+    sessionStorage.getItem("cartItems")
+  );
+  console.log("4. History state:", history.state);
+  console.log("5. Current cartItems:", cartItems.value);
+  console.log("6. Display items:", displayItems.value);
+
+  // Try to recover from sessionStorage if empty
+  if (cartItems.value.length === 0) {
+    const sessionCart = sessionStorage.getItem("cartItems");
+    if (sessionCart) {
+      try {
+        const parsed = JSON.parse(sessionCart);
+        console.log("Attempting to recover from sessionStorage:", parsed);
+        cartItems.value = parsed;
+      } catch (e) {
+        console.error("Failed to parse sessionStorage cart:", e);
+      }
+    }
+  }
+};
+
+const testOrderCreation = async () => {
+  console.log("Testing order creation...");
+  console.log("Cart items:", cartItems.value);
+  console.log("Table ID:", tableId.value);
+
+  if (cartItems.value.length === 0) {
+    alert("No cart items to test with!");
+    return;
+  }
+
+  try {
+    const result = await createOrdersWithMeals(cartItems.value, tableId.value);
+    console.log("Test order created:", result);
+    alert("Test order created successfully!");
+    await fetchOrdersForTable();
+  } catch (error) {
+    console.error("Test order failed:", error);
+    alert(
+      `Test order failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+};
+
 const fetchOrdersForTable = async () => {
   try {
     loadingOrders.value = true;
@@ -226,11 +316,9 @@ const proceedToPayment = async () => {
       await fetchOrdersForTable();
     }
 
-    // Navigate to payment or confirmation page
-    router.push({
-      path: "/customer/payment",
-      query: { tableId: tableId.value.toString() },
-    });
+    // For now, just show success message and go back to menu
+    alert("Order placed successfully! You will be redirected to the menu.");
+    router.push("/customer/menu");
   } catch (error) {
     console.error("Error processing order:", error);
     // TODO: Show error toast or message to user
@@ -466,6 +554,38 @@ const proceedToPayment = async () => {
           </v-card-text>
         </v-card>
       </v-container>
+
+      <!-- Debug Buttons -->
+      <div class="px-4 py-2">
+        <v-row justify="center">
+          <v-col cols="6">
+            <v-btn
+              @click="checkAllCartSources"
+              variant="outlined"
+              size="small"
+              rounded="pill"
+              color="info"
+              block
+              class="text-caption"
+            >
+              DEBUG CART DATA
+            </v-btn>
+          </v-col>
+          <v-col cols="6">
+            <v-btn
+              @click="testOrderCreation"
+              variant="outlined"
+              size="small"
+              rounded="pill"
+              color="warning"
+              block
+              class="text-caption"
+            >
+              TEST ORDER
+            </v-btn>
+          </v-col>
+        </v-row>
+      </div>
 
       <!-- Bottom Action Buttons -->
       <div

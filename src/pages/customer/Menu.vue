@@ -64,10 +64,16 @@ const reviewOrder = () => {
     JSON.stringify(cartItems.value)
   );
 
-  // Navigate to review order page with cart data using replace to ensure state is passed
-  router.replace({
+  // Also store in a more persistent way
+  sessionStorage.setItem("cartItems", JSON.stringify(cartItems.value));
+
+  // Navigate to review order page with cart data using push with query
+  router.push({
     path: "/customer/review-order",
-    state: { cartItems: cartItems.value },
+    query: {
+      hasCartItems: cartItems.value.length > 0 ? "true" : "false",
+      itemCount: cartItems.value.length.toString(),
+    },
   });
 };
 
