@@ -13,6 +13,7 @@ import LandingPage from "@/pages/customer/LandingPage.vue";
 import Menu from "@/pages/customer/Menu.vue";
 import TableQRCodeGenerator from "@/pages/admin/components/TableQRCodeGenerator.vue";
 import ReviewOrder from "@/pages/customer/ReviewOrder.vue";
+import WaitingPage from "@/pages/customer/WaitingPage.vue";
 
 /**
  * Route definitions for the application
@@ -39,6 +40,11 @@ const routes = setupLayouts([
   {
     path: "/customer/review-order",
     component: ReviewOrder,
+  },
+
+  {
+    path: "/customer/waiting",
+    component: WaitingPage,
   },
 
   {

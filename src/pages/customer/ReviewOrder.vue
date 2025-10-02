@@ -241,6 +241,12 @@ const proceedToPayment = async () => {
         cartItems.value
       );
 
+      // Store item count for the waiting page
+      sessionStorage.setItem(
+        "lastOrderItemCount",
+        cartItems.value.length.toString()
+      );
+
       // Create orders with meal_id for each cart item
       const orders = await createOrdersWithMeals(
         cartItems.value,
@@ -256,14 +262,23 @@ const proceedToPayment = async () => {
 
       // Refresh the orders list to show the new orders
       await fetchOrdersForTable();
-    }
 
-    // For now, just show success message and go back to menu
-    alert("Order placed successfully! You will be redirected to the menu.");
-    router.push("/customer/menu");
+      // Navigate to waiting page with table information
+      router.push({
+        path: "/customer/waiting",
+        query: { table: currentTableId.toString() },
+      });
+    } else {
+      // If no cart items, just go to waiting page (existing orders)
+      router.push({
+        path: "/customer/waiting",
+        query: { table: tableId.value.toString() },
+      });
+    }
   } catch (error) {
     console.error("Error processing order:", error);
-    // TODO: Show error toast or message to user
+    // Show error message and stay on current page
+    alert("There was an error placing your order. Please try again.");
   } finally {
     loading.value = false;
   }
