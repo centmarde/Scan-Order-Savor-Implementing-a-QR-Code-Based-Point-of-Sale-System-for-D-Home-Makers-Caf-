@@ -110,7 +110,7 @@ onMounted(async () => {
 <template>
   <v-app>
     <!-- Fixed Header -->
-    <Navbar />
+    <Navbar :menu-items="menuItems" @add-to-cart="addToCart" />
 
     <!-- Content Area -->
     <v-main class="grey-lighten-5">

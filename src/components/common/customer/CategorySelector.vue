@@ -90,7 +90,7 @@ const addToCart = (item: MenuItem) => {
         @click="selectCategory(category)"
         :variant="selectedCategory === category ? 'flat' : 'outlined'"
         :color="
-          selectedCategory === category ? 'orange-darken-2' : 'grey-lighten-2'
+          selectedCategory === category ? 'orange-darken-2' : 'grey-darken-2'
         "
         :text-color="selectedCategory === category ? 'white' : 'grey-darken-2'"
         class="flex-shrink-0"
@@ -116,7 +116,7 @@ const addToCart = (item: MenuItem) => {
           {{ selectedCategory === "All" ? "All Items" : selectedCategory }}
         </h2>
       </div>
-      <v-chip size="small" variant="outlined" color="grey">
+      <v-chip class="ml-2" size="small" variant="outlined" color="grey">
         {{ filteredMenuItems.length }} items
       </v-chip>
     </div>
