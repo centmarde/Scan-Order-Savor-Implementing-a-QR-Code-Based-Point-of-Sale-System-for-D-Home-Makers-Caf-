@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
+import { useTableStore } from "@/stores/tableStores";
 import type { MenuItem } from "@/stores/menuData";
 import {
   createOrdersWithMeals,
@@ -19,6 +20,9 @@ import OrderItems from "@/components/common/customer/OrderItems.vue";
 const router = useRouter();
 const route = useRoute();
 
+// Table store for managing table ID from QR code
+const tableStore = useTableStore();
+
 // Theme setup
 const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
   useTheme();
@@ -28,12 +32,16 @@ const loading = ref(false);
 const loadingOrders = ref(false);
 const orderStatus = ref("pending");
 const currentOrderId = ref<number | null>(null);
-const tableId = ref(1); // This should come from QR code
 
 // Cart items (should be passed via router state or stored in a global store)
 const cartItems = ref<MenuItem[]>([]);
 // Orders with meal details from database
 const ordersWithMeals = ref<OrderWithMeals[]>([]);
+
+// Computed property to get table ID from store with fallback
+const tableId = computed(() => {
+  return tableStore.currentTableId || 1; // Default to table 1 if no table ID is set
+});
 
 // Get cart data from router state if available and fetch existing orders
 onMounted(async () => {
@@ -43,6 +51,21 @@ onMounted(async () => {
   console.log("Route query:", route.query);
   console.log("Route meta:", route.meta);
   console.log("History state:", history.state);
+
+  // Ensure table ID is set from query params if available (fallback for direct navigation)
+  if (route.query.table && !tableStore.currentTableId) {
+    const tableParam = route.query.table;
+    const tableValue = Array.isArray(tableParam) ? tableParam[0] : tableParam;
+    if (tableValue) {
+      const parsedTableId = parseInt(tableValue, 10);
+      if (!isNaN(parsedTableId) && parsedTableId > 0) {
+        tableStore.setTableId(parsedTableId);
+        console.log("Table ID set from query params:", parsedTableId);
+      }
+    }
+  }
+
+  console.log("Current table ID for orders:", tableId.value);
 
   // Try multiple methods to get cart items
   let cartDataLoaded = false;
@@ -188,7 +211,9 @@ watchEffect(() => {
 const fetchOrdersForTable = async () => {
   try {
     loadingOrders.value = true;
-    const orders = await getOrdersByTableWithMeals(tableId.value);
+    const currentTableId = tableId.value;
+    console.log("Fetching orders for table:", currentTableId);
+    const orders = await getOrdersByTableWithMeals(currentTableId);
     ordersWithMeals.value = orders;
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -208,12 +233,20 @@ const proceedToPayment = async () => {
 
     // Only create new orders if we have cart items (new order)
     if (cartItems.value.length > 0) {
+      const currentTableId = tableId.value;
+      console.log(
+        "Creating orders for table:",
+        currentTableId,
+        "with items:",
+        cartItems.value
+      );
+
       // Create orders with meal_id for each cart item
       const orders = await createOrdersWithMeals(
         cartItems.value,
-        tableId.value
+        currentTableId
       );
-      console.log("Orders created:", orders);
+      console.log("Orders created successfully:", orders);
 
       // Clear cart items after successful order creation
       cartItems.value = [];

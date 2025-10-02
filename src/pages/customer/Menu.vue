@@ -72,13 +72,20 @@ const reviewOrder = () => {
   // Also store in a more persistent way
   sessionStorage.setItem("cartItems", JSON.stringify(cartItems.value));
 
-  // Navigate to review order page with cart data using push with query
+  // Navigate to review order page with cart data and table ID
+  const queryParams: Record<string, string> = {
+    hasCartItems: cartItems.value.length > 0 ? "true" : "false",
+    itemCount: cartItems.value.length.toString(),
+  };
+
+  // Include table ID if available
+  if (tableStore.currentTableId) {
+    queryParams.table = tableStore.currentTableId.toString();
+  }
+
   router.push({
     path: "/customer/review-order",
-    query: {
-      hasCartItems: cartItems.value.length > 0 ? "true" : "false",
-      itemCount: cartItems.value.length.toString(),
-    },
+    query: queryParams,
   });
 };
 
