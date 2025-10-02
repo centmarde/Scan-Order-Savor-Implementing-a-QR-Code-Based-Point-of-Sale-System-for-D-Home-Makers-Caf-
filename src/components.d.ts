@@ -17,6 +17,7 @@ declare module 'vue' {
     InsideNavbar3: typeof import('./components/common/insideNavbar/InsideNavbar3.vue')['default']
     InsideNavbar4: typeof import('./components/common/insideNavbar/InsideNavbar4.vue')['default']
     LoginForm: typeof import('./components/auth/LoginForm.vue')['default']
+    Navbar: typeof import('./components/common/customer/Navbar.vue')['default']
     OuterFooter: typeof import('./components/common/outerFooters/OuterFooter.vue')['default']
     OuterFooter2: typeof import('./components/common/outerFooters/OuterFooter2.vue')['default']
     OuterNavbar: typeof import('./components/common/outerNavbars/OuterNavbar1.vue')['default']

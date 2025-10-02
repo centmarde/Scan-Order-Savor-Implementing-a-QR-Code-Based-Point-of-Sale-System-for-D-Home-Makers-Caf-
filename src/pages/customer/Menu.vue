@@ -8,6 +8,8 @@ import {
   APP_CONFIG,
 } from "@/utils/constants";
 
+import Navbar from "@/components/common/customer/Navbar.vue";
+
 const router = useRouter();
 
 // Data structures
@@ -113,26 +115,7 @@ onMounted(async () => {
 <template>
   <v-app>
     <!-- Fixed Header -->
-    <v-app-bar elevation="1" color="white" class="px-4 border-b-sm">
-      <v-btn icon variant="text" @click="$router.go(-1)">
-        <v-icon>mdi-arrow-left</v-icon>
-      </v-btn>
-
-      <v-spacer />
-
-      <div class="text-center">
-        <h2 class="text-h6 font-weight-bold text-grey-darken-3">
-          {{ APP_CONFIG.APP_NAME }}
-        </h2>
-        <p class="text-caption text-grey-darken-1 ma-0">Menu</p>
-      </div>
-
-      <v-spacer />
-
-      <v-btn icon variant="text">
-        <v-icon>mdi-magnify</v-icon>
-      </v-btn>
-    </v-app-bar>
+    <Navbar />
 
     <!-- Content Area -->
     <v-main class="grey-lighten-5">
@@ -143,7 +126,7 @@ onMounted(async () => {
       >
         <v-progress-circular
           indeterminate
-          color="pink"
+          color="orange-darken-2"
           size="48"
           class="mb-4"
         ></v-progress-circular>
