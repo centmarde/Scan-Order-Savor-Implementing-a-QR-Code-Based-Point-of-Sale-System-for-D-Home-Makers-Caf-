@@ -259,7 +259,7 @@ onMounted(async () => {
                         @click.stop="addToCart(item)"
                         icon
                         size="small"
-                        color="pink"
+                        color="orange-darken-2"
                         variant="flat"
                       >
                         <v-icon size="20">mdi-plus</v-icon>
@@ -353,7 +353,7 @@ onMounted(async () => {
                       @click.stop="addToCart(item)"
                       icon
                       size="small"
-                      color="pink"
+                      color="orange-darken-2"
                       variant="flat"
                     >
                       <v-icon size="20">mdi-plus</v-icon>
