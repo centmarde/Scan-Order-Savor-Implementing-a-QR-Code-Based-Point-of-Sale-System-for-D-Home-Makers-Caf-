@@ -11,6 +11,8 @@ import UserManagementView from "@/pages/admin/UserManagementView.vue";
 
 import LandingPage from "@/pages/customer/LandingPage.vue";
 import Menu from "@/pages/customer/Menu.vue";
+import TableQRCodeGenerator from "@/pages/admin/components/TableQRCodeGenerator.vue";
+import ReviewOrder from "@/pages/customer/ReviewOrder.vue";
 
 /**
  * Route definitions for the application
@@ -32,6 +34,11 @@ const routes = setupLayouts([
   {
     path: "/customer/landing",
     redirect: "/",
+  },
+
+  {
+    path: "/customer/review",
+    component: ReviewOrder,
   },
 
   {
