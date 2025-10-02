@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { supabase } from "@/lib/supabase";
-import {
-  MENU_CATEGORIES,
-  getInventoryImageUrl,
-  APP_CONFIG,
-} from "@/utils/constants";
+import { APP_CONFIG } from "@/utils/constants";
 import { useThemeController } from "@/controller/themeController";
 import { useThemeColors } from "@/composables/useThemeColors";
+import { useMenu } from "@/composables/useMenu";
+import type { MenuItem } from "@/stores/menuData";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
 import BestSellers from "@/components/common/customer/BestSellers.vue";
@@ -20,81 +17,20 @@ const router = useRouter();
 const { fetchThemeData } = useThemeController();
 const { primaryColor, secondaryColor, backgroundColor } = useThemeColors();
 
-// Data structures
-interface MenuItem {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  quantity: number;
-  sales: number;
-  category?: string;
-  created_at: string;
-}
+// Menu data management
+const { menuItems, loading, error, fetchMenuItems, clearError, hasItems } =
+  useMenu();
 
-interface Category {
-  id: number;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-}
-
-// Reactive data
+// Local cart state (could be moved to separate cart store later)
 const cartItems = ref<MenuItem[]>([]);
-const menuItems = ref<MenuItem[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
-
-// Categories data from constants
-const categories = ref<Category[]>(MENU_CATEGORIES);
-
-// Fetch menu items from Supabase
-const fetchMenuItems = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
-
-    const { data, error: fetchError } = await supabase
-      .from("menu")
-      .select("*")
-      .order("name");
-
-    if (fetchError) {
-      throw fetchError;
-    }
-
-    // Process the data to ensure image URLs point to Supabase storage
-    menuItems.value = (data || []).map((item) => ({
-      ...item,
-      // If image is just a filename without full URL, prepend the Supabase storage URL
-      image: item.image?.includes("http")
-        ? item.image
-        : getInventoryImageUrl(item.image || "default.jpg"),
-    }));
-  } catch (err) {
-    console.error("Error fetching menu items:", err);
-    error.value = "Failed to load menu items. Please try again later.";
-  } finally {
-    loading.value = false;
-  }
-};
 
 // Computed properties
 const cartTotal = computed(() => {
-  return cartItems.value.reduce((total, item) => total + item.price, 0);
+  return cartItems.value.reduce(
+    (total: number, item: MenuItem) => total + item.price,
+    0
+  );
 });
-
-// Methods
-const getItemsByCategory = (categoryId: number) => {
-  // Return all non-best-seller items for the "All Items" section
-  const bestSellerIds = menuItems.value
-    .sort((a, b) => (b.sales || 0) - (a.sales || 0))
-    .slice(0, 3)
-    .map((item) => item.id);
-  return menuItems.value.filter((item) => !bestSellerIds.includes(item.id));
-};
 
 const addToCart = (item: MenuItem) => {
   cartItems.value.push({ ...item });
@@ -141,7 +77,7 @@ onMounted(async () => {
         <v-icon color="error" size="64" class="mb-4">mdi-alert-circle</v-icon>
         <p class="text-h6 text-error mb-4">{{ error }}</p>
         <v-btn
-          @click="fetchMenuItems"
+          @click="() => fetchMenuItems(true)"
           color="primary"
           variant="flat"
           rounded="xl"

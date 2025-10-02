@@ -13,7 +13,6 @@ declare module 'vue' {
     BottomBar: typeof import('./components/common/BottomBar.vue')['default']
     CategorySelector: typeof import('./components/common/customer/CategorySelector.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
-    BottomBar: typeof import('./components/common/BottomBar.vue')['default']
     InnerNavBar: typeof import('./components/common/InnerNavBar.vue')['default']
     InsideNavbar1: typeof import('./components/common/insideNavbar/InsideNavbar1.vue')['default']
     InsideNavbar2: typeof import('./components/common/insideNavbar/InsideNavbar2.vue')['default']

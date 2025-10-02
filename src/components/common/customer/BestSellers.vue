@@ -2,19 +2,9 @@
 import { computed } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
 import { useThemeColors } from "@/composables/useThemeColors";
+import type { MenuItem } from "@/stores/menuData";
 
 // Props
-interface MenuItem {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  quantity: number;
-  sales: number;
-  created_at: string;
-}
-
 interface Props {
   menuItems: MenuItem[];
 }
