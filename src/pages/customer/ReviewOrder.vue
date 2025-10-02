@@ -280,25 +280,25 @@ const proceedToPayment = async () => {
 
     <!-- Content Area -->
     <v-main style="background-color: #f5f3ef">
-      <v-container class="pa-4">
+      <v-container class="pa-2">
         <!-- Order Status Card -->
         <v-card
-          class="mb-6"
-          elevation="4"
-          rounded="xl"
+          class="mb-3"
+          elevation="2"
+          rounded="lg"
           :style="{
             background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
             border: '1px solid rgba(139, 92, 42, 0.1)',
           }"
         >
-          <v-card-text class="pa-5">
-            <div class="d-flex align-center justify-space-between mb-4">
+          <v-card-text class="pa-3">
+            <div class="d-flex align-center justify-space-between mb-2">
               <div class="d-flex align-center">
-                <v-icon :style="{ color: primaryColor }" size="24" class="mr-2">
+                <v-icon :style="{ color: primaryColor }" size="20" class="mr-2">
                   mdi-receipt
                 </v-icon>
                 <h2
-                  class="text-h5 font-weight-bold"
+                  class="text-h6 font-weight-bold"
                   :style="{ color: '#2D2D2D' }"
                 >
                   Review Your Order
@@ -335,49 +335,46 @@ const proceedToPayment = async () => {
             </div>
 
             <!-- Order Summary Info -->
-            <div class="d-flex align-center mb-4">
+            <div class="d-flex align-center mb-2">
               <v-chip
-                size="small"
+                size="x-small"
                 variant="flat"
                 :style="{ backgroundColor: primaryColor, color: 'white' }"
-                class="mr-3"
+                class="mr-2"
               >
                 {{ itemCount }} item{{ itemCount > 1 ? "s" : "" }}
               </v-chip>
-              <span class="text-body-2" :style="{ color: '#555' }">
-                Total: {{ APP_CONFIG.CURRENCY }}{{ displayTotal.toFixed(2) }}
-              </span>
             </div>
           </v-card-text>
         </v-card>
 
         <!-- Order Items List -->
         <v-card
-          class="mb-6"
-          elevation="4"
-          rounded="xl"
+          class="mb-3"
+          elevation="2"
+          rounded="lg"
           :style="{
             background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
             border: '1px solid rgba(139, 92, 42, 0.1)',
           }"
         >
-          <v-card-text class="pa-5">
+          <v-card-text class="pa-3">
             <h3
-              class="text-h6 font-weight-bold mb-4"
+              class="text-subtitle-1 font-weight-bold mb-2"
               :style="{ color: '#2D2D2D' }"
             >
               Ordered Items
             </h3>
 
             <!-- Loading State -->
-            <div v-if="loadingOrders" class="text-center py-8">
+            <div v-if="loadingOrders" class="text-center py-4">
               <v-progress-circular
                 indeterminate
                 color="primary"
-                size="32"
-                class="mb-3"
+                size="24"
+                class="mb-2"
               ></v-progress-circular>
-              <p class="text-body-2 text-grey-darken-1">
+              <p class="text-caption text-grey-darken-1">
                 Loading your orders...
               </p>
             </div>
@@ -386,22 +383,22 @@ const proceedToPayment = async () => {
               <v-list-item
                 v-for="groupedItem in displayItems"
                 :key="groupedItem.item.id"
-                class="px-0 py-3 mb-3"
+                class="px-0 py-2 mb-2"
                 :style="{
                   backgroundColor: '#ffffff',
                   border: '1px solid #e9ecef',
-                  borderRadius: '12px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  borderRadius: '8px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                 }"
               >
                 <template v-slot:prepend>
-                  <div class="position-relative mr-4 ml-3">
+                  <div class="position-relative mr-3 ml-2">
                     <v-avatar
-                      size="60"
-                      class="elevation-2"
+                      size="48"
+                      class="elevation-1"
                       :style="{
-                        border: '2px solid #ffffff',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                        border: '1px solid #ffffff',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
                       }"
                     >
                       <v-img
@@ -412,14 +409,14 @@ const proceedToPayment = async () => {
                     </v-avatar>
                     <v-chip
                       v-if="groupedItem.quantity > 1"
-                      size="small"
+                      size="x-small"
                       class="position-absolute"
                       :style="{
-                        top: '-5px',
-                        right: '-5px',
+                        top: '-3px',
+                        right: '-3px',
                         backgroundColor: primaryColor,
                         color: 'white',
-                        fontSize: '12px',
+                        fontSize: '10px',
                         fontWeight: 'bold',
                       }"
                     >
@@ -428,15 +425,15 @@ const proceedToPayment = async () => {
                   </div>
                 </template>
 
-                <v-list-item-content class="py-2">
+                <v-list-item-content class="py-1">
                   <v-list-item-title
-                    class="text-h6 font-weight-bold mb-2"
+                    class="text-body-1 font-weight-bold mb-1"
                     :style="{ color: '#2D2D2D' }"
                   >
                     {{ groupedItem.item.name }}
                     <span
                       v-if="groupedItem.quantity > 1"
-                      class="text-body-2 ml-2"
+                      class="text-caption ml-1"
                       :style="{ color: primaryColor, fontWeight: 'bold' }"
                     >
                       ({{ groupedItem.quantity }}x)
@@ -444,7 +441,7 @@ const proceedToPayment = async () => {
                   </v-list-item-title>
 
                   <v-list-item-subtitle
-                    class="text-body-2 mb-2"
+                    class="text-caption mb-1"
                     :style="{ color: '#666' }"
                   >
                     {{
@@ -455,14 +452,14 @@ const proceedToPayment = async () => {
 
                   <div class="d-flex align-center justify-space-between">
                     <span
-                      class="text-body-2 font-weight-medium"
+                      class="text-caption font-weight-medium"
                       :style="{ color: primaryColor }"
                     >
                       {{ APP_CONFIG.CURRENCY
                       }}{{ groupedItem.item.price.toFixed(2) }} each
                     </span>
                     <span
-                      class="text-body-2 font-weight-bold mr-4"
+                      class="text-caption font-weight-bold mr-2"
                       :style="{ color: primaryColor }"
                     >
                       {{ groupedItem.quantity }}x
@@ -476,19 +473,19 @@ const proceedToPayment = async () => {
 
         <!-- Order Total Card -->
         <v-card
-          class="mb-6"
-          elevation="6"
-          rounded="xl"
+          class="mb-3"
+          elevation="3"
+          rounded="lg"
           :style="{
             background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
             border: '1px solid rgba(255, 255, 255, 0.1)',
           }"
         >
-          <v-card-text class="pa-5 text-center">
-            <h2 class="text-h4 font-weight-bold text-white mb-2">
+          <v-card-text class="pa-3 text-center">
+            <h2 class="text-h6 font-weight-bold text-white mb-1">
               Order Total
             </h2>
-            <p class="text-h3 font-weight-bold text-white mb-0">
+            <p class="text-h5 font-weight-bold text-white mb-0">
               {{ APP_CONFIG.CURRENCY }}{{ displayTotal.toFixed(2) }}
             </p>
           </v-card-text>
@@ -497,7 +494,7 @@ const proceedToPayment = async () => {
 
       <!-- Bottom Action Buttons -->
       <div
-        class="position-fixed pa-4"
+        class="position-fixed pa-2"
         style="bottom: 0; left: 0; right: 0; z-index: 10; background: #f5f3ef"
       >
         <v-row class="align-center" no-gutters>
@@ -506,20 +503,20 @@ const proceedToPayment = async () => {
             <v-btn
               @click="cancelOrder"
               variant="outlined"
-              size="x-large"
+              size="large"
               rounded="pill"
               color="error"
               block
-              class="text-body-1 font-weight-bold py-3"
+              class="text-body-2 font-weight-bold py-2"
               :disabled="loading"
             >
-              <v-icon left class="mr-2">mdi-close</v-icon>
+              <v-icon left class="mr-1" size="small">mdi-close</v-icon>
               CANCEL
             </v-btn>
           </v-col>
 
           <v-col cols="2" class="text-center">
-            <v-divider vertical class="mx-auto" style="height: 40px" />
+            <v-divider vertical class="mx-auto" style="height: 32px" />
           </v-col>
 
           <!-- Proceed to Payment Button -->
@@ -527,16 +524,16 @@ const proceedToPayment = async () => {
             <v-btn
               @click="proceedToPayment"
               variant="flat"
-              size="x-large"
+              size="large"
               rounded="pill"
               :style="{ backgroundColor: primaryColor, color: 'white' }"
               block
-              class="text-body-1 font-weight-bold py-3"
-              elevation="4"
+              class="text-body-2 font-weight-bold py-2"
+              elevation="2"
               :loading="loading"
               :disabled="cartItems.length === 0 && ordersWithMeals.length === 0"
             >
-              <v-icon left class="mr-2">
+              <v-icon left class="mr-1" size="small">
                 {{
                   cartItems.length > 0 ? "mdi-cart-check" : "mdi-credit-card"
                 }}
@@ -550,22 +547,22 @@ const proceedToPayment = async () => {
       <!-- Empty State -->
       <v-container
         v-if="displayItems.length === 0 && !loadingOrders"
-        class="text-center pa-8"
+        class="text-center pa-4"
       >
-        <v-icon color="grey-lighten-1" size="64" class="mb-4"
+        <v-icon color="grey-lighten-1" size="48" class="mb-3"
           >mdi-cart-off</v-icon
         >
-        <h3 class="text-h5 text-grey-darken-1 mb-4">No Items to Review</h3>
-        <p class="text-body-1 text-grey-darken-1 mb-6">
+        <h3 class="text-h6 text-grey-darken-1 mb-3">No Items to Review</h3>
+        <p class="text-body-2 text-grey-darken-1 mb-4">
           Your cart is empty. Please add some items to your order first.
         </p>
         <v-btn
           @click="() => router.push('/customer/menu')"
           color="primary"
           variant="flat"
-          rounded="xl"
-          size="large"
-          class="px-8"
+          rounded="lg"
+          size="default"
+          class="px-6"
         >
           Back to Menu
         </v-btn>

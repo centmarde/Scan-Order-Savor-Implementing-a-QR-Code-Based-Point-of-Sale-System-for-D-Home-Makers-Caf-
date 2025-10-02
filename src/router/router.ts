@@ -37,7 +37,7 @@ const routes = setupLayouts([
   },
 
   {
-    path: "/customer/review",
+    path: "/customer/review-order",
     component: ReviewOrder,
   },
 
