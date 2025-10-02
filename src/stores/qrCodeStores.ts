@@ -1,22 +1,51 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 // Define the base domain for the customer-facing menu application
 const BASE_DOMAIN = 'https://dhome-makers.vercel.app';
 const MENU_PATH = '/';
+
+// LocalStorage key for persisting the table count
+const STORAGE_KEY = 'coffee_shop_table_count';
 
 /**
  * Pinia Store for managing QR code generation parameters and logic.
  * This is meant to be used on an internal Admin/Cashier page.
  */
 export const useQrCodeStore = defineStore('qrCode', () => {
-    // State: Configuration for the coffee shop (defaulting to 10 tables)
+    // Load the persisted table count from localStorage, or default to 10
+    const loadPersistedTableCount = (): number => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = parseInt(stored, 10);
+                return parsed > 0 ? parsed : 10;
+            }
+        } catch (e) {
+            console.error('Error loading persisted table count:', e);
+        }
+        return 10;
+    };
+
+    // State: Configuration for the coffee shop
     const shopConfig = ref({
-        // The total number of tables in the coffee shop
-        totalTables: 10,
+        // The total number of tables in the coffee shop (load from localStorage)
+        totalTables: loadPersistedTableCount(),
         // The base URL used for the QR code link (to the customer menu)
         baseUrl: `${BASE_DOMAIN}${MENU_PATH}`,
     });
+
+    // Watch for changes to totalTables and persist to localStorage
+    watch(
+        () => shopConfig.value.totalTables,
+        (newCount) => {
+            try {
+                localStorage.setItem(STORAGE_KEY, newCount.toString());
+            } catch (e) {
+                console.error('Error persisting table count:', e);
+            }
+        }
+    );
 
     // Computed: Generate a list of all table IDs (1, 2, 3, ...)
     const tableIds = computed(() => {
