@@ -129,5 +129,3 @@ const navigateToMenu = () => {
   router.push("/customer/menu");
 };
 </script>
-
-<!-- No custom CSS. All styling is handled by Vuetify props and classes. -->
