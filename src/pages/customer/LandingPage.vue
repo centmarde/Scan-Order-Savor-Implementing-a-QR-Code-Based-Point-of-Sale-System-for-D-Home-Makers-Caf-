@@ -19,17 +19,20 @@ onUnmounted(() => {
 });
 
 // Carousel images
+
+const supabaseBaseUrl =
+  "https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory/";
 const carouselImages = [
   {
-    src: "/images/adobo.jpg",
+    src: supabaseBaseUrl + "adobo.jpg",
     alt: "Adobo Food",
   },
   {
-    src: "/images/sinigang.jpg", // You can replace these with different images
+    src: supabaseBaseUrl + "sinigang.jpg",
     alt: "Delicious Meal 2",
   },
   {
-    src: "/images/caldereta.png", // You can replace these with different images
+    src: supabaseBaseUrl + "caldereta.png",
     alt: "Healthy Food 3",
   },
 ];
