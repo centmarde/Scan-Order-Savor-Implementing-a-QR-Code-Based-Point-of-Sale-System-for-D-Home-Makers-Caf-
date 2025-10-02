@@ -68,48 +68,20 @@ watch(isOpen, (newValue) => {
 });
 </script>
 
-<style scoped>
-.wood-brown-dark {
-  color: #8b5c2a;
-}
-.wood-brown-light {
-  color: #c19a6b;
-}
-.flex-grow-1 {
-  flex-grow: 1;
-}
-.brown-category-chip {
-  background-color: #c19a6b;
-  color: #8b5c2a;
-  border: 1px solid #8b5c2a;
-}
-.dark-wood-chip {
-  background-color: #8b5c2a;
-}
-.light-brown-overlay {
-  background-color: #c19a6b;
-}
-.dark-wood-btn {
-  background-color: #8b5c2a;
-  color: #fff;
-}
-.outlined-wood-btn {
-  border-color: #c19a6b;
-  color: #c19a6b;
-}
-</style>
-
 <template>
   <!-- Search Modal -->
   <v-dialog v-model="isOpen" max-width="500">
     <v-card rounded="xl">
       <v-card-title class="d-flex align-center pa-4">
-        <h3 class="text-h6 font-weight-bold wood-brown-dark flex-grow-1">
+        <h3
+          class="text-h6 font-weight-bold"
+          style="color: #8b5c2a; flex-grow: 1"
+        >
           Search Menu
         </h3>
         <v-spacer></v-spacer>
         <v-btn icon variant="text" size="small" @click="closeDialog">
-          <v-icon class="wood-brown-light">mdi-close</v-icon>
+          <v-icon style="color: #c19a6b">mdi-close</v-icon>
         </v-btn>
       </v-card-title>
 
@@ -132,7 +104,7 @@ watch(isOpen, (newValue) => {
         <div v-if="searchQuery.trim()">
           <!-- Results Found -->
           <div v-if="filteredSearchResults.length > 0">
-            <p class="text-body-2 mb-3 wood-brown-dark">
+            <p class="text-body-2 mb-3" style="color: #8b5c2a">
               {{ filteredSearchResults.length }} result{{
                 filteredSearchResults.length > 1 ? "s" : ""
               }}
@@ -152,13 +124,14 @@ watch(isOpen, (newValue) => {
               >
                 <v-card-text class="pa-3">
                   <div class="d-flex">
-                    <div class="flex-grow-1 pr-3">
+                    <div style="flex-grow: 1" class="pr-3">
                       <h4
-                        class="text-body-1 font-weight-bold mb-1 wood-brown-dark"
+                        class="text-body-1 font-weight-bold mb-1"
+                        style="color: #8b5c2a"
                       >
                         {{ item.name }}
                       </h4>
-                      <p class="text-caption mb-2 wood-brown-light">
+                      <p class="text-caption mb-2" style="color: #c19a6b">
                         {{ item.description }}
                       </p>
 
@@ -167,7 +140,12 @@ watch(isOpen, (newValue) => {
                         v-if="item.category"
                         size="x-small"
                         variant="flat"
-                        class="mb-2 brown-category-chip"
+                        class="mb-2"
+                        style="
+                          background-color: #8b5c2a;
+                          color: white;
+                          border: 1px solid #8b5c2a;
+                        "
                       >
                         {{ item.category }}
                       </v-chip>
@@ -180,7 +158,8 @@ watch(isOpen, (newValue) => {
                         <v-chip
                           size="x-small"
                           variant="flat"
-                          class="text-white dark-wood-chip"
+                          class="text-white"
+                          style="background-color: #8b5c2a"
                         >
                           Only {{ item.quantity }} left
                         </v-chip>
@@ -188,10 +167,10 @@ watch(isOpen, (newValue) => {
 
                       <span
                         class="text-h6 font-weight-bold ml-2"
-                        :class="
+                        :style="
                           item.quantity === 0
-                            ? 'wood-brown-light'
-                            : 'wood-brown-dark'
+                            ? 'color: #C19A6B'
+                            : 'color: #8B5C2A'
                         "
                       >
                         {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
@@ -211,7 +190,8 @@ watch(isOpen, (newValue) => {
                         <v-overlay
                           v-if="item.quantity === 0"
                           contained
-                          class="d-flex align-center justify-center rounded-lg light-brown-overlay"
+                          class="d-flex align-center justify-center rounded-lg"
+                          style="background-color: #c19a6b"
                         >
                           <span
                             class="text-white text-caption font-weight-bold"
@@ -227,11 +207,9 @@ watch(isOpen, (newValue) => {
                         icon
                         size="small"
                         variant="flat"
-                        class="dark-wood-btn"
+                        style="background-color: #8b5c2a; color: #fff"
                       >
-                        <v-icon size="18" class="wood-brown-light"
-                          >mdi-plus</v-icon
-                        >
+                        <v-icon size="18" style="color: white">mdi-plus</v-icon>
                       </v-btn>
                       <v-btn
                         v-else
@@ -239,7 +217,7 @@ watch(isOpen, (newValue) => {
                         icon
                         size="small"
                         variant="outlined"
-                        class="outlined-wood-btn"
+                        style="border-color: #c19a6b; color: #c19a6b"
                       >
                         <v-icon size="18">mdi-close</v-icon>
                       </v-btn>
@@ -252,11 +230,11 @@ watch(isOpen, (newValue) => {
 
           <!-- No Results -->
           <div v-else class="text-center py-8">
-            <v-icon size="64" class="mb-4 wood-brown-light">
+            <v-icon size="64" class="mb-4" style="color: #c19a6b">
               mdi-food-off
             </v-icon>
-            <p class="text-h6 mb-2 wood-brown-dark">No Results Found</p>
-            <p class="text-body-2 wood-brown-light">
+            <p class="text-h6 mb-2" style="color: #8b5c2a">No Results Found</p>
+            <p class="text-body-2" style="color: #c19a6b">
               Try searching with different keywords
             </p>
           </div>
@@ -264,9 +242,13 @@ watch(isOpen, (newValue) => {
 
         <!-- Search Prompt -->
         <div v-else class="text-center py-8">
-          <v-icon size="64" class="mb-4 wood-brown-dark"> mdi-magnify </v-icon>
-          <p class="text-h6 mb-2 wood-brown-dark">Search for Menu Items</p>
-          <p class="text-body-2 wood-brown-light">
+          <v-icon size="64" class="mb-4" style="color: #8b5c2a">
+            mdi-magnify
+          </v-icon>
+          <p class="text-h6 mb-2" style="color: #8b5c2a">
+            Search for Menu Items
+          </p>
+          <p class="text-body-2" style="color: #c19a6b">
             Enter the name of a meal to find what you're looking for
           </p>
         </div>
