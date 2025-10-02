@@ -92,15 +92,15 @@
               <v-row align="center" class="min-height-screen" justify="center">
                 <v-col cols="12" lg="8" md="10">
                   <div class="text-center">
-                    <h1 class="text-h2 text-md-h1 font-weight-bold mb-4 text-black">
+                    <h1 class="text-h2 text-md-h2 font-weight-bold mb-4 text-black">
                       {{ data.title }}
                     </h1>
 
-                    <h2 class="text-h4 text-md-h3 text-black mb-6">
+                    <h2 class="text-h5 text-md-h4 text-black mb-6">
                       {{ data.subtitle }}
                     </h2>
 
-                    <p class="text-h6 text-md-h5 text-black mb-8">
+                    <p class="text-h8 text-black mb-8">
                       {{ data.description }}
                     </p>
 
