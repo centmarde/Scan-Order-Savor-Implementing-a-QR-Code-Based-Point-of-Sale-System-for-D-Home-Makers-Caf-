@@ -9,6 +9,7 @@ import type { MenuItem } from "@/stores/menuData";
 import Navbar from "@/components/common/customer/Navbar.vue";
 import BestSellers from "@/components/common/customer/BestSellers.vue";
 import CategorySelector from "@/components/common/customer/CategorySelector.vue";
+import YourOrder from "@/components/common/customer/YourOrder.vue";
 
 const router = useRouter();
 
@@ -36,9 +37,23 @@ const addToCart = (item: MenuItem) => {
   // You could add a toast notification here
 };
 
+const removeFromCart = (index: number) => {
+  cartItems.value.splice(index, 1);
+};
+
 const viewCart = () => {
   // Navigate to cart page (you'll need to create this)
   router.push("/customer/cart");
+};
+
+const cancelOrder = () => {
+  // Clear all cart items
+  cartItems.value = [];
+};
+
+const reviewOrder = () => {
+  // Navigate to checkout/review page
+  router.push("/customer/checkout");
 };
 
 // Lifecycle
@@ -87,7 +102,7 @@ onMounted(async () => {
       </v-container>
 
       <!-- Menu Content -->
-      <div v-else class="pb-16">
+      <div v-else class="pb-4">
         <!-- Restaurant Info Banner -->
         <v-card
           class="mx-4 mt-4 mb-6"
@@ -135,41 +150,15 @@ onMounted(async () => {
         <!-- Category Selector and Menu Items -->
         <CategorySelector :menu-items="menuItems" @add-to-cart="addToCart" />
       </div>
-    </v-main>
 
-    <!-- Fixed Bottom Cart -->
-    <v-bottom-navigation
-      v-if="cartItems.length > 0"
-      grow
-      class="px-4"
-      height="80"
-      color="secondary"
-    >
-      <v-btn
-        @click="viewCart"
-        variant="flat"
-        block
-        size="large"
-        rounded="xl"
-        class="font-weight-bold ma-2"
-        :style="{ backgroundColor: primaryColor, color: 'white' }"
-      >
-        <template v-slot:prepend>
-          <v-icon :style="{ color: secondaryColor }">mdi-cart</v-icon>
-        </template>
-        <span class="mx-2"
-          >{{ cartItems.length }} item{{
-            cartItems.length > 1 ? "s" : ""
-          }}</span
-        >
-        <v-spacer />
-        <span class="mr-2"
-          >{{ APP_CONFIG.CURRENCY }}{{ cartTotal.toFixed(2) }}</span
-        >
-        <template v-slot:append>
-          <v-icon :style="{ color: secondaryColor }">mdi-chevron-right</v-icon>
-        </template>
-      </v-btn>
-    </v-bottom-navigation>
+      <!-- Your Order Section -->
+      <YourOrder
+        :cart-items="cartItems"
+        @view-cart="viewCart"
+        @cancel-order="cancelOrder"
+        @review-order="reviewOrder"
+        @remove-item="removeFromCart"
+      />
+    </v-main>
   </v-app>
 </template>
