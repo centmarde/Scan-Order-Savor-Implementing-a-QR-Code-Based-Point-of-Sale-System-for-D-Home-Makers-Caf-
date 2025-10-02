@@ -5,7 +5,7 @@
  */
 
 // Plugins
-import vuetify from './vuetify'
+import vuetify, { initializeDynamicThemes } from './vuetify'
 import pinia from '../stores'
 import router from '../router'
 import toast from './toast'
@@ -20,4 +20,9 @@ export function registerPlugins (app: App) {
     .use(pinia)
 
   toast(app)
+
+  // Initialize dynamic themes after vuetify is registered
+  initializeDynamicThemes().catch(error => {
+    console.error('Failed to initialize dynamic themes:', error)
+  })
 }

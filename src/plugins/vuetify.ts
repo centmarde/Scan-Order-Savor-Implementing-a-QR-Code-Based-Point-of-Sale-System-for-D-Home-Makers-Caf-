@@ -11,16 +11,19 @@ import { createVuetify } from 'vuetify'
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 
+// Import dynamic theme creation functions
+import { createDynamicThemes } from '@/themes/base'
+
 // Create vuetify instance with minimal initial configuration
-// Theme will be loaded dynamically from external-page.json
+// Themes will be loaded dynamically from external-page.json via base.ts
 const vuetify = createVuetify({
   theme: {
     defaultTheme: 'light',
     themes: {
+      // Minimal fallback themes - will be replaced by dynamic loading
       light: {
         dark: false,
         colors: {
-          // Temporary minimal theme - will be replaced by dynamic loading
           primary: '#1976D2',
           secondary: '#424242',
         },
@@ -28,7 +31,6 @@ const vuetify = createVuetify({
       dark: {
         dark: true,
         colors: {
-          // Temporary minimal theme - will be replaced by dynamic loading
           primary: '#2196F3',
           secondary: '#616161',
         },
@@ -36,6 +38,22 @@ const vuetify = createVuetify({
     },
   },
 })
+
+// Function to initialize dynamic themes
+export async function initializeDynamicThemes() {
+  try {
+    const themes = await createDynamicThemes()
+
+    // Update vuetify themes with dynamic configuration
+    vuetify.theme.themes.value.light = themes.light
+    vuetify.theme.themes.value.dark = themes.dark
+
+    console.log('Dynamic themes loaded successfully from external-page.json')
+  } catch (error) {
+    console.error('Failed to load dynamic themes:', error)
+    console.warn('Using fallback themes')
+  }
+}
 
 // Export vuetify instance for dynamic theme updates
 export { vuetify }

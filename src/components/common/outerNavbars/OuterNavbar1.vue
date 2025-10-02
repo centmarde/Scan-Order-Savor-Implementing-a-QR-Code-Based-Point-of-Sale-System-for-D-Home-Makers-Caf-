@@ -120,6 +120,10 @@
       })
     }
   }
+
+  function navigateBack () {
+    router.push('/')
+  }
 </script>
 
 <template>
@@ -135,6 +139,17 @@
   >
     <!-- Drawer Header with Logo/Title -->
     <div class="pa-4 d-flex align-center">
+      <!-- Back Button -->
+      <v-btn
+        icon
+        variant="text"
+        size="small"
+        class="me-2"
+        @click="navigateBack"
+      >
+        <v-icon icon="mdi-arrow-left" />
+      </v-btn>
+
       <template v-if="navbarConfig?.logo?.src">
         <v-img
           :src="navbarConfig.logo.src"
@@ -214,6 +229,16 @@
     :elevation="navbarConfig.elevation"
   >
     <template #prepend>
+      <!-- Back Button -->
+      <v-btn
+        icon
+        variant="text"
+        class="me-2"
+        @click="navigateBack"
+      >
+        <v-icon icon="mdi-arrow-left" />
+      </v-btn>
+
       <!-- Mobile Hamburger Menu -->
       <v-btn
         v-if="mobile"
