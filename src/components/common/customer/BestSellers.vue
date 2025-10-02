@@ -43,8 +43,12 @@ const addToCart = (item: MenuItem) => {
   <!-- Best Sellers Section -->
   <v-container class="px-4 py-6">
     <div class="d-flex align-center mb-4">
-      <v-icon color="orange" size="24" class="mr-2">mdi-fire</v-icon>
-      <h2 class="text-h6 font-weight-bold text-grey-darken-3">Most Popular</h2>
+      <v-icon :style="'color: #8B5C2A;'" size="24" class="mr-2"
+        >mdi-fire</v-icon
+      >
+      <h2 class="text-h6 font-weight-bold" style="color: #8b5c2a">
+        Most Popular
+      </h2>
     </div>
 
     <v-row dense v-if="bestSellers.length > 0">
@@ -68,7 +72,7 @@ const addToCart = (item: MenuItem) => {
                 <p class="text-caption text-grey-darken-1 mb-2">
                   {{ item.description }}
                 </p>
-                <span class="text-h6 font-weight-bold text-orange-darken-2">
+                <span class="text-h6 font-weight-bold" style="color: #8b5c2a">
                   {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
                 </span>
               </div>
@@ -83,13 +87,20 @@ const addToCart = (item: MenuItem) => {
                     class="rounded-lg"
                   />
                   <v-chip
-                    color="orange"
                     size="x-small"
                     class="position-absolute"
-                    style="top: -4px; left: -4px"
+                    style="
+                      top: -4px;
+                      left: -4px;
+                      background-color: #8b5c2a;
+                      color: white;
+                      border: 1px solid #8b5c2a;
+                    "
                     variant="flat"
                   >
-                    <v-icon size="12" class="mr-1">mdi-fire</v-icon>
+                    <v-icon size="12" class="mr-1" :style="'color: white;'"
+                      >mdi-fire</v-icon
+                    >
                     Popular
                   </v-chip>
                 </div>
@@ -97,10 +108,10 @@ const addToCart = (item: MenuItem) => {
                   @click.stop="addToCart(item)"
                   icon
                   size="small"
-                  color="orange-darken-2"
+                  style="background-color: #8b5c2a; color: #fff"
                   variant="flat"
                 >
-                  <v-icon size="20">mdi-plus</v-icon>
+                  <v-icon size="20" :style="'color: white;'">mdi-plus</v-icon>
                 </v-btn>
               </div>
             </div>

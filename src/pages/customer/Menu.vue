@@ -113,7 +113,7 @@ onMounted(async () => {
     <Navbar :menu-items="menuItems" @add-to-cart="addToCart" />
 
     <!-- Content Area -->
-    <v-main class="grey-lighten-5">
+    <v-main style="background-color: #f5f3ef">
       <!-- Loading State -->
       <v-container
         v-if="loading"
@@ -121,7 +121,7 @@ onMounted(async () => {
       >
         <v-progress-circular
           indeterminate
-          color="orange-darken-2"
+          color="#8B5C2A"
           size="48"
           class="mb-4"
         ></v-progress-circular>
@@ -134,7 +134,7 @@ onMounted(async () => {
         <p class="text-h6 text-error mb-4">{{ error }}</p>
         <v-btn
           @click="fetchMenuItems"
-          color="pink"
+          style="background-color: #8b5c2a; color: #fff"
           variant="flat"
           rounded="xl"
           class="px-6"
@@ -147,10 +147,10 @@ onMounted(async () => {
       <div v-else class="pb-16">
         <!-- Restaurant Info Banner -->
         <v-card
-          color="orange-darken-2"
           class="mx-4 mt-4 mb-6"
           rounded="xl"
           elevation="2"
+          style="background-color: #8b5c2a; color: #fff"
         >
           <v-card-text class="pa-6">
             <div class="d-flex align-center mb-3">
@@ -158,20 +158,22 @@ onMounted(async () => {
                 <v-img src="/public/assets/logo1.png" />
               </v-avatar>
               <div>
-                <h1 class="text-h5 font-weight-bold text-white mb-1">
+                <h1 class="text-h5 font-weight-bold mb-1" style="color: #fff">
                   {{ APP_CONFIG.APP_NAME }}
                 </h1>
                 <div class="d-flex align-center">
-                  <v-icon color="white" size="16" class="mr-1">mdi-star</v-icon>
-                  <span class="text-white text-body-2 mr-3">4.8</span>
-                  <v-icon color="white" size="16" class="mr-1"
+                  <v-icon color="#C19A6B" size="16" class="mr-1"
+                    >mdi-star</v-icon
+                  >
+                  <span class="text-body-2 mr-3" style="color: #ddd">4.8</span>
+                  <v-icon color="#C19A6B" size="16" class="mr-1"
                     >mdi-clock-outline</v-icon
                   >
-                  <span class="text-white text-body-2">3-5 min</span>
+                  <span class="text-body-2" style="color: #ddd">3-5 min</span>
                 </div>
               </div>
             </div>
-            <p class="text-white text-body-2 mb-0">
+            <p class="text-body-2 mb-0" style="color: #fff">
               Authentic Filipino cuisine • Fresh ingredients • Pick your meals
               and check out your order
             </p>
@@ -192,18 +194,19 @@ onMounted(async () => {
       grow
       class="px-4"
       height="80"
+      style="background-color: #c19a6b"
     >
       <v-btn
         @click="viewCart"
-        color="pink"
+        style="background-color: #8b5c2a; color: #fff"
         variant="flat"
         block
         size="large"
         rounded="xl"
-        class="text-white font-weight-bold ma-2"
+        class="font-weight-bold ma-2"
       >
         <template v-slot:prepend>
-          <v-icon>mdi-cart</v-icon>
+          <v-icon style="color: #c19a6b">mdi-cart</v-icon>
         </template>
         <span class="mx-2"
           >{{ cartItems.length }} item{{
@@ -215,7 +218,7 @@ onMounted(async () => {
           >{{ APP_CONFIG.CURRENCY }}{{ cartTotal.toFixed(2) }}</span
         >
         <template v-slot:append>
-          <v-icon>mdi-chevron-right</v-icon>
+          <v-icon style="color: #c19a6b">mdi-chevron-right</v-icon>
         </template>
       </v-btn>
     </v-bottom-navigation>
