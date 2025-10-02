@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router"; // <-- Import useRoute
+import { useRouter, useRoute } from "vue-router";
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
 import { useMenu } from "@/composables/useMenu";
-import { useTableStore } from "@/stores/tableStores"; // <-- Import new store
+import { useTableStore } from "@/stores/tableStores";
 import type { MenuItem } from "@/stores/menuData";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
@@ -12,7 +12,7 @@ import BestSellers from "@/components/common/customer/BestSellers.vue";
 import CategorySelector from "@/components/common/customer/CategorySelector.vue";
 
 const router = useRouter();
-const route = useRoute(); // <-- Initialize useRoute
+const route = useRoute();
 
 // Initialize the new table store
 const tableStore = useTableStore(); 
@@ -61,7 +61,6 @@ onMounted(async () => {
   } else if (tableStore.currentTableId === null) {
     // Optional: Log a warning or prompt the user if they navigate here directly
     console.warn("[Table Capture] Menu accessed without a table ID query parameter.");
-    // In a production app, you might show a modal asking them to manually enter their table number.
   }
   
   // Initialize theme first
@@ -109,22 +108,35 @@ onMounted(async () => {
 
       <!-- Menu Content -->
       <div v-else class="pb-16">
-        <!-- Table Identification Banner (New Feature) -->
-        <v-alert
+        <!-- Table Identification Banner - Updated Design -->
+        <v-card
           v-if="tableStore.currentTableId"
-          type="success"
-          variant="tonal"
-          class="mx-4 mt-4"
+          class="mx-4 mt-4 mb-4"
           rounded="xl"
-          style="border-left: 8px solid var(--v-theme-secondary);"
+          elevation="3"
+          :style="{ 
+            backgroundColor: 'white',
+            borderTop: `4px solid ${secondaryColor}`
+          }"
         >
-            <div class="d-flex align-center">
-                <v-icon size="24" class="mr-3" :style="{ color: secondaryColor }">mdi-table-chair</v-icon>
-                <span class="font-weight-medium">
-                    You are ordering from Table #<strong :style="{ color: primaryColor }">{{ tableStore.currentTableId }}</strong>.
-                </span>
+          <v-card-text class="pa-5">
+            <div class="d-flex align-center justify-center">
+              <v-icon 
+                size="28" 
+                class="mr-3" 
+                :style="{ color: secondaryColor }"
+              >
+                mdi-qrcode-scan
+              </v-icon>
+              <span class="text-h6 font-weight-medium">
+                You are ordering from 
+                <strong :style="{ color: primaryColor, fontSize: '1.3em' }">
+                  Table #{{ tableStore.currentTableId }}
+                </strong>.
+              </span>
             </div>
-        </v-alert>
+          </v-card-text>
+        </v-card>
 
         <!-- Restaurant Info Banner -->
         <v-card

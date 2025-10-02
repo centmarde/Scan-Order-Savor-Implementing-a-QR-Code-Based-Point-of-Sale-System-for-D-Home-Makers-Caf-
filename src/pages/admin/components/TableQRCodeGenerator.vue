@@ -80,7 +80,7 @@ onMounted(() => {
             </h1>
             <p class="text-subtitle-1 mb-6 text-grey-darken-2">
                 Scanning the code directs the customer to: 
-                <code class="font-weight-bold">{{ qrCodeStore.shopConfig.baseUrl }}/customer/menu?table=[ID]</code>
+                <code class="font-weight-bold">{{ qrCodeStore.shopConfig.baseUrl }}</code>
             </p>
 
             <!-- Configuration Card -->
@@ -159,10 +159,10 @@ onMounted(() => {
                 class="mt-8"
                 rounded="lg"
             >
-                <div class="d-flex align-center">
+                <!-- <div class="d-flex align-center">
                     <v-icon class="mr-3">mdi-printer</v-icon>
                     Tip: Use your browser's print function (<kbd>Ctrl+P</kbd> or <kbd>Cmd+P</kbd>) to print these cards for your tables. The layout is optimized for clean printing.
-                </div>
+                </div> -->
             </v-alert>
 
         </v-container>
