@@ -9,6 +9,7 @@ import {
 } from "@/utils/constants";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
+import BestSellers from "@/components/common/customer/BestSellers.vue";
 
 const router = useRouter();
 
@@ -74,22 +75,17 @@ const fetchMenuItems = async () => {
 };
 
 // Computed properties
-const bestSellers = computed(() => {
-  // Get top 3 items by sales
-  return menuItems.value
-    .filter((item) => item.sales > 0)
-    .sort((a, b) => b.sales - a.sales)
-    .slice(0, 3);
-});
-
 const cartTotal = computed(() => {
   return cartItems.value.reduce((total, item) => total + item.price, 0);
 });
 
 // Methods
 const getItemsByCategory = (categoryId: number) => {
-  // Since we're showing all items, return all non-best-seller items
-  const bestSellerIds = bestSellers.value.map((item) => item.id);
+  // Return all non-best-seller items for the "All Items" section
+  const bestSellerIds = menuItems.value
+    .sort((a, b) => (b.sales || 0) - (a.sales || 0))
+    .slice(0, 3)
+    .map((item) => item.id);
   return menuItems.value.filter((item) => !bestSellerIds.includes(item.id));
 };
 
@@ -184,76 +180,7 @@ onMounted(async () => {
         </v-card>
 
         <!-- Best Sellers Section -->
-        <v-container class="px-4 py-6">
-          <div class="d-flex align-center mb-4">
-            <v-icon color="orange" size="24" class="mr-2">mdi-fire</v-icon>
-            <h2 class="text-h6 font-weight-bold text-grey-darken-3">
-              Most Popular
-            </h2>
-          </div>
-
-          <v-row dense v-if="bestSellers.length > 0">
-            <v-col v-for="item in bestSellers" :key="item.id" cols="12">
-              <!-- FoodPanda-style horizontal item card -->
-              <v-card
-                elevation="1"
-                class="mb-3"
-                @click="addToCart(item)"
-                rounded="xl"
-                hover
-              >
-                <v-card-text class="pa-3">
-                  <div class="d-flex">
-                    <div class="flex-grow-1 pr-3">
-                      <h3
-                        class="text-body-1 font-weight-bold text-grey-darken-3 mb-1"
-                      >
-                        {{ item.name }}
-                      </h3>
-                      <p class="text-caption text-grey-darken-1 mb-2">
-                        {{ item.description }}
-                      </p>
-                      <span class="text-h6 font-weight-bold pink--text">
-                        {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
-                      </span>
-                    </div>
-                    <div class="d-flex flex-column align-center">
-                      <div class="position-relative mb-2">
-                        <v-img
-                          :src="item.image"
-                          :alt="item.name"
-                          width="80"
-                          height="80"
-                          cover
-                          class="rounded-lg"
-                        />
-                        <v-chip
-                          color="orange"
-                          size="x-small"
-                          class="position-absolute"
-                          style="top: -4px; left: -4px"
-                          variant="flat"
-                        >
-                          <v-icon size="12" class="mr-1">mdi-fire</v-icon>
-                          Popular
-                        </v-chip>
-                      </div>
-                      <v-btn
-                        @click.stop="addToCart(item)"
-                        icon
-                        size="small"
-                        color="orange-darken-2"
-                        variant="flat"
-                      >
-                        <v-icon size="20">mdi-plus</v-icon>
-                      </v-btn>
-                    </div>
-                  </div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-container>
+        <BestSellers :menu-items="menuItems" @add-to-cart="addToCart" />
 
         <!-- All Menu Items Section -->
         <v-container class="px-4 pb-6">
