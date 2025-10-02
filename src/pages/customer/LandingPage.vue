@@ -2,14 +2,12 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { getInventoryImageUrl } from "@/utils/constants";
-import { useThemeController } from "@/controller/themeController";
-import { useThemeColors } from "@/composables/useThemeColors";
+import { useTheme } from "@/composables/useTheme";
 
 const router = useRouter();
 
 // Theme setup
-const { fetchThemeData } = useThemeController();
-const { primaryColor, secondaryColor } = useThemeColors();
+const { initializeTheme, primaryColor, secondaryColor } = useTheme();
 
 // Carousel state
 const currentSlide = ref(0);
@@ -18,7 +16,7 @@ const currentSlide = ref(0);
 let intervalId: number | undefined;
 onMounted(async () => {
   // Initialize theme first
-  await fetchThemeData();
+  await initializeTheme();
 
   intervalId = window.setInterval(() => {
     currentSlide.value = (currentSlide.value + 1) % carouselImages.length;

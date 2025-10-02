@@ -2,8 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { APP_CONFIG } from "@/utils/constants";
-import { useThemeController } from "@/controller/themeController";
-import { useThemeColors } from "@/composables/useThemeColors";
+import { useTheme } from "@/composables/useTheme";
 import { useMenu } from "@/composables/useMenu";
 import type { MenuItem } from "@/stores/menuData";
 
@@ -14,8 +13,8 @@ import CategorySelector from "@/components/common/customer/CategorySelector.vue"
 const router = useRouter();
 
 // Theme setup
-const { fetchThemeData } = useThemeController();
-const { primaryColor, secondaryColor, backgroundColor } = useThemeColors();
+const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
+  useTheme();
 
 // Menu data management
 const { menuItems, loading, error, fetchMenuItems, clearError, hasItems } =
@@ -45,7 +44,7 @@ const viewCart = () => {
 // Lifecycle
 onMounted(async () => {
   // Initialize theme first
-  await fetchThemeData();
+  await initializeTheme();
   // Fetch menu items from Supabase
   await fetchMenuItems();
 });

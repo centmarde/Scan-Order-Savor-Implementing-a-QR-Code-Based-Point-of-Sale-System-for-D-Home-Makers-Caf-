@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
-import { useThemeColors } from "@/composables/useThemeColors";
+import { useTheme } from "@/composables/useTheme";
 import type { MenuItem } from "@/stores/menuData";
 import SearchDialog from "./SearchDialog.vue";
 
@@ -21,7 +21,7 @@ const emit = defineEmits<{
 const searchDialog = ref(false);
 
 // Theme colors
-const { primaryColor, textPrimary } = useThemeColors();
+const { primaryColor, textPrimary } = useTheme();
 
 // Methods
 const openSearchModal = () => {

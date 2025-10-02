@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
-import { useThemeColors } from "@/composables/useThemeColors";
+import { useTheme } from "@/composables/useTheme";
 import type { MenuItem } from "@/stores/menuData";
 
 // Props
@@ -22,7 +22,7 @@ const emit = defineEmits<{
 const searchQuery = ref("");
 
 // Theme colors
-const { primaryColor, secondaryColor, textPrimary } = useThemeColors();
+const { primaryColor, secondaryColor, textPrimary } = useTheme();
 
 // Computed properties
 const isOpen = computed({
