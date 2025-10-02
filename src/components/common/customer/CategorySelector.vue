@@ -89,11 +89,7 @@ const addToCart = (item: MenuItem) => {
         :key="category"
         @click="selectCategory(category)"
         :variant="selectedCategory === category ? 'flat' : 'outlined'"
-        :style="
-          selectedCategory === category
-            ? 'background-color: #8B5C2A; color: #fff;'
-            : 'background-color: #C19A6B; color: #8B5C2A; border: 1px solid #8B5C2A;'
-        "
+        :color="selectedCategory === category ? 'primary' : 'secondary'"
         class="flex-shrink-0"
         rounded="xl"
         size="default"
@@ -112,23 +108,12 @@ const addToCart = (item: MenuItem) => {
   <v-container class="px-4 pb-6">
     <div class="d-flex align-center justify-between mb-4">
       <div class="d-flex align-center">
-        <v-icon :style="'color: #8B5C2A;'" size="24" class="mr-2"
-          >mdi-food</v-icon
-        >
-        <h2 class="text-h6 font-weight-bold text-grey-darken-3">
+        <v-icon color="primary" size="24" class="mr-2">mdi-food</v-icon>
+        <h2 class="text-h6 font-weight-bold text-primary">
           {{ selectedCategory === "All" ? "All Items" : selectedCategory }}
         </h2>
       </div>
-      <v-chip
-        class="ml-2"
-        size="small"
-        variant="outlined"
-        style="
-          background-color: #8b5c2a;
-          color: white;
-          border: 1px solid #8b5c2a;
-        "
-      >
+      <v-chip class="ml-2" size="small" variant="flat" color="primary">
         {{ filteredMenuItems.length }} items
       </v-chip>
     </div>
@@ -148,10 +133,10 @@ const addToCart = (item: MenuItem) => {
         <v-card-text class="pa-3">
           <div class="d-flex">
             <div class="flex-grow-1 pr-3">
-              <h3 class="text-body-1 font-weight-bold text-grey-darken-3 mb-1">
+              <h3 class="text-body-1 font-weight-bold text-primary mb-1">
                 {{ item.name }}
               </h3>
-              <p class="text-caption text-grey-darken-1 mb-2">
+              <p class="text-caption text-secondary mb-2">
                 {{ item.description }}
               </p>
 
@@ -159,7 +144,7 @@ const addToCart = (item: MenuItem) => {
               <div v-if="item.quantity > 0 && item.quantity <= 5" class="mb-2">
                 <v-chip
                   size="x-small"
-                  color="8b5c2a"
+                  color="primary"
                   variant="flat"
                   class="text-white"
                 >
@@ -167,7 +152,7 @@ const addToCart = (item: MenuItem) => {
                 </v-chip>
               </div>
 
-              <span class="text-h6 font-weight-bold" style="color: #8b5c2a">
+              <span class="text-h6 font-weight-bold text-primary">
                 {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
               </span>
             </div>
@@ -196,7 +181,7 @@ const addToCart = (item: MenuItem) => {
                 @click.stop="addToCart(item)"
                 icon
                 size="small"
-                color="#8b5c2a"
+                color="primary"
                 variant="flat"
               >
                 <v-icon size="20">mdi-plus</v-icon>

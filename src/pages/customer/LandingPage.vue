@@ -79,11 +79,7 @@ const navigateToMenu = () => {
               <v-chip
                 v-for="(image, index) in carouselImages"
                 :key="index"
-                :style="{
-                  backgroundColor:
-                    currentSlide === index ? '#8B5C2A' : '#C19A6B',
-                  border: 'none',
-                }"
+                :color="currentSlide === index ? 'primary' : 'secondary'"
                 size="x-small"
                 variant="flat"
                 class="mx-1"
@@ -106,12 +102,10 @@ const navigateToMenu = () => {
               30K+ FOOD ITEMS HERE
             </div>
 
-            <h1 class="text-h3 font-weight-bold mb-2" style="color: #8b5c2a">
+            <h1 class="text-h3 font-weight-bold mb-2 text-primary">
               Enjoy Healthy
             </h1>
-            <h1 class="text-h3 font-weight-bold mb-8" style="color: #c19a6b">
-              Food
-            </h1>
+            <h1 class="text-h3 font-weight-bold mb-8 text-secondary">Food</h1>
           </div>
 
           <!-- Bottom section with button -->
@@ -122,8 +116,9 @@ const navigateToMenu = () => {
               rounded="xl"
               elevation="0"
               block
+              color="primary"
               class="text-white font-weight-bold text-capitalize"
-              style="height: 56px; background-color: #8b5c2a; border: none"
+              style="height: 56px"
             >
               Get Started
             </v-btn>

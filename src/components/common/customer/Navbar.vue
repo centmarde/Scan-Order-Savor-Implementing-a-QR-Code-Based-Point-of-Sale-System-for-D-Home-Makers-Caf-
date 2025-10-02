@@ -42,22 +42,22 @@ const addToCart = (item: MenuItem) => {
 
 <template>
   <v-app-bar elevation="1" color="white" class="px-4 border-b-sm">
-    <v-btn icon variant="text" @click="$router.go(-1)">
+    <v-btn icon variant="text" color="primary" @click="$router.go(-1)">
       <v-icon>mdi-arrow-left</v-icon>
     </v-btn>
 
     <v-spacer />
 
     <div class="text-center">
-      <h2 class="text-h6 font-weight-bold text-grey-darken-3">
+      <h2 class="text-h6 font-weight-bold text-primary">
         {{ APP_CONFIG.APP_NAME }}
       </h2>
-      <p class="text-caption text-grey-darken-1 ma-0">Menu</p>
+      <p class="text-caption text-secondary ma-0">Menu</p>
     </div>
 
     <v-spacer />
 
-    <v-btn icon variant="text" @click="openSearchModal">
+    <v-btn icon variant="text" color="primary" @click="openSearchModal">
       <v-icon>mdi-magnify</v-icon>
     </v-btn>
   </v-app-bar>

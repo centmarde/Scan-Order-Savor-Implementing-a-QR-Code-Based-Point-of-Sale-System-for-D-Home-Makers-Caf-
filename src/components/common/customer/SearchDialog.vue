@@ -73,15 +73,12 @@ watch(isOpen, (newValue) => {
   <v-dialog v-model="isOpen" max-width="500">
     <v-card rounded="xl">
       <v-card-title class="d-flex align-center pa-4">
-        <h3
-          class="text-h6 font-weight-bold"
-          style="color: #8b5c2a; flex-grow: 1"
-        >
+        <h3 class="text-h6 font-weight-bold text-primary flex-grow-1">
           Search Menu
         </h3>
         <v-spacer></v-spacer>
         <v-btn icon variant="text" size="small" @click="closeDialog">
-          <v-icon style="color: #c19a6b">mdi-close</v-icon>
+          <v-icon color="secondary">mdi-close</v-icon>
         </v-btn>
       </v-card-title>
 
@@ -97,14 +94,14 @@ watch(isOpen, (newValue) => {
           autofocus
           hide-details
           class="mb-4"
-          color="#C19A6B"
+          color="secondary"
         ></v-text-field>
 
         <!-- Search Results -->
         <div v-if="searchQuery.trim()">
           <!-- Results Found -->
           <div v-if="filteredSearchResults.length > 0">
-            <p class="text-body-2 mb-3" style="color: #8b5c2a">
+            <p class="text-body-2 mb-3 text-primary">
               {{ filteredSearchResults.length }} result{{
                 filteredSearchResults.length > 1 ? "s" : ""
               }}
@@ -126,12 +123,11 @@ watch(isOpen, (newValue) => {
                   <div class="d-flex">
                     <div style="flex-grow: 1" class="pr-3">
                       <h4
-                        class="text-body-1 font-weight-bold mb-1"
-                        style="color: #8b5c2a"
+                        class="text-body-1 font-weight-bold mb-1 text-primary"
                       >
                         {{ item.name }}
                       </h4>
-                      <p class="text-caption mb-2" style="color: #c19a6b">
+                      <p class="text-caption mb-2 text-secondary">
                         {{ item.description }}
                       </p>
 
@@ -141,11 +137,7 @@ watch(isOpen, (newValue) => {
                         size="x-small"
                         variant="flat"
                         class="mb-2"
-                        style="
-                          background-color: #8b5c2a;
-                          color: white;
-                          border: 1px solid #8b5c2a;
-                        "
+                        color="primary"
                       >
                         {{ item.category }}
                       </v-chip>
@@ -159,7 +151,7 @@ watch(isOpen, (newValue) => {
                           size="x-small"
                           variant="flat"
                           class="text-white"
-                          style="background-color: #8b5c2a"
+                          color="primary"
                         >
                           Only {{ item.quantity }} left
                         </v-chip>
@@ -167,10 +159,10 @@ watch(isOpen, (newValue) => {
 
                       <span
                         class="text-h6 font-weight-bold ml-2"
-                        :style="
+                        :class="
                           item.quantity === 0
-                            ? 'color: #C19A6B'
-                            : 'color: #8B5C2A'
+                            ? 'text-secondary'
+                            : 'text-primary'
                         "
                       >
                         {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
@@ -190,8 +182,7 @@ watch(isOpen, (newValue) => {
                         <v-overlay
                           v-if="item.quantity === 0"
                           contained
-                          class="d-flex align-center justify-center rounded-lg"
-                          style="background-color: #c19a6b"
+                          class="d-flex align-center justify-center rounded-lg bg-secondary"
                         >
                           <span
                             class="text-white text-caption font-weight-bold"
@@ -207,9 +198,9 @@ watch(isOpen, (newValue) => {
                         icon
                         size="small"
                         variant="flat"
-                        style="background-color: #8b5c2a; color: #fff"
+                        color="primary"
                       >
-                        <v-icon size="18" style="color: white">mdi-plus</v-icon>
+                        <v-icon size="18">mdi-plus</v-icon>
                       </v-btn>
                       <v-btn
                         v-else
@@ -217,7 +208,7 @@ watch(isOpen, (newValue) => {
                         icon
                         size="small"
                         variant="outlined"
-                        style="border-color: #c19a6b; color: #c19a6b"
+                        color="secondary"
                       >
                         <v-icon size="18">mdi-close</v-icon>
                       </v-btn>
@@ -230,11 +221,11 @@ watch(isOpen, (newValue) => {
 
           <!-- No Results -->
           <div v-else class="text-center py-8">
-            <v-icon size="64" class="mb-4" style="color: #c19a6b">
+            <v-icon size="64" class="mb-4" color="secondary">
               mdi-food-off
             </v-icon>
-            <p class="text-h6 mb-2" style="color: #8b5c2a">No Results Found</p>
-            <p class="text-body-2" style="color: #c19a6b">
+            <p class="text-h6 mb-2 text-primary">No Results Found</p>
+            <p class="text-body-2 text-secondary">
               Try searching with different keywords
             </p>
           </div>
@@ -242,13 +233,9 @@ watch(isOpen, (newValue) => {
 
         <!-- Search Prompt -->
         <div v-else class="text-center py-8">
-          <v-icon size="64" class="mb-4" style="color: #8b5c2a">
-            mdi-magnify
-          </v-icon>
-          <p class="text-h6 mb-2" style="color: #8b5c2a">
-            Search for Menu Items
-          </p>
-          <p class="text-body-2" style="color: #c19a6b">
+          <v-icon size="64" class="mb-4" color="primary"> mdi-magnify </v-icon>
+          <p class="text-h6 mb-2 text-primary">Search for Menu Items</p>
+          <p class="text-body-2 text-secondary">
             Enter the name of a meal to find what you're looking for
           </p>
         </div>
