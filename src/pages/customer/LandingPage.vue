@@ -1,3 +1,47 @@
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+// Carousel state
+const currentSlide = ref(0);
+
+// Auto-advance carousel every 3 seconds
+let intervalId: number | undefined;
+onMounted(() => {
+  intervalId = window.setInterval(() => {
+    currentSlide.value = (currentSlide.value + 1) % carouselImages.length;
+  }, 5000);
+});
+onUnmounted(() => {
+  if (intervalId) window.clearInterval(intervalId);
+});
+
+// Carousel images
+const carouselImages = [
+  {
+    src: "/images/adobo.jpg",
+    alt: "Adobo Food",
+  },
+  {
+    src: "/images/sinigang.jpg", // You can replace these with different images
+    alt: "Delicious Meal 2",
+  },
+  {
+    src: "/images/caldereta.png", // You can replace these with different images
+    alt: "Healthy Food 3",
+  },
+];
+
+/**
+ * Navigate to the menu page
+ */
+const navigateToMenu = () => {
+  router.push("/customer/menu");
+};
+</script>
+
 <template>
   <v-container class="pa-0 fill-height" fluid>
     <v-row justify="center" align="center" class="ma-0 pa-0 fill-height">
@@ -85,47 +129,3 @@
     </v-row>
   </v-container>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
-
-// Carousel state
-const currentSlide = ref(0);
-
-// Auto-advance carousel every 3 seconds
-let intervalId: number | undefined;
-onMounted(() => {
-  intervalId = window.setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % carouselImages.length;
-  }, 5000);
-});
-onUnmounted(() => {
-  if (intervalId) window.clearInterval(intervalId);
-});
-
-// Carousel images
-const carouselImages = [
-  {
-    src: "/images/adobo.jpg",
-    alt: "Adobo Food",
-  },
-  {
-    src: "/images/sinigang.jpg", // You can replace these with different images
-    alt: "Delicious Meal 2",
-  },
-  {
-    src: "/images/caldereta.png", // You can replace these with different images
-    alt: "Healthy Food 3",
-  },
-];
-
-/**
- * Navigate to the menu page
- */
-const navigateToMenu = () => {
-  router.push("/customer/menu");
-};
-</script>

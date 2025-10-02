@@ -1,3 +1,111 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { supabase } from "@/lib/supabase";
+
+const router = useRouter();
+
+// Data structures
+interface MenuItem {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  quantity: number;
+  sales: number;
+  created_at: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
+// Reactive data
+const selectedCategory = ref<number | null>(null);
+const cartItems = ref<MenuItem[]>([]);
+const menuItems = ref<MenuItem[]>([]);
+const loading = ref(true);
+const error = ref<string | null>(null);
+
+// Categories data (keeping static for now since they're not in the database)
+const categories = ref<Category[]>([
+  {
+    id: 1,
+    name: "All Items",
+    description: "View all available menu items",
+    icon: "mdi-food",
+    color: "primary",
+  },
+]);
+
+// Fetch menu items from Supabase
+const fetchMenuItems = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    const { data, error: fetchError } = await supabase
+      .from("menu")
+      .select("*")
+      .order("name");
+
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    menuItems.value = data || [];
+  } catch (err) {
+    console.error("Error fetching menu items:", err);
+    error.value = "Failed to load menu items. Please try again later.";
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Computed properties
+const bestSellers = computed(() => {
+  // Get top 3 items by sales
+  return menuItems.value
+    .filter((item) => item.sales > 0)
+    .sort((a, b) => b.sales - a.sales)
+    .slice(0, 3);
+});
+
+const cartTotal = computed(() => {
+  return cartItems.value.reduce((total, item) => total + item.price, 0);
+});
+
+// Methods
+const getItemsByCategory = (categoryId: number) => {
+  // Since we're showing all items, return all non-best-seller items
+  const bestSellerIds = bestSellers.value.map((item) => item.id);
+  return menuItems.value.filter((item) => !bestSellerIds.includes(item.id));
+};
+
+const addToCart = (item: MenuItem) => {
+  cartItems.value.push({ ...item });
+  // You could add a toast notification here
+};
+
+const viewCart = () => {
+  // Navigate to cart page (you'll need to create this)
+  router.push("/customer/cart");
+};
+
+// Lifecycle
+onMounted(async () => {
+  // Set first category as default
+  selectedCategory.value = categories.value[0]?.id || null;
+  // Fetch menu items from Supabase
+  await fetchMenuItems();
+});
+</script>
+
 <template>
   <v-container fluid class="pa-0">
     <!-- Header Section -->
@@ -238,111 +346,3 @@
     </v-bottom-navigation>
   </v-container>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { supabase } from "@/lib/supabase";
-
-const router = useRouter();
-
-// Data structures
-interface MenuItem {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  quantity: number;
-  sales: number;
-  created_at: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-}
-
-// Reactive data
-const selectedCategory = ref<number | null>(null);
-const cartItems = ref<MenuItem[]>([]);
-const menuItems = ref<MenuItem[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
-
-// Categories data (keeping static for now since they're not in the database)
-const categories = ref<Category[]>([
-  {
-    id: 1,
-    name: "All Items",
-    description: "View all available menu items",
-    icon: "mdi-food",
-    color: "primary",
-  },
-]);
-
-// Fetch menu items from Supabase
-const fetchMenuItems = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
-
-    const { data, error: fetchError } = await supabase
-      .from("menu")
-      .select("*")
-      .order("name");
-
-    if (fetchError) {
-      throw fetchError;
-    }
-
-    menuItems.value = data || [];
-  } catch (err) {
-    console.error("Error fetching menu items:", err);
-    error.value = "Failed to load menu items. Please try again later.";
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Computed properties
-const bestSellers = computed(() => {
-  // Get top 3 items by sales
-  return menuItems.value
-    .filter((item) => item.sales > 0)
-    .sort((a, b) => b.sales - a.sales)
-    .slice(0, 3);
-});
-
-const cartTotal = computed(() => {
-  return cartItems.value.reduce((total, item) => total + item.price, 0);
-});
-
-// Methods
-const getItemsByCategory = (categoryId: number) => {
-  // Since we're showing all items, return all non-best-seller items
-  const bestSellerIds = bestSellers.value.map((item) => item.id);
-  return menuItems.value.filter((item) => !bestSellerIds.includes(item.id));
-};
-
-const addToCart = (item: MenuItem) => {
-  cartItems.value.push({ ...item });
-  // You could add a toast notification here
-};
-
-const viewCart = () => {
-  // Navigate to cart page (you'll need to create this)
-  router.push("/customer/cart");
-};
-
-// Lifecycle
-onMounted(async () => {
-  // Set first category as default
-  selectedCategory.value = categories.value[0]?.id || null;
-  // Fetch menu items from Supabase
-  await fetchMenuItems();
-});
-</script>
