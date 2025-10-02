@@ -37,8 +37,12 @@ const addToCart = (item: MenuItem) => {
   // You could add a toast notification here
 };
 
-const removeFromCart = (index: number) => {
-  cartItems.value.splice(index, 1);
+const removeFromCart = (itemId: number) => {
+  // Find the first occurrence of the item with this ID and remove it
+  const index = cartItems.value.findIndex((item) => item.id === itemId);
+  if (index !== -1) {
+    cartItems.value.splice(index, 1);
+  }
 };
 
 const viewCart = () => {

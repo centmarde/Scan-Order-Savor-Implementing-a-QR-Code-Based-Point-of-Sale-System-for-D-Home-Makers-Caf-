@@ -16,13 +16,27 @@ const emit = defineEmits<{
   viewCart: [];
   cancelOrder: [];
   reviewOrder: [];
-  removeItem: [index: number];
+  removeItem: [itemId: number];
 }>();
 
 // Theme colors
 const { primaryColor, secondaryColor } = useTheme();
 
 // Computed properties
+const groupedCartItems = computed(() => {
+  const grouped: { [key: number]: { item: MenuItem; quantity: number } } = {};
+
+  props.cartItems.forEach((item) => {
+    if (grouped[item.id]) {
+      grouped[item.id].quantity += 1;
+    } else {
+      grouped[item.id] = { item, quantity: 1 };
+    }
+  });
+
+  return Object.values(grouped);
+});
+
 const cartTotal = computed(() => {
   return props.cartItems.reduce(
     (total: number, item: MenuItem) => total + item.price,
@@ -42,8 +56,8 @@ const reviewOrder = () => {
   emit("reviewOrder");
 };
 
-const removeItem = (index: number) => {
-  emit("removeItem", index);
+const removeItem = (itemId: number) => {
+  emit("removeItem", itemId);
 };
 </script>
 
@@ -96,8 +110,8 @@ const removeItem = (index: number) => {
             style="overflow-y: auto; background: transparent"
           >
             <v-list-item
-              v-for="(item, index) in cartItems"
-              :key="`${item.id}-${index}`"
+              v-for="groupedItem in groupedCartItems"
+              :key="groupedItem.item.id"
               class="px-4 py-3 mb-2 rounded-lg elevation-1"
               :style="{
                 backgroundColor: '#ffffff',
@@ -106,16 +120,37 @@ const removeItem = (index: number) => {
               }"
             >
               <template v-slot:prepend>
-                <v-avatar
-                  size="40"
-                  class="mr-3 elevation-2"
-                  :style="{
-                    border: '2px solid #ffffff',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  }"
-                >
-                  <v-img :src="item.image" :alt="item.name" cover />
-                </v-avatar>
+                <div class="position-relative mr-3">
+                  <v-avatar
+                    size="40"
+                    class="elevation-2"
+                    :style="{
+                      border: '2px solid #ffffff',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    }"
+                  >
+                    <v-img
+                      :src="groupedItem.item.image"
+                      :alt="groupedItem.item.name"
+                      cover
+                    />
+                  </v-avatar>
+                  <v-chip
+                    v-if="groupedItem.quantity > 1"
+                    size="x-small"
+                    class="position-absolute"
+                    :style="{
+                      top: '-5px',
+                      right: '-5px',
+                      backgroundColor: primaryColor,
+                      color: 'white',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                    }"
+                  >
+                    {{ groupedItem.quantity }}x
+                  </v-chip>
+                </div>
               </template>
 
               <v-list-item-content>
@@ -123,27 +158,43 @@ const removeItem = (index: number) => {
                   class="text-body-2 font-weight-bold mb-1"
                   :style="{ color: '#2D2D2D' }"
                 >
-                  {{ item.name }}
+                  {{ groupedItem.item.name }}
+                  <span
+                    v-if="groupedItem.quantity > 1"
+                    class="text-caption ml-1"
+                    :style="{ color: primaryColor, fontWeight: 'bold' }"
+                  >
+                    ({{ groupedItem.quantity }}x)
+                  </span>
                 </v-list-item-title>
                 <v-list-item-subtitle
                   class="text-caption font-weight-medium"
                   :style="{ color: primaryColor }"
                 >
-                  {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
+                  {{ APP_CONFIG.CURRENCY
+                  }}{{ groupedItem.item.price.toFixed(2) }} each
+                  <span v-if="groupedItem.quantity > 1" class="ml-1">
+                    • Total: {{ APP_CONFIG.CURRENCY
+                    }}{{
+                      (groupedItem.item.price * groupedItem.quantity).toFixed(2)
+                    }}
+                  </span>
                 </v-list-item-subtitle>
               </v-list-item-content>
 
               <template v-slot:append>
-                <v-btn
-                  @click="removeItem(index)"
-                  icon
-                  size="small"
-                  variant="text"
-                  class="ml-2"
-                  :style="{ color: '#dc3545' }"
-                >
-                  <v-icon size="18">mdi-close-circle</v-icon>
-                </v-btn>
+                <div class="d-flex align-center">
+                  <v-btn
+                    @click="removeItem(groupedItem.item.id)"
+                    icon
+                    size="small"
+                    variant="text"
+                    class="ml-2"
+                    :style="{ color: '#dc3545' }"
+                  >
+                    <v-icon size="18">mdi-minus-circle</v-icon>
+                  </v-btn>
+                </div>
               </template>
             </v-list-item>
           </v-list>
