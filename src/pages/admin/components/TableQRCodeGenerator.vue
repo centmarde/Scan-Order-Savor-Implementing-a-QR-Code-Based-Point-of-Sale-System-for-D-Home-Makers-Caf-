@@ -152,18 +152,18 @@ onMounted(() => {
             </v-row>
             
             <!-- Print Tip -->
-            <v-alert
+            <!-- <v-alert
                 v-if="qrCodeStore.tableIds.length > 0"
                 type="info"
                 variant="tonal"
                 class="mt-8"
                 rounded="lg"
             >
-                <!-- <div class="d-flex align-center">
+                <div class="d-flex align-center">
                     <v-icon class="mr-3">mdi-printer</v-icon>
                     Tip: Use your browser's print function (<kbd>Ctrl+P</kbd> or <kbd>Cmd+P</kbd>) to print these cards for your tables. The layout is optimized for clean printing.
-                </div> -->
-            </v-alert>
+                </div>
+            </v-alert> -->
 
         </v-container>
     </v-app>
