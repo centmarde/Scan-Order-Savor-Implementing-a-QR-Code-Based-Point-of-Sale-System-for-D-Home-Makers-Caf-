@@ -1,3 +1,44 @@
+<script setup lang="ts">
+import { computed } from "vue";
+import { APP_CONFIG } from "@/utils/constants";
+
+// Props
+interface MenuItem {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  quantity: number;
+  sales: number;
+  created_at: string;
+}
+
+interface Props {
+  menuItems: MenuItem[];
+}
+
+const props = defineProps<Props>();
+
+// Emits
+const emit = defineEmits<{
+  addToCart: [item: MenuItem];
+}>();
+
+// Computed properties
+const bestSellers = computed(() => {
+  // Get top 3 items by sales (including items with 0 sales if needed)
+  return props.menuItems
+    .sort((a, b) => (b.sales || 0) - (a.sales || 0))
+    .slice(0, 3);
+});
+
+// Methods
+const addToCart = (item: MenuItem) => {
+  emit("addToCart", item);
+};
+</script>
+
 <template>
   <!-- Best Sellers Section -->
   <v-container class="px-4 py-6">
@@ -69,44 +110,3 @@
     </v-row>
   </v-container>
 </template>
-
-<script setup lang="ts">
-import { computed } from "vue";
-import { APP_CONFIG } from "@/utils/constants";
-
-// Props
-interface MenuItem {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  quantity: number;
-  sales: number;
-  created_at: string;
-}
-
-interface Props {
-  menuItems: MenuItem[];
-}
-
-const props = defineProps<Props>();
-
-// Emits
-const emit = defineEmits<{
-  addToCart: [item: MenuItem];
-}>();
-
-// Computed properties
-const bestSellers = computed(() => {
-  // Get top 3 items by sales (including items with 0 sales if needed)
-  return props.menuItems
-    .sort((a, b) => (b.sales || 0) - (a.sales || 0))
-    .slice(0, 3);
-});
-
-// Methods
-const addToCart = (item: MenuItem) => {
-  emit("addToCart", item);
-};
-</script>

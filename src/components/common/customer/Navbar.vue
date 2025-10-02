@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { APP_CONFIG } from "@/utils/constants";
+</script>
+
 <template>
   <v-app-bar elevation="1" color="white" class="px-4 border-b-sm">
     <v-btn icon variant="text" @click="$router.go(-1)">
@@ -20,7 +24,3 @@
     </v-btn>
   </v-app-bar>
 </template>
-
-<script setup lang="ts">
-import { APP_CONFIG } from "@/utils/constants";
-</script>
