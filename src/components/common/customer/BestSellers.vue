@@ -68,7 +68,7 @@ const addToCart = (item: MenuItem) => {
                 <p class="text-caption text-grey-darken-1 mb-2">
                   {{ item.description }}
                 </p>
-                <span class="text-h6 font-weight-bold pink--text">
+                <span class="text-h6 font-weight-bold text-orange-darken-2">
                   {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
                 </span>
               </div>
