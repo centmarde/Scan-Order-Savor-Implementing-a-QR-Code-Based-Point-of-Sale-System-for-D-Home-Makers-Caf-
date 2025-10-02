@@ -48,6 +48,13 @@ const carouselImages = [
 const navigateToMenu = () => {
   router.push("/customer/menu");
 };
+
+/**
+ * Navigate to employee access
+ */
+const navigateToEmployeeAccess = () => {
+  router.push("/hero");
+};
 </script>
 
 <template>
@@ -132,13 +139,24 @@ const navigateToMenu = () => {
               rounded="xl"
               elevation="0"
               block
-              class="text-white font-weight-bold text-capitalize"
+              class="text-white font-weight-bold text-capitalize mb-4"
               :style="{
                 backgroundColor: primaryColor,
                 height: '56px',
               }"
             >
               Get Started
+            </v-btn>
+
+            <!-- Employee Access Button -->
+            <v-btn
+              @click="navigateToEmployeeAccess"
+              variant="text"
+              size="small"
+              class="text-caption font-weight-medium text-lowercase"
+              :style="{ color: secondaryColor }"
+            >
+              Employee Access
             </v-btn>
           </div>
         </div>
