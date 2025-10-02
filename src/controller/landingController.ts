@@ -1,6 +1,6 @@
 import axios from "axios";
 import { ref, type Ref } from "vue";
-import { useThemeController } from "@/controller/themeController";
+import { useTheme } from "@/composables/useTheme";
 
 export interface Feature {
   title: string;
@@ -135,7 +135,7 @@ export function useLandingController(): LandingController {
   const data = ref<LandingData | null>(null);
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
-  const { fetchThemeData } = useThemeController();
+  const { initializeTheme } = useTheme();
 
   const fetchLandingData = async (): Promise<void> => {
     try {
@@ -156,7 +156,7 @@ export function useLandingController(): LandingController {
 
       // Initialize theme from external-page.json via theme controller
       if (data.value?.theme) {
-        await fetchThemeData();
+        await initializeTheme();
       }
     } catch (error_) {
       console.error("Failed to fetch landing data:", error_);
