@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
+import { useThemeColors } from "@/composables/useThemeColors";
 import SearchDialog from "./SearchDialog.vue";
 
 // Props
@@ -30,6 +31,9 @@ const emit = defineEmits<{
 // Reactive data
 const searchDialog = ref(false);
 
+// Theme colors
+const { primaryColor, textPrimary } = useThemeColors();
+
 // Methods
 const openSearchModal = () => {
   searchDialog.value = true;
@@ -42,22 +46,32 @@ const addToCart = (item: MenuItem) => {
 
 <template>
   <v-app-bar elevation="1" color="white" class="px-4 border-b-sm">
-    <v-btn icon variant="text" color="primary" @click="$router.go(-1)">
+    <v-btn
+      icon
+      variant="text"
+      :style="{ color: primaryColor }"
+      @click="$router.go(-1)"
+    >
       <v-icon>mdi-arrow-left</v-icon>
     </v-btn>
 
     <v-spacer />
 
     <div class="text-center">
-      <h2 class="text-h6 font-weight-bold text-primary">
+      <h2 class="text-h6 font-weight-bold" :style="{ color: primaryColor }">
         {{ APP_CONFIG.APP_NAME }}
       </h2>
-      <p class="text-caption text-secondary ma-0">Menu</p>
+      <p class="text-caption ma-0" :style="{ color: textPrimary }">Menu</p>
     </div>
 
     <v-spacer />
 
-    <v-btn icon variant="text" color="primary" @click="openSearchModal">
+    <v-btn
+      icon
+      variant="text"
+      :style="{ color: primaryColor }"
+      @click="openSearchModal"
+    >
       <v-icon>mdi-magnify</v-icon>
     </v-btn>
   </v-app-bar>

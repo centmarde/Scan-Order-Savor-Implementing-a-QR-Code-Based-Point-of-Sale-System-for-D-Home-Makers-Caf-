@@ -7,12 +7,18 @@ import {
   getInventoryImageUrl,
   APP_CONFIG,
 } from "@/utils/constants";
+import { useThemeController } from "@/controller/themeController";
+import { useThemeColors } from "@/composables/useThemeColors";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
 import BestSellers from "@/components/common/customer/BestSellers.vue";
 import CategorySelector from "@/components/common/customer/CategorySelector.vue";
 
 const router = useRouter();
+
+// Theme setup
+const { fetchThemeData } = useThemeController();
+const { primaryColor, secondaryColor, backgroundColor } = useThemeColors();
 
 // Data structures
 interface MenuItem {
@@ -102,6 +108,8 @@ const viewCart = () => {
 
 // Lifecycle
 onMounted(async () => {
+  // Initialize theme first
+  await fetchThemeData();
   // Fetch menu items from Supabase
   await fetchMenuItems();
 });
@@ -150,7 +158,7 @@ onMounted(async () => {
           class="mx-4 mt-4 mb-6"
           rounded="xl"
           elevation="2"
-          color="primary"
+          :style="{ backgroundColor: primaryColor }"
         >
           <v-card-text class="pa-6">
             <div class="d-flex align-center mb-3">
@@ -162,11 +170,17 @@ onMounted(async () => {
                   {{ APP_CONFIG.APP_NAME }}
                 </h1>
                 <div class="d-flex align-center">
-                  <v-icon color="secondary" size="16" class="mr-1"
+                  <v-icon
+                    :style="{ color: secondaryColor }"
+                    size="16"
+                    class="mr-1"
                     >mdi-star</v-icon
                   >
                   <span class="text-body-2 mr-3 text-grey-lighten-2">4.8</span>
-                  <v-icon color="secondary" size="16" class="mr-1"
+                  <v-icon
+                    :style="{ color: secondaryColor }"
+                    size="16"
+                    class="mr-1"
                     >mdi-clock-outline</v-icon
                   >
                   <span class="text-body-2 text-grey-lighten-2">3-5 min</span>
@@ -198,15 +212,15 @@ onMounted(async () => {
     >
       <v-btn
         @click="viewCart"
-        color="primary"
         variant="flat"
         block
         size="large"
         rounded="xl"
         class="font-weight-bold ma-2"
+        :style="{ backgroundColor: primaryColor, color: 'white' }"
       >
         <template v-slot:prepend>
-          <v-icon color="secondary">mdi-cart</v-icon>
+          <v-icon :style="{ color: secondaryColor }">mdi-cart</v-icon>
         </template>
         <span class="mx-2"
           >{{ cartItems.length }} item{{
@@ -218,7 +232,7 @@ onMounted(async () => {
           >{{ APP_CONFIG.CURRENCY }}{{ cartTotal.toFixed(2) }}</span
         >
         <template v-slot:append>
-          <v-icon color="secondary">mdi-chevron-right</v-icon>
+          <v-icon :style="{ color: secondaryColor }">mdi-chevron-right</v-icon>
         </template>
       </v-btn>
     </v-bottom-navigation>

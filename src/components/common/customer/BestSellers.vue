@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
+import { useThemeColors } from "@/composables/useThemeColors";
 
 // Props
 interface MenuItem {
@@ -25,6 +26,9 @@ const emit = defineEmits<{
   addToCart: [item: MenuItem];
 }>();
 
+// Theme colors
+const { primaryColor, secondaryColor, textPrimary } = useThemeColors();
+
 // Computed properties
 const bestSellers = computed(() => {
   // Get top 3 items by sales (including items with 0 sales if needed)
@@ -43,8 +47,12 @@ const addToCart = (item: MenuItem) => {
   <!-- Best Sellers Section -->
   <v-container class="px-4 py-6">
     <div class="d-flex align-center mb-4">
-      <v-icon color="primary" size="24" class="mr-2">mdi-fire</v-icon>
-      <h2 class="text-h6 font-weight-bold text-primary">Most Popular</h2>
+      <v-icon :style="{ color: primaryColor }" size="24" class="mr-2"
+        >mdi-fire</v-icon
+      >
+      <h2 class="text-h6 font-weight-bold" :style="{ color: primaryColor }">
+        Most Popular
+      </h2>
     </div>
 
     <v-row dense v-if="bestSellers.length > 0">
@@ -61,14 +69,18 @@ const addToCart = (item: MenuItem) => {
             <div class="d-flex">
               <div class="flex-grow-1 pr-3">
                 <h3
-                  class="text-body-1 font-weight-bold text-grey-darken-3 mb-1"
+                  class="text-body-1 font-weight-bold mb-1"
+                  :style="{ color: textPrimary }"
                 >
                   {{ item.name }}
                 </h3>
-                <p class="text-caption text-grey-darken-1 mb-2">
+                <p class="text-caption mb-2" :style="{ color: secondaryColor }">
                   {{ item.description }}
                 </p>
-                <span class="text-h6 font-weight-bold text-primary">
+                <span
+                  class="text-h6 font-weight-bold"
+                  :style="{ color: primaryColor }"
+                >
                   {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
                 </span>
               </div>
@@ -86,7 +98,7 @@ const addToCart = (item: MenuItem) => {
                     size="x-small"
                     class="position-absolute"
                     style="top: -4px; left: -4px"
-                    color="primary"
+                    :style="{ backgroundColor: primaryColor, color: 'white' }"
                     variant="flat"
                   >
                     <v-icon size="12" class="mr-1">mdi-fire</v-icon>
@@ -97,8 +109,8 @@ const addToCart = (item: MenuItem) => {
                   @click.stop="addToCart(item)"
                   icon
                   size="small"
-                  color="primary"
                   variant="flat"
+                  :style="{ backgroundColor: primaryColor, color: 'white' }"
                 >
                   <v-icon size="20">mdi-plus</v-icon>
                 </v-btn>

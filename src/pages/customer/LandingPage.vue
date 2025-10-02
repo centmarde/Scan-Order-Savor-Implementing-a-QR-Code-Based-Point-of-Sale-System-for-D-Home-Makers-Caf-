@@ -2,15 +2,24 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { getInventoryImageUrl } from "@/utils/constants";
+import { useThemeController } from "@/controller/themeController";
+import { useThemeColors } from "@/composables/useThemeColors";
 
 const router = useRouter();
+
+// Theme setup
+const { fetchThemeData } = useThemeController();
+const { primaryColor, secondaryColor } = useThemeColors();
 
 // Carousel state
 const currentSlide = ref(0);
 
 // Auto-advance carousel every 3 seconds
 let intervalId: number | undefined;
-onMounted(() => {
+onMounted(async () => {
+  // Initialize theme first
+  await fetchThemeData();
+
   intervalId = window.setInterval(() => {
     currentSlide.value = (currentSlide.value + 1) % carouselImages.length;
   }, 5000);
@@ -79,16 +88,17 @@ const navigateToMenu = () => {
               <v-chip
                 v-for="(image, index) in carouselImages"
                 :key="index"
-                :color="currentSlide === index ? 'primary' : 'secondary'"
+                :style="{
+                  backgroundColor:
+                    currentSlide === index ? primaryColor : secondaryColor,
+                  width: '8px',
+                  height: '8px',
+                  minWidth: '8px',
+                  borderRadius: '50%',
+                }"
                 size="x-small"
                 variant="flat"
                 class="mx-1"
-                style="
-                  width: 8px;
-                  height: 8px;
-                  min-width: 8px;
-                  border-radius: 50%;
-                "
                 @click="currentSlide = index"
               ></v-chip>
             </div>
@@ -102,10 +112,18 @@ const navigateToMenu = () => {
               30K+ FOOD ITEMS HERE
             </div>
 
-            <h1 class="text-h3 font-weight-bold mb-2 text-primary">
+            <h1
+              class="text-h3 font-weight-bold mb-2"
+              :style="{ color: primaryColor }"
+            >
               Enjoy Healthy
             </h1>
-            <h1 class="text-h3 font-weight-bold mb-8 text-secondary">Food</h1>
+            <h1
+              class="text-h3 font-weight-bold mb-8"
+              :style="{ color: secondaryColor }"
+            >
+              Food
+            </h1>
           </div>
 
           <!-- Bottom section with button -->
@@ -116,9 +134,11 @@ const navigateToMenu = () => {
               rounded="xl"
               elevation="0"
               block
-              color="primary"
               class="text-white font-weight-bold text-capitalize"
-              style="height: 56px"
+              :style="{
+                backgroundColor: primaryColor,
+                height: '56px',
+              }"
             >
               Get Started
             </v-btn>

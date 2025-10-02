@@ -5,40 +5,29 @@
  */
 
 // Composables
-import { createVuetify } from 'vuetify'
+import { createVuetify } from "vuetify";
 
 // Styles
-import '@mdi/font/css/materialdesignicons.css'
-import 'vuetify/styles'
+import "@mdi/font/css/materialdesignicons.css";
+import "vuetify/styles";
 
-// Create vuetify instance with minimal initial configuration
-// Theme will be loaded dynamically from external-page.json
+// Create vuetify instance with minimal configuration
+// Theme is handled by themeController.ts → base.ts → UI components flow
 const vuetify = createVuetify({
   theme: {
-    defaultTheme: 'light',
+    defaultTheme: "light",
     themes: {
       light: {
         dark: false,
         colors: {
-          // Temporary minimal theme - will be replaced by dynamic loading
-          primary: '#1976D2',
-          secondary: '#424242',
-        },
-      },
-      dark: {
-        dark: true,
-        colors: {
-          // Temporary minimal theme - will be replaced by dynamic loading
-          primary: '#2196F3',
-          secondary: '#616161',
+          // Minimal colors - actual theming handled by themeController
+          primary: "#000000",
+          secondary: "#666666",
         },
       },
     },
   },
-})
-
-// Export vuetify instance for dynamic theme updates
-export { vuetify }
+});
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
-export default vuetify
+export default vuetify;

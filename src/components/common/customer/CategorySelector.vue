@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
+import { useThemeColors } from "@/composables/useThemeColors";
 
 // Data structures
 interface MenuItem {
@@ -29,6 +30,9 @@ const emit = defineEmits<{
 
 // Reactive data
 const selectedCategory = ref<string>("All");
+
+// Theme colors
+const { primaryColor, secondaryColor, textPrimary } = useThemeColors();
 
 // Computed properties
 const allCategories = computed(() => {
@@ -89,7 +93,11 @@ const addToCart = (item: MenuItem) => {
         :key="category"
         @click="selectCategory(category)"
         :variant="selectedCategory === category ? 'flat' : 'outlined'"
-        :color="selectedCategory === category ? 'primary' : 'secondary'"
+        :style="
+          selectedCategory === category
+            ? { backgroundColor: primaryColor, color: 'white' }
+            : { borderColor: secondaryColor, color: secondaryColor }
+        "
         class="flex-shrink-0"
         rounded="xl"
         size="default"
@@ -108,12 +116,19 @@ const addToCart = (item: MenuItem) => {
   <v-container class="px-4 pb-6">
     <div class="d-flex align-center justify-between mb-4">
       <div class="d-flex align-center">
-        <v-icon color="primary" size="24" class="mr-2">mdi-food</v-icon>
-        <h2 class="text-h6 font-weight-bold text-primary">
+        <v-icon :style="{ color: primaryColor }" size="24" class="mr-2"
+          >mdi-food</v-icon
+        >
+        <h2 class="text-h6 font-weight-bold" :style="{ color: primaryColor }">
           {{ selectedCategory === "All" ? "All Items" : selectedCategory }}
         </h2>
       </div>
-      <v-chip class="ml-2" size="small" variant="flat" color="primary">
+      <v-chip
+        class="ml-2"
+        size="small"
+        variant="flat"
+        :style="{ backgroundColor: primaryColor, color: 'white' }"
+      >
         {{ filteredMenuItems.length }} items
       </v-chip>
     </div>
@@ -133,10 +148,13 @@ const addToCart = (item: MenuItem) => {
         <v-card-text class="pa-3">
           <div class="d-flex">
             <div class="flex-grow-1 pr-3">
-              <h3 class="text-body-1 font-weight-bold text-primary mb-1">
+              <h3
+                class="text-body-1 font-weight-bold mb-1"
+                :style="{ color: primaryColor }"
+              >
                 {{ item.name }}
               </h3>
-              <p class="text-caption text-secondary mb-2">
+              <p class="text-caption mb-2" :style="{ color: secondaryColor }">
                 {{ item.description }}
               </p>
 
@@ -144,15 +162,18 @@ const addToCart = (item: MenuItem) => {
               <div v-if="item.quantity > 0 && item.quantity <= 5" class="mb-2">
                 <v-chip
                   size="x-small"
-                  color="primary"
                   variant="flat"
                   class="text-white"
+                  :style="{ backgroundColor: primaryColor }"
                 >
                   Only {{ item.quantity }} left
                 </v-chip>
               </div>
 
-              <span class="text-h6 font-weight-bold text-primary">
+              <span
+                class="text-h6 font-weight-bold"
+                :style="{ color: primaryColor }"
+              >
                 {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
               </span>
             </div>
@@ -181,12 +202,19 @@ const addToCart = (item: MenuItem) => {
                 @click.stop="addToCart(item)"
                 icon
                 size="small"
-                color="primary"
                 variant="flat"
+                :style="{ backgroundColor: primaryColor, color: 'white' }"
               >
                 <v-icon size="20">mdi-plus</v-icon>
               </v-btn>
-              <v-btn v-else disabled icon size="small" variant="outlined">
+              <v-btn
+                v-else
+                disabled
+                icon
+                size="small"
+                variant="outlined"
+                :style="{ borderColor: secondaryColor, color: secondaryColor }"
+              >
                 <v-icon size="20">mdi-close</v-icon>
               </v-btn>
             </div>
@@ -197,11 +225,15 @@ const addToCart = (item: MenuItem) => {
 
     <!-- No Items State -->
     <v-card v-else class="text-center pa-8" variant="outlined" rounded="xl">
-      <v-icon color="grey-lighten-1" size="64" class="mb-4"
+      <v-icon :style="{ color: secondaryColor }" size="64" class="mb-4"
         >mdi-food-off</v-icon
       >
-      <p class="text-h6 text-grey-darken-1 mb-2">No Items Available</p>
-      <p class="text-body-2 text-grey">No items found in this category.</p>
+      <p class="text-h6 mb-2" :style="{ color: textPrimary }">
+        No Items Available
+      </p>
+      <p class="text-body-2" :style="{ color: secondaryColor }">
+        No items found in this category.
+      </p>
     </v-card>
   </v-container>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
+import { useThemeColors } from "@/composables/useThemeColors";
 
 // Props
 interface MenuItem {
@@ -30,6 +31,9 @@ const emit = defineEmits<{
 
 // Reactive data
 const searchQuery = ref("");
+
+// Theme colors
+const { primaryColor, secondaryColor, textPrimary } = useThemeColors();
 
 // Computed properties
 const isOpen = computed({
@@ -73,12 +77,15 @@ watch(isOpen, (newValue) => {
   <v-dialog v-model="isOpen" max-width="500">
     <v-card rounded="xl">
       <v-card-title class="d-flex align-center pa-4">
-        <h3 class="text-h6 font-weight-bold text-primary flex-grow-1">
+        <h3
+          class="text-h6 font-weight-bold flex-grow-1"
+          :style="{ color: primaryColor }"
+        >
           Search Menu
         </h3>
         <v-spacer></v-spacer>
         <v-btn icon variant="text" size="small" @click="closeDialog">
-          <v-icon color="secondary">mdi-close</v-icon>
+          <v-icon :style="{ color: secondaryColor }">mdi-close</v-icon>
         </v-btn>
       </v-card-title>
 
@@ -94,14 +101,17 @@ watch(isOpen, (newValue) => {
           autofocus
           hide-details
           class="mb-4"
-          color="secondary"
+          :style="{
+            '--v-field-input-color': textPrimary,
+            '--v-theme-primary': secondaryColor,
+          }"
         ></v-text-field>
 
         <!-- Search Results -->
         <div v-if="searchQuery.trim()">
           <!-- Results Found -->
           <div v-if="filteredSearchResults.length > 0">
-            <p class="text-body-2 mb-3 text-primary">
+            <p class="text-body-2 mb-3" :style="{ color: primaryColor }">
               {{ filteredSearchResults.length }} result{{
                 filteredSearchResults.length > 1 ? "s" : ""
               }}
@@ -123,11 +133,15 @@ watch(isOpen, (newValue) => {
                   <div class="d-flex">
                     <div style="flex-grow: 1" class="pr-3">
                       <h4
-                        class="text-body-1 font-weight-bold mb-1 text-primary"
+                        class="text-body-1 font-weight-bold mb-1"
+                        :style="{ color: primaryColor }"
                       >
                         {{ item.name }}
                       </h4>
-                      <p class="text-caption mb-2 text-secondary">
+                      <p
+                        class="text-caption mb-2"
+                        :style="{ color: secondaryColor }"
+                      >
                         {{ item.description }}
                       </p>
 
@@ -137,7 +151,10 @@ watch(isOpen, (newValue) => {
                         size="x-small"
                         variant="flat"
                         class="mb-2"
-                        color="primary"
+                        :style="{
+                          backgroundColor: primaryColor,
+                          color: 'white',
+                        }"
                       >
                         {{ item.category }}
                       </v-chip>
@@ -151,7 +168,7 @@ watch(isOpen, (newValue) => {
                           size="x-small"
                           variant="flat"
                           class="text-white"
-                          color="primary"
+                          :style="{ backgroundColor: primaryColor }"
                         >
                           Only {{ item.quantity }} left
                         </v-chip>
@@ -159,11 +176,10 @@ watch(isOpen, (newValue) => {
 
                       <span
                         class="text-h6 font-weight-bold ml-2"
-                        :class="
-                          item.quantity === 0
-                            ? 'text-secondary'
-                            : 'text-primary'
-                        "
+                        :style="{
+                          color:
+                            item.quantity === 0 ? secondaryColor : primaryColor,
+                        }"
                       >
                         {{ APP_CONFIG.CURRENCY }}{{ item.price.toFixed(2) }}
                       </span>
@@ -182,7 +198,8 @@ watch(isOpen, (newValue) => {
                         <v-overlay
                           v-if="item.quantity === 0"
                           contained
-                          class="d-flex align-center justify-center rounded-lg bg-secondary"
+                          class="d-flex align-center justify-center rounded-lg"
+                          :style="{ backgroundColor: secondaryColor }"
                         >
                           <span
                             class="text-white text-caption font-weight-bold"
@@ -198,7 +215,10 @@ watch(isOpen, (newValue) => {
                         icon
                         size="small"
                         variant="flat"
-                        color="primary"
+                        :style="{
+                          backgroundColor: primaryColor,
+                          color: 'white',
+                        }"
                       >
                         <v-icon size="18">mdi-plus</v-icon>
                       </v-btn>
@@ -208,7 +228,10 @@ watch(isOpen, (newValue) => {
                         icon
                         size="small"
                         variant="outlined"
-                        color="secondary"
+                        :style="{
+                          borderColor: secondaryColor,
+                          color: secondaryColor,
+                        }"
                       >
                         <v-icon size="18">mdi-close</v-icon>
                       </v-btn>
@@ -221,11 +244,13 @@ watch(isOpen, (newValue) => {
 
           <!-- No Results -->
           <div v-else class="text-center py-8">
-            <v-icon size="64" class="mb-4" color="secondary">
+            <v-icon size="64" class="mb-4" :style="{ color: secondaryColor }">
               mdi-food-off
             </v-icon>
-            <p class="text-h6 mb-2 text-primary">No Results Found</p>
-            <p class="text-body-2 text-secondary">
+            <p class="text-h6 mb-2" :style="{ color: primaryColor }">
+              No Results Found
+            </p>
+            <p class="text-body-2" :style="{ color: secondaryColor }">
               Try searching with different keywords
             </p>
           </div>
@@ -233,9 +258,13 @@ watch(isOpen, (newValue) => {
 
         <!-- Search Prompt -->
         <div v-else class="text-center py-8">
-          <v-icon size="64" class="mb-4" color="primary"> mdi-magnify </v-icon>
-          <p class="text-h6 mb-2 text-primary">Search for Menu Items</p>
-          <p class="text-body-2 text-secondary">
+          <v-icon size="64" class="mb-4" :style="{ color: primaryColor }">
+            mdi-magnify
+          </v-icon>
+          <p class="text-h6 mb-2" :style="{ color: primaryColor }">
+            Search for Menu Items
+          </p>
+          <p class="text-body-2" :style="{ color: secondaryColor }">
             Enter the name of a meal to find what you're looking for
           </p>
         </div>
