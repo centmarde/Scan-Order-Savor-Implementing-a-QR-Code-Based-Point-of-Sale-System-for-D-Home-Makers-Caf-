@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 
 // Define the base domain for the customer-facing menu application
 const BASE_DOMAIN = 'https://dhome-makers.vercel.app';
-const MENU_PATH = '/menu';
+const MENU_PATH = '/';
 
 /**
  * Pinia Store for managing QR code generation parameters and logic.
