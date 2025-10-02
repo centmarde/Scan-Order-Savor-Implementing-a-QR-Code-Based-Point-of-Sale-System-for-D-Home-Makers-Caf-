@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
@@ -37,12 +37,26 @@ const ordersWithMeals = ref<OrderWithMeals[]>([]);
 onMounted(async () => {
   await initializeTheme();
 
-  // Get cart items from navigation state (for new orders)
+  // Get cart items from multiple sources (for new orders)
   if (route.meta?.cartItems) {
     cartItems.value = route.meta.cartItems as MenuItem[];
   } else if (history.state?.cartItems) {
     cartItems.value = history.state.cartItems;
+  } else {
+    // Try to get from sessionStorage as backup
+    const storedCartItems = sessionStorage.getItem("reviewOrderCartItems");
+    if (storedCartItems) {
+      try {
+        cartItems.value = JSON.parse(storedCartItems);
+        // Clear from sessionStorage after use
+        sessionStorage.removeItem("reviewOrderCartItems");
+      } catch (error) {
+        console.error("Error parsing stored cart items:", error);
+      }
+    }
   }
+
+  console.log("Cart items loaded:", cartItems.value);
 
   // Fetch existing orders for this table
   await fetchOrdersForTable();
@@ -81,9 +95,25 @@ const groupedOrderItems = computed(() => {
 
 const displayItems = computed(() => {
   // Show cart items if available (new order), otherwise show database orders
-  return cartItems.value.length > 0
-    ? groupedCartItems.value
-    : groupedOrderItems.value;
+  const hasCartItems = cartItems.value.length > 0;
+  const hasOrderItems = groupedOrderItems.value.length > 0;
+
+  console.log(
+    "Display items - Cart items:",
+    cartItems.value.length,
+    "Order items:",
+    groupedOrderItems.value.length
+  );
+
+  if (hasCartItems) {
+    console.log("Displaying cart items:", groupedCartItems.value);
+    return groupedCartItems.value;
+  } else if (hasOrderItems) {
+    console.log("Displaying order items:", groupedOrderItems.value);
+    return groupedOrderItems.value;
+  }
+
+  return [];
 });
 
 const orderTotal = computed(() => {
@@ -108,6 +138,13 @@ const itemCount = computed(() => {
   return cartItems.value.length > 0
     ? cartItems.value.length
     : ordersWithMeals.value.length;
+});
+
+// Watch for changes in cart items and display items
+watchEffect(() => {
+  console.log("Cart items changed:", cartItems.value);
+  console.log("Display items changed:", displayItems.value);
+  console.log("Display total:", displayTotal.value);
 });
 
 const getStatusColor = (status: string) => {
@@ -170,14 +207,24 @@ const proceedToPayment = async () => {
   try {
     loading.value = true;
 
-    // Create orders with meal_id for each cart item
-    const orders = await createOrdersWithMeals(cartItems.value, tableId.value);
+    // Only create new orders if we have cart items (new order)
+    if (cartItems.value.length > 0) {
+      // Create orders with meal_id for each cart item
+      const orders = await createOrdersWithMeals(
+        cartItems.value,
+        tableId.value
+      );
+      console.log("Orders created:", orders);
 
-    // Update local state
-    orderStatus.value = "pending";
+      // Clear cart items after successful order creation
+      cartItems.value = [];
 
-    // Refresh the orders list to show the new orders
-    await fetchOrdersForTable();
+      // Update local state
+      orderStatus.value = "pending";
+
+      // Refresh the orders list to show the new orders
+      await fetchOrdersForTable();
+    }
 
     // Navigate to payment or confirmation page
     router.push({
@@ -461,8 +508,12 @@ const proceedToPayment = async () => {
               :loading="loading"
               :disabled="cartItems.length === 0 && ordersWithMeals.length === 0"
             >
-              <v-icon left class="mr-2">mdi-credit-card</v-icon>
-              PROCEED TO PAYMENT
+              <v-icon left class="mr-2">
+                {{
+                  cartItems.length > 0 ? "mdi-cart-check" : "mdi-credit-card"
+                }}
+              </v-icon>
+              {{ cartItems.length > 0 ? "PLACE ORDER" : "PROCEED TO PAYMENT" }}
             </v-btn>
           </v-col>
         </v-row>
@@ -470,11 +521,7 @@ const proceedToPayment = async () => {
 
       <!-- Empty State -->
       <v-container
-        v-if="
-          cartItems.length === 0 &&
-          ordersWithMeals.length === 0 &&
-          !loadingOrders
-        "
+        v-if="displayItems.length === 0 && !loadingOrders"
         class="text-center pa-8"
       >
         <v-icon color="grey-lighten-1" size="64" class="mb-4"

@@ -56,8 +56,16 @@ const cancelOrder = () => {
 };
 
 const reviewOrder = () => {
-  // Navigate to review order page with cart data
-  router.push({
+  console.log("Navigating to review order with cart items:", cartItems.value);
+
+  // Store cart data in sessionStorage as backup
+  sessionStorage.setItem(
+    "reviewOrderCartItems",
+    JSON.stringify(cartItems.value)
+  );
+
+  // Navigate to review order page with cart data using replace to ensure state is passed
+  router.replace({
     path: "/customer/review-order",
     state: { cartItems: cartItems.value },
   });
