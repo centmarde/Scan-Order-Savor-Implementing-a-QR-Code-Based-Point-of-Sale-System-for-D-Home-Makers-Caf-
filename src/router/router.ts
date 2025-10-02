@@ -18,6 +18,10 @@ import Menu from "@/pages/customer/Menu.vue";
 const routes = setupLayouts([
   {
     path: "/",
+    component: LandingPage,
+  },
+  {
+    path: "/hero",
     component: Hero,
   },
   {
@@ -27,7 +31,7 @@ const routes = setupLayouts([
 
   {
     path: "/customer/landing",
-    component: LandingPage,
+    redirect: "/",
   },
 
   {
