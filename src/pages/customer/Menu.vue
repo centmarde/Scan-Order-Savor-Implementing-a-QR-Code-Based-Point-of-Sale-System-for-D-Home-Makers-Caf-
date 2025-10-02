@@ -189,7 +189,7 @@ onMounted(async () => {
                   <v-icon color="white" size="16" class="mr-1"
                     >mdi-clock-outline</v-icon
                   >
-                  <span class="text-white text-body-2">20-30 min</span>
+                  <span class="text-white text-body-2">3-5 min</span>
                 </div>
               </div>
             </div>

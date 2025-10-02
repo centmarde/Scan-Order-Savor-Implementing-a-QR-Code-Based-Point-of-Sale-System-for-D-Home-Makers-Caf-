@@ -79,7 +79,9 @@ const navigateToMenu = () => {
               <v-chip
                 v-for="(image, index) in carouselImages"
                 :key="index"
-                :color="currentSlide === index ? 'pink' : 'grey-lighten-3'"
+                :color="
+                  currentSlide === index ? 'orange-darken-2' : 'grey-lighten-3'
+                "
                 size="x-small"
                 variant="flat"
                 class="mx-1"
@@ -105,7 +107,7 @@ const navigateToMenu = () => {
             <h1 class="text-h3 font-weight-bold mb-2 text-grey-darken-4">
               Enjoy Healthy
             </h1>
-            <h1 class="text-h3 font-weight-bold mb-8" style="color: #e91e63">
+            <h1 class="text-h3 font-weight-bold mb-8" style="color: #f57c00">
               Food
             </h1>
           </div>
@@ -114,7 +116,7 @@ const navigateToMenu = () => {
           <div class="text-center">
             <v-btn
               @click="navigateToMenu"
-              color="pink"
+              color="orange-darken-2"
               size="x-large"
               rounded="xl"
               elevation="0"
