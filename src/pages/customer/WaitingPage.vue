@@ -11,6 +11,7 @@ import {
 import Navbar from "@/components/common/customer/Navbar.vue";
 import StatusCard from "@/components/common/customer/StatusCard.vue";
 import StatusMessages from "@/components/common/customer/StatusMessages.vue";
+import StatusInfoCard from "@/components/common/customer/StatusInfoCard.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -247,128 +248,8 @@ const checkOrderStatus = async () => {
               </p>
             </div>
 
-            <!-- Dynamic Status Info Card -->
-            <v-card
-              elevation="2"
-              rounded="xl"
-              class="pa-4 mb-4"
-              :style="{
-                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-                border: '1px solid rgba(139, 92, 42, 0.1)',
-                maxWidth: '280px',
-              }"
-            >
-              <div class="text-center">
-                <!-- Dynamic Icon and Info based on Status -->
-                <div v-if="currentOrderStatus === 'pending'">
-                  <v-icon :style="{ color: '#FFA726' }" size="24" class="mb-2">
-                    mdi-clock-outline
-                  </v-icon>
-                  <p
-                    class="text-body-2 font-weight-medium mb-1"
-                    :style="{ color: primaryColor }"
-                  >
-                    Estimated Time
-                  </p>
-                  <p
-                    class="text-h6 font-weight-bold"
-                    :style="{ color: '#2D2D2D' }"
-                  >
-                    3-5 minutes
-                  </p>
-                </div>
-
-                <div v-else-if="currentOrderStatus === 'confirmed'">
-                  <v-icon :style="{ color: '#42A5F5' }" size="24" class="mb-2">
-                    mdi-check-circle-outline
-                  </v-icon>
-                  <p
-                    class="text-body-2 font-weight-medium mb-1"
-                    :style="{ color: primaryColor }"
-                  >
-                    Estimated Time
-                  </p>
-                  <p
-                    class="text-h6 font-weight-bold"
-                    :style="{ color: '#2D2D2D' }"
-                  >
-                    12-15 minutes
-                  </p>
-                </div>
-
-                <div v-else-if="currentOrderStatus === 'preparing'">
-                  <v-icon :style="{ color: '#FF7043' }" size="24" class="mb-2">
-                    mdi-chef-hat
-                  </v-icon>
-                  <p
-                    class="text-body-2 font-weight-medium mb-1"
-                    :style="{ color: primaryColor }"
-                  >
-                    Estimated Time
-                  </p>
-                  <p
-                    class="text-h6 font-weight-bold"
-                    :style="{ color: '#2D2D2D' }"
-                  >
-                    5-10 minutes
-                  </p>
-                </div>
-
-                <div v-else-if="currentOrderStatus === 'ready'">
-                  <v-icon :style="{ color: '#4CAF50' }" size="24" class="mb-2">
-                    mdi-bell-ring
-                  </v-icon>
-                  <p
-                    class="text-body-2 font-weight-medium mb-1"
-                    :style="{ color: '#4CAF50' }"
-                  >
-                    Status
-                  </p>
-                  <p
-                    class="text-h6 font-weight-bold"
-                    :style="{ color: '#2D2D2D' }"
-                  >
-                    Ready to Serve!
-                  </p>
-                </div>
-
-                <div v-else-if="currentOrderStatus === 'completed'">
-                  <v-icon :style="{ color: '#4CAF50' }" size="24" class="mb-2">
-                    mdi-check-all
-                  </v-icon>
-                  <p
-                    class="text-body-2 font-weight-medium mb-1"
-                    :style="{ color: '#4CAF50' }"
-                  >
-                    Status
-                  </p>
-                  <p
-                    class="text-h6 font-weight-bold"
-                    :style="{ color: '#2D2D2D' }"
-                  >
-                    Completed
-                  </p>
-                </div>
-
-                <div v-else-if="currentOrderStatus === 'cancelled'">
-                  <v-icon :style="{ color: '#F44336' }" size="24" class="mb-2">
-                    mdi-close-circle-outline
-                  </v-icon>
-                  <p
-                    class="text-body-2 font-weight-medium mb-1"
-                    :style="{ color: '#F44336' }"
-                  >
-                    Status
-                  </p>
-                  <p
-                    class="text-h6 font-weight-bold"
-                    :style="{ color: '#2D2D2D' }"
-                  >
-                    Cancelled
-                  </p>
-                </div>
-              </div>
-            </v-card>
+            <!-- Status Info Card Component -->
+            <StatusInfoCard :order-status="currentOrderStatus" />
           </template>
         </div>
 
