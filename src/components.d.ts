@@ -32,6 +32,7 @@ declare module 'vue' {
     SearchDialog: typeof import('./components/common/customer/SearchDialog.vue')['default']
     Sidebar: typeof import('./components/common/sideBar/Sidebar.vue')['default']
     SlugName: typeof import('./components/common/insideNavbar/SlugName.vue')['default']
+    StatusCard: typeof import('./components/common/customer/StatusCard.vue')['default']
     YourOrder: typeof import('./components/common/customer/YourOrder.vue')['default']
   }
 }
