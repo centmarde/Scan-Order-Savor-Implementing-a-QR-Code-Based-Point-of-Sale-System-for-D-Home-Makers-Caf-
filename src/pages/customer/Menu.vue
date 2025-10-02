@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router"; // <-- Import useRoute
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
 import { useMenu } from "@/composables/useMenu";
+import { useTableStore } from "@/stores/tableStores"; // <-- Import new store
 import type { MenuItem } from "@/stores/menuData";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
@@ -11,6 +12,10 @@ import BestSellers from "@/components/common/customer/BestSellers.vue";
 import CategorySelector from "@/components/common/customer/CategorySelector.vue";
 
 const router = useRouter();
+const route = useRoute(); // <-- Initialize useRoute
+
+// Initialize the new table store
+const tableStore = useTableStore(); 
 
 // Theme setup
 const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
@@ -43,6 +48,22 @@ const viewCart = () => {
 
 // Lifecycle
 onMounted(async () => {
+  // 1. CAPTURE TABLE ID FROM URL
+  if (route.query.table && typeof route.query.table === 'string') {
+    const tableId = parseInt(route.query.table, 10);
+    
+    if (!isNaN(tableId) && tableId > 0) {
+      // Set the table ID in the session store
+      tableStore.setTableId(tableId);
+    } else {
+      console.warn(`[Table Capture] Invalid table ID found: ${route.query.table}`);
+    }
+  } else if (tableStore.currentTableId === null) {
+    // Optional: Log a warning or prompt the user if they navigate here directly
+    console.warn("[Table Capture] Menu accessed without a table ID query parameter.");
+    // In a production app, you might show a modal asking them to manually enter their table number.
+  }
+  
   // Initialize theme first
   await initializeTheme();
   // Fetch menu items from Supabase
@@ -88,6 +109,23 @@ onMounted(async () => {
 
       <!-- Menu Content -->
       <div v-else class="pb-16">
+        <!-- Table Identification Banner (New Feature) -->
+        <v-alert
+          v-if="tableStore.currentTableId"
+          type="success"
+          variant="tonal"
+          class="mx-4 mt-4"
+          rounded="xl"
+          style="border-left: 8px solid var(--v-theme-secondary);"
+        >
+            <div class="d-flex align-center">
+                <v-icon size="24" class="mr-3" :style="{ color: secondaryColor }">mdi-table-chair</v-icon>
+                <span class="font-weight-medium">
+                    You are ordering from Table #<strong :style="{ color: primaryColor }">{{ tableStore.currentTableId }}</strong>.
+                </span>
+            </div>
+        </v-alert>
+
         <!-- Restaurant Info Banner -->
         <v-card
           class="mx-4 mt-4 mb-6"

@@ -8,6 +8,8 @@ import NotFound from "@/pages/NotFound.vue";
 import ForbiddenView from "@/pages/ForbiddenView.vue";
 import AdminUserRolesView from "@/pages/admin/AdminUserRolesView.vue";
 import UserManagementView from "@/pages/admin/UserManagementView.vue";
+// 1. IMPORT THE NEW COMPONENT
+import TableQRCodeGenerator from "@/pages/admin/components/TableQRCodeGenerator.vue";
 
 import LandingPage from "@/pages/customer/LandingPage.vue";
 import Menu from "@/pages/customer/Menu.vue";
@@ -52,6 +54,12 @@ const routes = setupLayouts([
   {
     path: "/admin/user-management",
     component: UserManagementView,
+    meta: { requiresAuth: true },
+  },
+  // 2. ADD THE NEW ADMIN ROUTE
+  {
+    path: "/admin/qr-generator",
+    component: TableQRCodeGenerator,
     meta: { requiresAuth: true },
   },
   {
