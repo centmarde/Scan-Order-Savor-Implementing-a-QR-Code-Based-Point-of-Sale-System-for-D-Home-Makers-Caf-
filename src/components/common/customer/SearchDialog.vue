@@ -43,11 +43,8 @@ const filteredSearchResults = computed(() => {
   }
 
   const query = searchQuery.value.toLowerCase().trim();
-  return props.menuItems.filter(
-    (item) =>
-      item.name.toLowerCase().includes(query) ||
-      item.description.toLowerCase().includes(query) ||
-      (item.category && item.category.toLowerCase().includes(query))
+  return props.menuItems.filter((item) =>
+    item.name.toLowerCase().includes(query)
   );
 });
 
@@ -73,10 +70,13 @@ watch(isOpen, (newValue) => {
 
 <template>
   <!-- Search Modal -->
-  <v-dialog v-model="isOpen" max-width="500" persistent>
+  <v-dialog v-model="isOpen" max-width="500">
     <v-card rounded="xl">
-      <v-card-title class="d-flex align-center justify-between pa-4">
-        <h3 class="text-h6 font-weight-bold text-grey-darken-3">Search Menu</h3>
+      <v-card-title class="d-flex align-center pa-4">
+        <h3 class="text-h6 font-weight-bold text-grey-darken-3 flex-grow-1">
+          Search Menu
+        </h3>
+        <v-spacer />
         <v-btn icon variant="text" size="small" @click="closeDialog">
           <v-icon>mdi-close</v-icon>
         </v-btn>
@@ -86,7 +86,7 @@ watch(isOpen, (newValue) => {
         <!-- Search Input -->
         <v-text-field
           v-model="searchQuery"
-          placeholder="Search for meals, drinks, or categories..."
+          placeholder="Search for meal names..."
           prepend-inner-icon="mdi-magnify"
           variant="outlined"
           rounded="xl"
@@ -160,7 +160,7 @@ watch(isOpen, (newValue) => {
                       </div>
 
                       <span
-                        class="text-h6 font-weight-bold"
+                        class="text-h6 font-weight-bold ml-2"
                         :class="
                           item.quantity === 0
                             ? 'text-grey'
@@ -239,8 +239,7 @@ watch(isOpen, (newValue) => {
           </v-icon>
           <p class="text-h6 text-grey-darken-1 mb-2">Search for Menu Items</p>
           <p class="text-body-2 text-grey">
-            Enter the name of a meal, drink, or category to find what you're
-            looking for
+            Enter the name of a meal to find what you're looking for
           </p>
         </div>
       </v-card-text>
