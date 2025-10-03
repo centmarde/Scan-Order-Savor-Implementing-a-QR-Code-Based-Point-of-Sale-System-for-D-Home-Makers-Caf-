@@ -15,18 +15,40 @@ interface MenuItem {
   created_at: string;
 }
 
+// Interface for order items
+interface OrderItem {
+  id: number;
+  menu_item_id: number;
+  quantity: number;
+  price: number;
+  created_at: string;
+  menu?: MenuItem;
+}
+
 // Data for best sellers and analytics
 const bestSellers = ref<MenuItem[]>([]);
 const salesData = ref<MenuItem[]>([]);
+const orderItems = ref<OrderItem[]>([]);
+const totalMenuItems = ref(0);
 const loading = ref(false);
 const selectedPeriod = ref("week"); // week, month, day
 
 // Computed properties for analytics
 const totalSales = computed(() => {
-  return salesData.value.reduce((total, item) => total + item.sales, 0);
+  const total = salesData.value.reduce(
+    (total, item) => total + (item.sales || 0),
+    0
+  );
+  console.log(
+    "Total sales calculation:",
+    salesData.value.map((item) => ({ name: item.name, sales: item.sales })),
+    "Total:",
+    total
+  );
+  return total;
 });
 
-const filteredSalesData = computed(() => {
+const filteredOrderItems = computed(() => {
   const now = new Date();
   let startDate = new Date();
 
@@ -38,14 +60,17 @@ const filteredSalesData = computed(() => {
     startDate.setMonth(now.getMonth() - 1);
   }
 
-  return salesData.value.filter((item) => {
+  return orderItems.value.filter((item) => {
     const itemDate = new Date(item.created_at);
     return itemDate >= startDate;
   });
 });
 
 const periodTotalSales = computed(() => {
-  return filteredSalesData.value.reduce((total, item) => total + item.sales, 0);
+  return filteredOrderItems.value.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 });
 
 // Methods
@@ -86,6 +111,52 @@ const fetchSalesData = async () => {
   }
 };
 
+const fetchOrderItems = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("order_items")
+      .select(
+        `
+        *,
+        menu:meal_id (
+          id,
+          name,
+          category,
+          price,
+          image
+        )
+      `
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching order items:", error);
+      return;
+    }
+
+    orderItems.value = data || [];
+  } catch (error) {
+    console.error("Error in fetchOrderItems:", error);
+  }
+};
+
+const fetchMenuItemsCount = async () => {
+  try {
+    const { count, error } = await supabase
+      .from("menu")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.error("Error fetching menu items count:", error);
+      return;
+    }
+
+    totalMenuItems.value = count || 0;
+  } catch (error) {
+    console.error("Error in fetchMenuItemsCount:", error);
+  }
+};
+
 const getImageUrl = (imagePath: string) => {
   if (!imagePath) return "/assets/logo1.png";
   if (imagePath.startsWith("http")) return imagePath;
@@ -101,7 +172,12 @@ const formatCurrency = (amount: number) => {
 
 const refreshData = async () => {
   loading.value = true;
-  await Promise.all([fetchBestSellers(), fetchSalesData()]);
+  await Promise.all([
+    fetchBestSellers(),
+    fetchSalesData(),
+    fetchOrderItems(),
+    fetchMenuItemsCount(),
+  ]);
   loading.value = false;
 };
 
@@ -116,12 +192,16 @@ onMounted(() => {
     <v-row class="mt-4 mt-md-6">
       <v-col cols="12">
         <v-card elevation="4" class="pa-3 pa-md-4">
-          <v-card-title 
-            :class="$vuetify.display.xs 
-              ? 'd-flex flex-column align-start gap-3' 
-              : 'd-flex align-center justify-space-between'"
+          <v-card-title
+            :class="
+              $vuetify.display.xs
+                ? 'd-flex flex-column align-start gap-3'
+                : 'd-flex align-center justify-space-between'
+            "
           >
-            <span :class="$vuetify.display.xs ? 'text-h6' : 'text-h5'">Sales Analytics</span>
+            <span :class="$vuetify.display.xs ? 'text-h6' : 'text-h5'"
+              >Sales Analytics</span
+            >
             <div class="d-flex align-center flex-wrap">
               <v-btn-toggle
                 v-model="selectedPeriod"
@@ -130,23 +210,23 @@ onMounted(() => {
                 variant="outlined"
                 :class="$vuetify.display.xs ? 'mb-2' : ''"
               >
-                <v-btn 
-                  value="day" 
+                <v-btn
+                  value="day"
                   :size="$vuetify.display.xs ? 'x-small' : 'small'"
                 >
-                  {{ $vuetify.display.xs ? 'Day' : 'Today' }}
+                  {{ $vuetify.display.xs ? "Day" : "Today" }}
                 </v-btn>
-                <v-btn 
-                  value="week" 
+                <v-btn
+                  value="week"
                   :size="$vuetify.display.xs ? 'x-small' : 'small'"
                 >
-                  {{ $vuetify.display.xs ? 'Week' : 'This Week' }}
+                  {{ $vuetify.display.xs ? "Week" : "This Week" }}
                 </v-btn>
-                <v-btn 
-                  value="month" 
+                <v-btn
+                  value="month"
                   :size="$vuetify.display.xs ? 'x-small' : 'small'"
                 >
-                  {{ $vuetify.display.xs ? 'Month' : 'This Month' }}
+                  {{ $vuetify.display.xs ? "Month" : "This Month" }}
                 </v-btn>
               </v-btn-toggle>
               <v-btn
@@ -162,19 +242,35 @@ onMounted(() => {
 
           <v-row class="mt-2">
             <v-col cols="12" sm="6" md="4">
-              <v-card variant="tonal" color="primary" :class="$vuetify.display.xs ? 'pa-3' : 'pa-4'">
+              <v-card
+                variant="tonal"
+                color="primary"
+                :class="$vuetify.display.xs ? 'pa-3' : 'pa-4'"
+              >
                 <div class="d-flex align-center">
-                  <v-icon 
-                    :size="$vuetify.display.xs ? '32' : '40'" 
+                  <v-icon
+                    :size="$vuetify.display.xs ? '32' : '40'"
                     :class="$vuetify.display.xs ? 'mr-2' : 'mr-3'"
                   >
                     mdi-chart-line
                   </v-icon>
                   <div>
-                    <div :class="$vuetify.display.xs ? 'text-h5 font-weight-bold' : 'text-h4 font-weight-bold'">
+                    <div
+                      :class="
+                        $vuetify.display.xs
+                          ? 'text-h5 font-weight-bold'
+                          : 'text-h4 font-weight-bold'
+                      "
+                    >
                       {{ periodTotalSales }}
                     </div>
-                    <div :class="$vuetify.display.xs ? 'text-caption text-medium-emphasis text-wrap' : 'text-caption text-medium-emphasis'">
+                    <div
+                      :class="
+                        $vuetify.display.xs
+                          ? 'text-caption text-medium-emphasis text-wrap'
+                          : 'text-caption text-medium-emphasis'
+                      "
+                    >
                       Total Sales ({{
                         selectedPeriod === "day"
                           ? "Today"
@@ -188,19 +284,35 @@ onMounted(() => {
               </v-card>
             </v-col>
             <v-col cols="12" sm="6" md="4">
-              <v-card variant="tonal" color="success" :class="$vuetify.display.xs ? 'pa-3' : 'pa-4'">
+              <v-card
+                variant="tonal"
+                color="success"
+                :class="$vuetify.display.xs ? 'pa-3' : 'pa-4'"
+              >
                 <div class="d-flex align-center">
-                  <v-icon 
-                    :size="$vuetify.display.xs ? '32' : '40'" 
+                  <v-icon
+                    :size="$vuetify.display.xs ? '32' : '40'"
                     :class="$vuetify.display.xs ? 'mr-2' : 'mr-3'"
                   >
                     mdi-trending-up
                   </v-icon>
                   <div>
-                    <div :class="$vuetify.display.xs ? 'text-h5 font-weight-bold' : 'text-h4 font-weight-bold'">
+                    <div
+                      :class="
+                        $vuetify.display.xs
+                          ? 'text-h5 font-weight-bold'
+                          : 'text-h4 font-weight-bold'
+                      "
+                    >
                       {{ totalSales }}
                     </div>
-                    <div :class="$vuetify.display.xs ? 'text-caption text-medium-emphasis text-wrap' : 'text-caption text-medium-emphasis'">
+                    <div
+                      :class="
+                        $vuetify.display.xs
+                          ? 'text-caption text-medium-emphasis text-wrap'
+                          : 'text-caption text-medium-emphasis'
+                      "
+                    >
                       Total Sales (All Time)
                     </div>
                   </div>
@@ -208,19 +320,35 @@ onMounted(() => {
               </v-card>
             </v-col>
             <v-col cols="12" sm="6" md="4">
-              <v-card variant="tonal" color="info" :class="$vuetify.display.xs ? 'pa-3' : 'pa-4'">
+              <v-card
+                variant="tonal"
+                color="info"
+                :class="$vuetify.display.xs ? 'pa-3' : 'pa-4'"
+              >
                 <div class="d-flex align-center">
-                  <v-icon 
-                    :size="$vuetify.display.xs ? '32' : '40'" 
+                  <v-icon
+                    :size="$vuetify.display.xs ? '32' : '40'"
                     :class="$vuetify.display.xs ? 'mr-2' : 'mr-3'"
                   >
                     mdi-food
                   </v-icon>
                   <div>
-                    <div :class="$vuetify.display.xs ? 'text-h5 font-weight-bold' : 'text-h4 font-weight-bold'">
-                      {{ bestSellers.length }}
+                    <div
+                      :class="
+                        $vuetify.display.xs
+                          ? 'text-h5 font-weight-bold'
+                          : 'text-h4 font-weight-bold'
+                      "
+                    >
+                      {{ totalMenuItems }}
                     </div>
-                    <div :class="$vuetify.display.xs ? 'text-caption text-medium-emphasis text-wrap' : 'text-caption text-medium-emphasis'">
+                    <div
+                      :class="
+                        $vuetify.display.xs
+                          ? 'text-caption text-medium-emphasis text-wrap'
+                          : 'text-caption text-medium-emphasis'
+                      "
+                    >
                       Menu Items
                     </div>
                   </div>
@@ -236,12 +364,19 @@ onMounted(() => {
     <v-row class="mt-4 mt-md-6">
       <v-col cols="12">
         <v-card elevation="4" class="pa-3 pa-md-4">
-          <v-card-title :class="$vuetify.display.xs ? 'text-h6 mb-3' : 'text-h5 mb-4'">
-            <v-icon :class="$vuetify.display.xs ? 'mr-1' : 'mr-2'">mdi-star</v-icon>
+          <v-card-title
+            :class="$vuetify.display.xs ? 'text-h6 mb-3' : 'text-h5 mb-4'"
+          >
+            <v-icon :class="$vuetify.display.xs ? 'mr-1' : 'mr-2'"
+              >mdi-star</v-icon
+            >
             Best Sellers
           </v-card-title>
 
-          <v-row v-if="bestSellers.length > 0" class="justify-center justify-md-start">
+          <v-row
+            v-if="bestSellers.length > 0"
+            class="justify-center justify-md-start"
+          >
             <v-col
               v-for="item in bestSellers"
               :key="item.id"
@@ -278,15 +413,30 @@ onMounted(() => {
                   </div>
                 </v-img>
 
-                <v-card-text :class="$vuetify.display.xs ? 'pa-2' : 'pa-3'" class="flex-grow-1 d-flex flex-column">
-                  <div :class="$vuetify.display.xs ? 'text-body-2 font-weight-bold mb-1' : 'text-subtitle-2 font-weight-bold mb-1'">
+                <v-card-text
+                  :class="$vuetify.display.xs ? 'pa-2' : 'pa-3'"
+                  class="flex-grow-1 d-flex flex-column"
+                >
+                  <div
+                    :class="
+                      $vuetify.display.xs
+                        ? 'text-body-2 font-weight-bold mb-1'
+                        : 'text-subtitle-2 font-weight-bold mb-1'
+                    "
+                  >
                     {{ item.name }}
                   </div>
                   <div class="text-caption text-medium-emphasis mb-2">
                     {{ item.category }}
                   </div>
                   <div class="mt-auto">
-                    <div :class="$vuetify.display.xs ? 'text-subtitle-1 font-weight-bold text-primary' : 'text-h6 font-weight-bold text-primary'">
+                    <div
+                      :class="
+                        $vuetify.display.xs
+                          ? 'text-subtitle-1 font-weight-bold text-primary'
+                          : 'text-h6 font-weight-bold text-primary'
+                      "
+                    >
                       {{ formatCurrency(item.price) }}
                     </div>
                   </div>
@@ -295,25 +445,45 @@ onMounted(() => {
             </v-col>
           </v-row>
 
-          <div v-else-if="loading" :class="$vuetify.display.xs ? 'text-center py-6' : 'text-center py-8'">
-            <v-progress-circular 
-              indeterminate 
-              color="primary" 
-              :size="$vuetify.display.xs ? '48' : '64'" 
+          <div
+            v-else-if="loading"
+            :class="
+              $vuetify.display.xs ? 'text-center py-6' : 'text-center py-8'
+            "
+          >
+            <v-progress-circular
+              indeterminate
+              color="primary"
+              :size="$vuetify.display.xs ? '48' : '64'"
             />
-            <div :class="$vuetify.display.xs ? 'text-body-2 mt-3' : 'text-body-1 mt-4'">
+            <div
+              :class="
+                $vuetify.display.xs ? 'text-body-2 mt-3' : 'text-body-1 mt-4'
+              "
+            >
               Loading best sellers...
             </div>
           </div>
 
-          <div v-else :class="$vuetify.display.xs ? 'text-center py-6' : 'text-center py-8'">
-            <v-icon 
-              :size="$vuetify.display.xs ? '48' : '64'" 
+          <div
+            v-else
+            :class="
+              $vuetify.display.xs ? 'text-center py-6' : 'text-center py-8'
+            "
+          >
+            <v-icon
+              :size="$vuetify.display.xs ? '48' : '64'"
               color="grey-lighten-2"
             >
               mdi-food-off
             </v-icon>
-            <div :class="$vuetify.display.xs ? 'text-body-2 text-medium-emphasis mt-3' : 'text-body-1 text-medium-emphasis mt-4'">
+            <div
+              :class="
+                $vuetify.display.xs
+                  ? 'text-body-2 text-medium-emphasis mt-3'
+                  : 'text-body-1 text-medium-emphasis mt-4'
+              "
+            >
               No menu items found
             </div>
           </div>
@@ -329,19 +499,19 @@ onMounted(() => {
   .dashboard-container {
     padding: 8px !important;
   }
-  
+
   .analytics-card .v-card-title {
     padding-bottom: 12px !important;
   }
-  
+
   .stat-card {
     margin-bottom: 12px;
   }
-  
+
   .best-sellers-grid .v-col {
     padding: 8px !important;
   }
-  
+
   .best-seller-card {
     min-height: 200px;
   }
@@ -384,7 +554,7 @@ onMounted(() => {
   .v-btn-toggle {
     width: 100%;
   }
-  
+
   .v-btn-toggle .v-btn {
     flex: 1;
     min-width: 0;
