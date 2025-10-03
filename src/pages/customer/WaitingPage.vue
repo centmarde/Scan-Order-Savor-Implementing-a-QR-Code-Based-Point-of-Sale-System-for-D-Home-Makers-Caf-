@@ -4,7 +4,7 @@ import { useRouter, useRoute } from "vue-router";
 import { useTheme } from "@/composables/useTheme";
 import { useTableStore } from "@/stores/tableStores";
 import {
-  getOrdersByTableWithMeals,
+  getLatestOrderByTableWithMeals,
   updateOrderFeedback,
   type OrderWithMeals,
   type FeedbackData,
@@ -30,7 +30,7 @@ const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
 const orderStatus = ref("pending");
 const itemCount = ref(0);
 const tableNumber = ref(1);
-const orders = ref<OrderWithMeals[]>([]);
+const currentOrder = ref<OrderWithMeals | null>(null);
 const loading = ref(false);
 
 // Animation states
@@ -52,38 +52,31 @@ const tableId = computed(() => {
 
 // Computed property to determine current order status
 const currentOrderStatus = computed(() => {
-  if (orders.value.length === 0) return "pending";
-
-  // Get the most recent order status or determine overall status
-  const statuses = orders.value.map((order) => order.status);
-
-  // Priority order for determining overall status
-  if (statuses.includes("cancelled")) return "cancelled";
-  if (statuses.includes("completed")) return "completed";
-  if (statuses.includes("ready")) return "ready";
-  if (statuses.includes("preparing")) return "preparing";
-  if (statuses.includes("confirmed")) return "confirmed";
-  if (statuses.includes("pending")) return "pending";
-
-  return "pending";
+  return currentOrder.value?.status || "pending";
 });
 
 // Computed property for total item count
 const totalItemCount = computed(() => {
-  return orders.value.length || itemCount.value;
+  if (!currentOrder.value?.order_items_db) return itemCount.value;
+
+  // Count total quantity from order_items
+  return currentOrder.value.order_items_db.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 });
 
-// Fetch orders from database
+// Fetch latest order from database
 const fetchOrders = async () => {
   try {
     loading.value = true;
     const currentTableId = tableId.value;
-    console.log("Fetching orders for table:", currentTableId);
+    console.log("Fetching latest order for table:", currentTableId);
 
-    const fetchedOrders = await getOrdersByTableWithMeals(currentTableId);
-    orders.value = fetchedOrders;
+    const fetchedOrder = await getLatestOrderByTableWithMeals(currentTableId);
+    currentOrder.value = fetchedOrder;
 
-    console.log("Fetched orders:", fetchedOrders);
+    console.log("Fetched latest order:", fetchedOrder);
     console.log("Current order status:", currentOrderStatus.value);
 
     // Check if status changed to completed and show feedback modal
@@ -109,7 +102,7 @@ const fetchOrders = async () => {
       console.log("Order is ready!");
     }
   } catch (error) {
-    console.error("Error fetching orders:", error);
+    console.error("Error fetching latest order:", error);
   } finally {
     loading.value = false;
   }
@@ -194,9 +187,7 @@ const handleFeedbackSubmit = async (feedbackData: FeedbackData) => {
 
 // Get order IDs for feedback
 const getOrderIds = (): number[] => {
-  return orders.value
-    .map((order) => order.id!)
-    .filter((id) => id !== undefined);
+  return currentOrder.value?.id ? [currentOrder.value.id] : [];
 };
 </script>
 
@@ -222,7 +213,7 @@ const getOrderIds = (): number[] => {
           class="flex-grow-1 d-flex flex-column align-center justify-center text-center pa-4"
         >
           <!-- Loading State -->
-          <div v-if="loading && orders.length === 0" class="mb-6">
+          <div v-if="loading && !currentOrder" class="mb-6">
             <v-progress-circular
               :color="primaryColor"
               indeterminate
@@ -278,8 +269,12 @@ const getOrderIds = (): number[] => {
               :show-content="showContent"
             />
 
-            <!-- Progress Indicator -->
-            <div class="mb-6 w-100" style="max-width: 300px">
+            <!-- Progress Indicator (only show if we have an order) -->
+            <div
+              v-if="currentOrder"
+              class="mb-6 w-100"
+              style="max-width: 300px"
+            >
               <v-progress-linear
                 :model-value="100"
                 :color="primaryColor"
@@ -293,8 +288,31 @@ const getOrderIds = (): number[] => {
               </p>
             </div>
 
-            <!-- Status Info Card Component -->
-            <StatusInfoCard :order-status="currentOrderStatus" />
+            <!-- No Order State -->
+            <div v-else class="mb-6">
+              <p class="text-body-1 text-center" :style="{ color: '#8B7355' }">
+                No active orders found for this table.
+              </p>
+              <v-btn
+                @click="goBackToMenu"
+                variant="outlined"
+                size="large"
+                rounded="pill"
+                :style="{
+                  borderColor: primaryColor,
+                  color: primaryColor,
+                }"
+                class="mt-4"
+              >
+                Place an Order
+              </v-btn>
+            </div>
+
+            <!-- Status Info Card Component (only show if we have an order) -->
+            <StatusInfoCard
+              v-if="currentOrder"
+              :order-status="currentOrderStatus"
+            />
           </template>
         </div>
 

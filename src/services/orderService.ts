@@ -395,6 +395,60 @@ export const getOrdersByTableWithMeals = async (
 };
 
 /**
+ * Get the latest order with meal details for a specific table
+ */
+export const getLatestOrderByTableWithMeals = async (
+  tableId: number
+): Promise<OrderWithMeals | null> => {
+  try {
+    // Fetch the most recent order for the table
+    const { data: orders, error: ordersError } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("table_id", tableId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (ordersError) {
+      console.error("Error fetching latest order:", ordersError);
+      throw new Error(`Failed to fetch latest order: ${ordersError.message}`);
+    }
+
+    if (!orders || orders.length === 0) return null;
+
+    const latestOrder = orders[0];
+
+    // Fetch order items with meal details for this specific order
+    const { data: orderItems, error: itemsError } = await supabase
+      .from("order_items")
+      .select(
+        `
+        *,
+        meal:menu(*)
+      `
+      )
+      .eq("order_id", latestOrder.id)
+      .order("created_at", { ascending: true });
+
+    if (itemsError) {
+      console.error("Error fetching order items:", itemsError);
+      throw new Error(`Failed to fetch order items: ${itemsError.message}`);
+    }
+
+    // Create order with items data
+    const orderWithMeals: OrderWithMeals = {
+      ...latestOrder,
+      order_items_db: orderItems || [],
+    };
+
+    return orderWithMeals;
+  } catch (error) {
+    console.error("Get latest order by table with meals error:", error);
+    throw error;
+  }
+};
+
+/**
  * Update order status
  */
 export const updateOrderStatus = async (
