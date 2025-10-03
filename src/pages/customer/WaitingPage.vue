@@ -6,6 +6,7 @@ import { useTableStore } from "@/stores/tableStores";
 import {
   getLatestOrderByTableWithMeals,
   updateOrderFeedback,
+  updateMealSales,
   type OrderWithMeals,
   type FeedbackData,
 } from "@/services/orderService";
@@ -41,6 +42,7 @@ const pulseAnimation = ref(true);
 const showFeedbackModal = ref(false);
 const feedbackSubmitted = ref(false);
 const previousOrderStatus = ref("");
+const salesUpdated = ref(false);
 
 // Polling interval for status updates
 let statusPollingInterval: number | null = null;
@@ -79,15 +81,29 @@ const fetchOrders = async () => {
     console.log("Fetched latest order:", fetchedOrder);
     console.log("Current order status:", currentOrderStatus.value);
 
-    // Check if status changed to completed and show feedback modal
+    // Check if status changed to completed
     if (
       currentOrderStatus.value === "completed" &&
-      previousOrderStatus.value !== "completed" &&
-      !feedbackSubmitted.value
+      previousOrderStatus.value !== "completed"
     ) {
-      setTimeout(() => {
-        showFeedbackModal.value = true;
-      }, 1000); // Show modal after 1 second delay for smooth transition
+      // Update meal sales when order is completed (only once)
+      if (fetchedOrder && !salesUpdated.value) {
+        try {
+          console.log("Order completed! Updating meal sales...");
+          await updateMealSales(fetchedOrder);
+          salesUpdated.value = true;
+          console.log("Meal sales updated successfully");
+        } catch (error) {
+          console.error("Error updating meal sales:", error);
+        }
+      }
+
+      // Show feedback modal if not already submitted
+      if (!feedbackSubmitted.value) {
+        setTimeout(() => {
+          showFeedbackModal.value = true;
+        }, 1000); // Show modal after 1 second delay for smooth transition
+      }
     }
 
     // Update previous status for comparison

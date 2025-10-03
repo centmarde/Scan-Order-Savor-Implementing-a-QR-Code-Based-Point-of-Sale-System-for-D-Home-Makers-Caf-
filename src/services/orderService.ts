@@ -593,6 +593,68 @@ export const updateOrderFeedback = async (
 };
 
 /**
+ * Update meal sales when order is completed
+ */
+export const updateMealSales = async (
+  orderWithMeals: OrderWithMeals
+): Promise<void> => {
+  try {
+    if (
+      !orderWithMeals.order_items_db ||
+      orderWithMeals.order_items_db.length === 0
+    ) {
+      console.log("No order items found to update sales");
+      return;
+    }
+
+    console.log("Updating meal sales for order:", orderWithMeals.id);
+
+    // Update sales for each meal in the order
+    for (const orderItem of orderWithMeals.order_items_db) {
+      const mealId = orderItem.meal_id;
+      const quantity = orderItem.quantity;
+
+      console.log(`Updating sales for meal ID ${mealId} by ${quantity}`);
+
+      // Get current sales count
+      const { data: currentMeal, error: fetchError } = await supabase
+        .from("menu")
+        .select("sales")
+        .eq("id", mealId)
+        .single();
+
+      if (fetchError) {
+        console.error(`Error fetching meal ${mealId}:`, fetchError);
+        continue; // Continue with other meals
+      }
+
+      const currentSales = currentMeal?.sales || 0;
+      const newSales = currentSales + quantity;
+
+      // Update the sales count
+      const { error: updateError } = await supabase
+        .from("menu")
+        .update({ sales: newSales })
+        .eq("id", mealId);
+
+      if (updateError) {
+        console.error(`Error updating sales for meal ${mealId}:`, updateError);
+        continue; // Continue with other meals
+      }
+
+      console.log(
+        `Successfully updated sales for meal ${mealId}: ${currentSales} → ${newSales}`
+      );
+    }
+
+    console.log("All meal sales updates completed successfully");
+  } catch (error) {
+    console.error("Error in updateMealSales:", error);
+    throw error;
+  }
+};
+
+/**
  * Updated database schema with order_items table:
  *
  * CREATE TABLE orders (
@@ -615,6 +677,9 @@ export const updateOrderFeedback = async (
  *
  * -- Add feedback column if it doesn't exist
  * ALTER TABLE orders ADD COLUMN IF NOT EXISTS feedback TEXT;
+ *
+ * -- Add sales column to menu table if it doesn't exist
+ * ALTER TABLE menu ADD COLUMN IF NOT EXISTS sales INTEGER DEFAULT 0;
  *
  * -- Enable Row Level Security (optional)
  * ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
