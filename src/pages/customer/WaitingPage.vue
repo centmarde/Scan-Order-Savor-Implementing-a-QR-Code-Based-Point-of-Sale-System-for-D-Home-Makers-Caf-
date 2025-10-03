@@ -86,15 +86,17 @@ const fetchOrders = async () => {
       currentOrderStatus.value === "completed" &&
       previousOrderStatus.value !== "completed"
     ) {
-      // Update meal sales when order is completed (only once)
+      // Update meal sales and deduct quantities when order is completed (only once)
       if (fetchedOrder && !salesUpdated.value) {
         try {
-          console.log("Order completed! Updating meal sales...");
+          console.log(
+            "Order completed! Updating meal sales and deducting quantities..."
+          );
           await updateMealSales(fetchedOrder);
           salesUpdated.value = true;
-          console.log("Meal sales updated successfully");
+          console.log("Meal sales and quantities updated successfully");
         } catch (error) {
-          console.error("Error updating meal sales:", error);
+          console.error("Error updating meal sales and quantities:", error);
         }
       }
 

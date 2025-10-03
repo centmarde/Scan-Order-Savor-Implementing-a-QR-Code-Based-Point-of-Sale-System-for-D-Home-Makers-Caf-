@@ -593,7 +593,7 @@ export const updateOrderFeedback = async (
 };
 
 /**
- * Update meal sales when order is completed
+ * Update meal sales and deduct quantities when order is completed
  */
 export const updateMealSales = async (
   orderWithMeals: OrderWithMeals
@@ -603,23 +603,28 @@ export const updateMealSales = async (
       !orderWithMeals.order_items_db ||
       orderWithMeals.order_items_db.length === 0
     ) {
-      console.log("No order items found to update sales");
+      console.log("No order items found to update sales and quantities");
       return;
     }
 
-    console.log("Updating meal sales for order:", orderWithMeals.id);
+    console.log(
+      "Updating meal sales and quantities for order:",
+      orderWithMeals.id
+    );
 
-    // Update sales for each meal in the order
+    // Update sales and quantities for each meal in the order
     for (const orderItem of orderWithMeals.order_items_db) {
       const mealId = orderItem.meal_id;
       const quantity = orderItem.quantity;
 
-      console.log(`Updating sales for meal ID ${mealId} by ${quantity}`);
+      console.log(
+        `Updating sales and quantity for meal ID ${mealId} by ${quantity}`
+      );
 
-      // Get current sales count
+      // Get current sales count and quantity
       const { data: currentMeal, error: fetchError } = await supabase
         .from("menu")
-        .select("sales")
+        .select("sales, quantity")
         .eq("id", mealId)
         .single();
 
@@ -629,25 +634,44 @@ export const updateMealSales = async (
       }
 
       const currentSales = currentMeal?.sales || 0;
+      const currentQuantity = currentMeal?.quantity || 0;
       const newSales = currentSales + quantity;
+      const newQuantity = Math.max(0, currentQuantity - quantity); // Ensure quantity doesn't go below 0
 
-      // Update the sales count
+      // Update both sales count and quantity
       const { error: updateError } = await supabase
         .from("menu")
-        .update({ sales: newSales })
+        .update({
+          sales: newSales,
+          quantity: newQuantity,
+        })
         .eq("id", mealId);
 
       if (updateError) {
-        console.error(`Error updating sales for meal ${mealId}:`, updateError);
+        console.error(
+          `Error updating sales and quantity for meal ${mealId}:`,
+          updateError
+        );
         continue; // Continue with other meals
       }
 
-      console.log(
-        `Successfully updated sales for meal ${mealId}: ${currentSales} → ${newSales}`
-      );
+      console.log(`Successfully updated meal ${mealId}:`);
+      console.log(`  Sales: ${currentSales} → ${newSales}`);
+      console.log(`  Quantity: ${currentQuantity} → ${newQuantity}`);
+
+      // Log warning if quantity reaches zero or goes negative
+      if (newQuantity === 0) {
+        console.warn(
+          `Warning: Meal ${mealId} is now out of stock (quantity: 0)`
+        );
+      } else if (currentQuantity < quantity) {
+        console.warn(
+          `Warning: Meal ${mealId} had insufficient stock. Ordered: ${quantity}, Available: ${currentQuantity}, New quantity: ${newQuantity}`
+        );
+      }
     }
 
-    console.log("All meal sales updates completed successfully");
+    console.log("All meal sales and quantity updates completed successfully");
   } catch (error) {
     console.error("Error in updateMealSales:", error);
     throw error;
@@ -680,6 +704,9 @@ export const updateMealSales = async (
  *
  * -- Add sales column to menu table if it doesn't exist
  * ALTER TABLE menu ADD COLUMN IF NOT EXISTS sales INTEGER DEFAULT 0;
+ *
+ * -- Add or ensure quantity column exists in menu table
+ * ALTER TABLE menu ADD COLUMN IF NOT EXISTS quantity INTEGER DEFAULT 0;
  *
  * -- Enable Row Level Security (optional)
  * ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
