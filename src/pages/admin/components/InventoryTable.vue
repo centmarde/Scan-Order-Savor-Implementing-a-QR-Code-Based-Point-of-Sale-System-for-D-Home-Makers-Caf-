@@ -2,6 +2,9 @@
 import { ref, onMounted, computed } from "vue";
 import { useTheme } from "@/composables/useTheme";
 import { supabase } from "@/lib/supabase";
+import AddItemDialog from "./dialogs/AddItemDialog.vue";
+import EditItemDialog from "./dialogs/EditItemDialog.vue";
+import DeleteItemDialog from "./dialogs/DeleteItemDialog.vue";
 
 // Interface for inventory items
 interface InventoryItem {
@@ -27,27 +30,6 @@ const dialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
 const selectedItem = ref<InventoryItem | null>(null);
-
-// Form data for new/edit item
-const formData = ref<InventoryItem>({
-  name: "",
-  description: "",
-  price: 0,
-  category: "",
-  image: "",
-  quantity: 0,
-  sales: 0,
-});
-
-// Categories for the select dropdown
-const categories = [
-  "Main Dish",
-  "Soup",
-  "Vegetable Dish",
-  "Appetizer",
-  "Dessert",
-  "Beverage",
-];
 
 // Table headers
 const headers = [
@@ -97,21 +79,11 @@ const fetchInventoryItems = async () => {
 };
 
 const openAddDialog = () => {
-  formData.value = {
-    name: "",
-    description: "",
-    price: 0,
-    category: "",
-    image: "",
-    quantity: 0,
-    sales: 0,
-  };
   dialog.value = true;
 };
 
 const openEditDialog = (item: InventoryItem) => {
   selectedItem.value = item;
-  formData.value = { ...item };
   editDialog.value = true;
 };
 
@@ -120,83 +92,16 @@ const openDeleteDialog = (item: InventoryItem) => {
   deleteDialog.value = true;
 };
 
-const saveItem = async () => {
-  try {
-    loading.value = true;
-
-    const { error } = await supabase.from("menu").insert([formData.value]);
-
-    if (error) {
-      console.error("Error adding item:", error);
-      alert("Error adding item: " + error.message);
-      return;
-    }
-
-    dialog.value = false;
-    await fetchInventoryItems();
-    alert("Item added successfully!");
-  } catch (error) {
-    console.error("Error in saveItem:", error);
-    alert("Error adding item");
-  } finally {
-    loading.value = false;
-  }
+const handleItemAdded = async () => {
+  await fetchInventoryItems();
 };
 
-const updateItem = async () => {
-  try {
-    if (!selectedItem.value?.id) return;
-
-    loading.value = true;
-
-    const { error } = await supabase
-      .from("menu")
-      .update(formData.value)
-      .eq("id", selectedItem.value.id);
-
-    if (error) {
-      console.error("Error updating item:", error);
-      alert("Error updating item: " + error.message);
-      return;
-    }
-
-    editDialog.value = false;
-    await fetchInventoryItems();
-    alert("Item updated successfully!");
-  } catch (error) {
-    console.error("Error in updateItem:", error);
-    alert("Error updating item");
-  } finally {
-    loading.value = false;
-  }
+const handleItemUpdated = async () => {
+  await fetchInventoryItems();
 };
 
-const deleteItem = async () => {
-  try {
-    if (!selectedItem.value?.id) return;
-
-    loading.value = true;
-
-    const { error } = await supabase
-      .from("menu")
-      .delete()
-      .eq("id", selectedItem.value.id);
-
-    if (error) {
-      console.error("Error deleting item:", error);
-      alert("Error deleting item: " + error.message);
-      return;
-    }
-
-    deleteDialog.value = false;
-    await fetchInventoryItems();
-    alert("Item deleted successfully!");
-  } catch (error) {
-    console.error("Error in deleteItem:", error);
-    alert("Error deleting item");
-  } finally {
-    loading.value = false;
-  }
+const handleItemDeleted = async () => {
+  await fetchInventoryItems();
 };
 
 const formatPrice = (price: number) => {
@@ -421,255 +326,20 @@ onMounted(() => {
       </div>
     </v-card-text>
 
-    <!-- Add Item Dialog -->
-    <v-dialog
-      v-model="dialog"
-      :max-width="$vuetify.display.xs ? '95vw' : '600'"
-      :fullscreen="$vuetify.display.xs"
-      :transition="
-        $vuetify.display.xs ? 'dialog-bottom-transition' : 'dialog-transition'
-      "
-    >
-      <v-card>
-        <v-card-title class="pa-4 pa-md-6">
-          <span class="text-h6 text-md-h5 font-weight-bold">Add New Item</span>
-          <v-spacer />
-          <v-btn
-            v-if="$vuetify.display.xs"
-            icon="mdi-close"
-            variant="text"
-            @click="dialog = false"
-          />
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-4 pa-md-6">
-          <v-form>
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="formData.name"
-                  label="Item Name"
-                  variant="outlined"
-                  required
-                />
-              </v-col>
-              <v-col cols="12">
-                <v-textarea
-                  v-model="formData.description"
-                  label="Description"
-                  variant="outlined"
-                  rows="3"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="formData.category"
-                  :items="categories"
-                  label="Category"
-                  variant="outlined"
-                  required
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model.number="formData.price"
-                  label="Price (₱)"
-                  variant="outlined"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model.number="formData.quantity"
-                  label="Quantity"
-                  variant="outlined"
-                  type="number"
-                  min="0"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="formData.image"
-                  label="Image URL/Path"
-                  variant="outlined"
-                />
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions class="pa-4 pa-md-6 pt-0">
-          <v-spacer v-if="!$vuetify.display.xs" />
-          <div :class="$vuetify.display.xs ? 'd-flex flex-column ga-2' : ''">
-            <v-btn
-              variant="text"
-              @click="dialog = false"
-              :block="$vuetify.display.xs"
-            >
-              Cancel
-            </v-btn>
-            <v-btn
-              :color="primaryColor"
-              variant="flat"
-              @click="saveItem"
-              :loading="loading"
-              :block="$vuetify.display.xs"
-            >
-              Save
-            </v-btn>
-          </div>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Dialog Components -->
+    <AddItemDialog v-model="dialog" @item-added="handleItemAdded" />
 
-    <!-- Edit Item Dialog -->
-    <v-dialog
+    <EditItemDialog
       v-model="editDialog"
-      :max-width="$vuetify.display.xs ? '95vw' : '600'"
-      :fullscreen="$vuetify.display.xs"
-      :transition="
-        $vuetify.display.xs ? 'dialog-bottom-transition' : 'dialog-transition'
-      "
-    >
-      <v-card>
-        <v-card-title class="pa-4 pa-md-6">
-          <span class="text-h6 text-md-h5 font-weight-bold">Edit Item</span>
-          <v-spacer />
-          <v-btn
-            v-if="$vuetify.display.xs"
-            icon="mdi-close"
-            variant="text"
-            @click="editDialog = false"
-          />
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-4 pa-md-6">
-          <v-form>
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="formData.name"
-                  label="Item Name"
-                  variant="outlined"
-                  required
-                />
-              </v-col>
-              <v-col cols="12">
-                <v-textarea
-                  v-model="formData.description"
-                  label="Description"
-                  variant="outlined"
-                  rows="3"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="formData.category"
-                  :items="categories"
-                  label="Category"
-                  variant="outlined"
-                  required
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model.number="formData.price"
-                  label="Price (₱)"
-                  variant="outlined"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model.number="formData.quantity"
-                  label="Quantity"
-                  variant="outlined"
-                  type="number"
-                  min="0"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="formData.image"
-                  label="Image URL/Path"
-                  variant="outlined"
-                />
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-        <v-card-actions class="pa-4 pa-md-6 pt-0">
-          <v-spacer v-if="!$vuetify.display.xs" />
-          <div :class="$vuetify.display.xs ? 'd-flex flex-column ga-2' : ''">
-            <v-btn
-              variant="text"
-              @click="editDialog = false"
-              :block="$vuetify.display.xs"
-            >
-              Cancel
-            </v-btn>
-            <v-btn
-              :color="primaryColor"
-              variant="flat"
-              @click="updateItem"
-              :loading="loading"
-              :block="$vuetify.display.xs"
-            >
-              Update
-            </v-btn>
-          </div>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :item="selectedItem"
+      @item-updated="handleItemUpdated"
+    />
 
-    <!-- Delete Confirmation Dialog -->
-    <v-dialog
+    <DeleteItemDialog
       v-model="deleteDialog"
-      :max-width="$vuetify.display.xs ? '90vw' : '400'"
-    >
-      <v-card>
-        <v-card-title class="pa-4 pa-md-6">
-          <span class="text-h6 text-md-h5 font-weight-bold"
-            >Confirm Delete</span
-          >
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-4 pa-md-6">
-          <p>
-            Are you sure you want to delete
-            <strong>{{ selectedItem?.name }}</strong
-            >?
-          </p>
-          <p class="text-error">This action cannot be undone.</p>
-        </v-card-text>
-        <v-card-actions class="pa-4 pa-md-6 pt-0">
-          <v-spacer v-if="!$vuetify.display.xs" />
-          <div :class="$vuetify.display.xs ? 'd-flex flex-column ga-2' : ''">
-            <v-btn
-              variant="text"
-              @click="deleteDialog = false"
-              :block="$vuetify.display.xs"
-            >
-              Cancel
-            </v-btn>
-            <v-btn
-              color="error"
-              variant="flat"
-              @click="deleteItem"
-              :loading="loading"
-              :block="$vuetify.display.xs"
-            >
-              Delete
-            </v-btn>
-          </div>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :item="selectedItem"
+      @item-deleted="handleItemDeleted"
+    />
   </v-card>
 </template>
 
@@ -681,19 +351,6 @@ onMounted(() => {
 
 .mobile-loading {
   padding: 16px 0;
-}
-
-/* Improve form field spacing on mobile */
-@media (max-width: 600px) {
-  .v-col {
-    padding: 4px 12px !important;
-  }
-
-  .v-text-field,
-  .v-select,
-  .v-textarea {
-    margin-bottom: 8px;
-  }
 }
 
 /* Custom scrollbar for mobile cards */
