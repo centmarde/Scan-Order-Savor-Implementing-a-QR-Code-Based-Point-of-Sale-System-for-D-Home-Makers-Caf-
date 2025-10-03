@@ -145,11 +145,6 @@ onMounted(async () => {
   setTimeout(() => {
     showContent.value = true;
   }, 300);
-
-  // Auto-redirect to menu after 5 minutes (extended time)
-  setTimeout(() => {
-    router.push("/customer/menu");
-  }, 300000);
 });
 
 // Clean up polling when component unmounts
