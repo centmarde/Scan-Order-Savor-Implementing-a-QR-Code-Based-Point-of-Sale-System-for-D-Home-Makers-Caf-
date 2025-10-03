@@ -120,7 +120,9 @@ const uploadImage = async (): Promise<string | null> => {
       .toString(36)
       .substring(2)}.${fileExt}`;
 
-    // Upload to Supabase storage
+    console.log("Attempting to upload file:", fileName, "to bucket: inventory");
+
+    // Upload directly to Supabase storage (bucket exists as confirmed)
     const { data, error } = await supabase.storage
       .from("inventory")
       .upload(fileName, imageFile.value, {
@@ -130,9 +132,44 @@ const uploadImage = async (): Promise<string | null> => {
 
     if (error) {
       console.error("Error uploading image:", error);
-      throw new Error(`Failed to upload image: ${error.message}`);
+      console.error("Full error details:", JSON.stringify(error, null, 2));
+
+      // Provide more specific error messages
+      if (
+        error.message.includes("row-level security") ||
+        error.message.includes("policy")
+      ) {
+        throw new Error(
+          "Permission denied: Storage policies need configuration. Please check Supabase storage policies."
+        );
+      } else if (error.message.includes("Bucket not found")) {
+        throw new Error(
+          "Storage bucket access issue. Please verify bucket permissions."
+        );
+      } else if (error.message.includes("duplicate")) {
+        // Try with a different filename if duplicate
+        const retryFileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2)}-retry.${fileExt}`;
+        const { data: retryData, error: retryError } = await supabase.storage
+          .from("inventory")
+          .upload(retryFileName, imageFile.value, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (retryError) {
+          throw new Error(`Upload retry failed: ${retryError.message}`);
+        }
+
+        console.log("Upload successful on retry:", retryData);
+        return retryFileName;
+      } else {
+        throw new Error(`Upload failed: ${error.message}`);
+      }
     }
 
+    console.log("Upload successful:", data);
     return fileName; // Return the filename, not the full path
   } catch (error) {
     console.error("Error in uploadImage:", error);
