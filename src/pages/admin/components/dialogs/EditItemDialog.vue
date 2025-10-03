@@ -189,12 +189,14 @@ const updateItem = async () => {
         </v-form>
       </v-card-text>
       <v-card-actions class="pa-4 pa-md-6 pt-0">
-        <v-spacer v-if="!$vuetify.display.xs" />
-        <div :class="$vuetify.display.xs ? 'd-flex flex-column ga-2' : ''">
+        <div
+          class="d-flex w-100"
+          :class="$vuetify.display.xs ? 'justify-space-between' : 'justify-end'"
+        >
           <v-btn
             variant="text"
             @click="closeDialog"
-            :block="$vuetify.display.xs"
+            :class="$vuetify.display.xs ? '' : 'mr-2'"
           >
             Cancel
           </v-btn>
@@ -203,7 +205,6 @@ const updateItem = async () => {
             variant="flat"
             @click="updateItem"
             :loading="loading"
-            :block="$vuetify.display.xs"
           >
             Update
           </v-btn>
