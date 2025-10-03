@@ -277,9 +277,9 @@ const getOrderIds = (): number[] => {
               :show-content="showContent"
             />
 
-            <!-- Progress Indicator (only show if we have an order) -->
+            <!-- Progress Indicator (only show if we have an order and it's not completed) -->
             <div
-              v-if="currentOrder"
+              v-if="currentOrder && currentOrderStatus !== 'completed'"
               class="mb-6 w-100"
               style="max-width: 300px"
             >
@@ -316,9 +316,9 @@ const getOrderIds = (): number[] => {
               </v-btn>
             </div>
 
-            <!-- Status Info Card Component (only show if we have an order) -->
+            <!-- Status Info Card Component (only show if we have an order and it's not completed) -->
             <StatusInfoCard
-              v-if="currentOrder"
+              v-if="currentOrder && currentOrderStatus !== 'completed'"
               :order-status="currentOrderStatus"
             />
           </template>
