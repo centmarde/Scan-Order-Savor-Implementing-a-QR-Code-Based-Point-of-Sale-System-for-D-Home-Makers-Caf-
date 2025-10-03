@@ -12,8 +12,9 @@ const { userName } = storeToRefs(authStore);
 <template>
   <InnerLayoutWrapper>
     <template #content>
-      <v-container fluid class="fill-height">
-        <v-row justify="center" align="center" class="fill-height">
+      <v-container fluid class="home-container">
+        <!-- Welcome Section -->
+        <v-row justify="center" class="welcome-section">
           <v-col cols="12" md="8" lg="6">
             <v-card elevation="4" class="pa-6">
               <v-card-title class="text-h4 text-center mb-4">
@@ -44,8 +45,44 @@ const { userName } = storeToRefs(authStore);
         </v-row>
 
         <!-- Dashboard Component -->
-        <Dashboard />
+        <div class="dashboard-section">
+          <Dashboard />
+        </div>
       </v-container>
     </template>
   </InnerLayoutWrapper>
 </template>
+
+<style scoped>
+.home-container {
+  min-height: 100vh;
+  padding-bottom: 20px;
+}
+
+.welcome-section {
+  padding-top: 2rem;
+  padding-bottom: 1rem;
+}
+
+.dashboard-section {
+  flex: 1;
+  padding-bottom: 2rem;
+}
+
+/* Ensure proper spacing on mobile */
+@media (max-width: 600px) {
+  .home-container {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .welcome-section {
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .dashboard-section {
+    padding-bottom: 1rem;
+  }
+}
+</style>
