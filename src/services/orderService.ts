@@ -16,6 +16,15 @@ export interface OrderItem {
   image: string;
 }
 
+// New interface for order_items table
+export interface OrderItemDB {
+  id?: number;
+  order_id: number;
+  meal_id: number;
+  quantity: number;
+  created_at?: string;
+}
+
 export interface Order {
   id?: number;
   created_at?: string;
@@ -28,12 +37,13 @@ export interface Order {
     | "cancelled";
   total_amount: number;
   table_id: number;
-  meal_id?: number;
+  meal_id?: number; // Back to single ID for main order
   order_items?: OrderItem[]; // For backward compatibility
 }
 
 export interface OrderWithMeals extends Order {
   meal?: MenuItem;
+  order_items_db?: (OrderItemDB & { meal: MenuItem })[]; // Database order items with meal details
 }
 
 export interface CreateOrderData {
@@ -48,6 +58,19 @@ export interface CreateOrderWithMealData {
   total_amount: number;
   table_id: number;
   meal_id: number;
+}
+
+export interface CreateSingleOrderData {
+  status: Order["status"];
+  total_amount: number;
+  table_id: number;
+  meal_id: number[]; // Array of meal IDs
+}
+
+export interface CreateOrderWithItemsData {
+  status: Order["status"];
+  total_amount: number;
+  table_id: number;
 }
 
 /**
@@ -76,7 +99,124 @@ export const createOrder = async (
 };
 
 /**
- * Create multiple orders with meal_id (new schema)
+ * Create a single order with order_items table (recommended approach)
+ */
+export const createOrderWithItems = async (
+  cartItems: MenuItem[],
+  tableId: number
+): Promise<Order> => {
+  try {
+    // Calculate total amount
+    const totalAmount = cartItems.reduce(
+      (total, item) => total + item.price,
+      0
+    );
+
+    // Create the main order
+    const orderData: CreateOrderWithItemsData = {
+      status: "pending",
+      total_amount: totalAmount,
+      table_id: tableId,
+    };
+
+    const { data: orderData_result, error: orderError } = await supabase
+      .from("orders")
+      .insert(orderData)
+      .select()
+      .single();
+
+    if (orderError) {
+      console.error("Error creating order:", orderError);
+      throw new Error(`Failed to create order: ${orderError.message}`);
+    }
+
+    // Group cart items by meal ID and count quantities
+    const groupedItems: {
+      [key: number]: { item: MenuItem; quantity: number };
+    } = {};
+
+    cartItems.forEach((item) => {
+      if (groupedItems[item.id]) {
+        groupedItems[item.id].quantity += 1;
+      } else {
+        groupedItems[item.id] = { item, quantity: 1 };
+      }
+    });
+
+    // Create order items
+    const orderItemsData: Omit<OrderItemDB, "id" | "created_at">[] =
+      Object.values(groupedItems).map(({ item, quantity }) => ({
+        order_id: orderData_result.id!,
+        meal_id: item.id,
+        quantity: quantity,
+      }));
+
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItemsData);
+
+    if (itemsError) {
+      console.error("Error creating order items:", itemsError);
+      // Clean up the order if order items failed
+      await supabase.from("orders").delete().eq("id", orderData_result.id);
+      throw new Error(`Failed to create order items: ${itemsError.message}`);
+    }
+
+    console.log(
+      "Order and order items created successfully:",
+      orderData_result.id
+    );
+    return orderData_result;
+  } catch (error) {
+    console.error("Create order with items error:", error);
+    throw error;
+  }
+};
+
+/**
+ * Create a single order with multiple meal IDs (JSON array approach - deprecated)
+ */
+export const createSingleOrderWithMeals = async (
+  cartItems: MenuItem[],
+  tableId: number
+): Promise<Order> => {
+  try {
+    // Create array of meal IDs (including duplicates for quantities)
+    const mealIds = cartItems.map((item) => item.id);
+
+    // Calculate total amount
+    const totalAmount = cartItems.reduce(
+      (total, item) => total + item.price,
+      0
+    );
+
+    const orderData: CreateSingleOrderData = {
+      status: "pending",
+      total_amount: totalAmount,
+      table_id: tableId,
+      meal_id: mealIds, // Array of meal IDs
+    };
+
+    const { data, error } = await supabase
+      .from("orders")
+      .insert(orderData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating single order with meals:", error);
+      throw new Error(`Failed to create order: ${error.message}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Create single order with meals error:", error);
+    throw error;
+  }
+};
+
+/**
+ * Create multiple orders with meal_id (original approach - kept for backward compatibility)
  */
 export const createOrdersWithMeals = async (
   cartItems: MenuItem[],
@@ -181,29 +321,73 @@ export const getOrderWithMeals = async (
 };
 
 /**
- * Get all orders with meal details for a specific table
+ * Get all orders with meal details for a specific table using order_items table
  */
 export const getOrdersByTableWithMeals = async (
   tableId: number
 ): Promise<OrderWithMeals[]> => {
   try {
-    const { data, error } = await supabase
+    // Fetch orders for the table
+    const { data: orders, error: ordersError } = await supabase
       .from("orders")
+      .select("*")
+      .eq("table_id", tableId)
+      .order("created_at", { ascending: false });
+
+    if (ordersError) {
+      console.error("Error fetching orders:", ordersError);
+      throw new Error(`Failed to fetch orders: ${ordersError.message}`);
+    }
+
+    if (!orders || orders.length === 0) return [];
+
+    // Fetch order items with meal details for all orders
+    const orderIds = orders.map((order) => order.id);
+
+    const { data: orderItems, error: itemsError } = await supabase
+      .from("order_items")
       .select(
         `
         *,
         meal:menu(*)
       `
       )
-      .eq("table_id", tableId)
-      .order("created_at", { ascending: false });
+      .in("order_id", orderIds)
+      .order("created_at", { ascending: true });
 
-    if (error) {
-      console.error("Error fetching orders with meals:", error);
-      throw new Error(`Failed to fetch orders with meals: ${error.message}`);
+    if (itemsError) {
+      console.error("Error fetching order items:", itemsError);
+      throw new Error(`Failed to fetch order items: ${itemsError.message}`);
     }
 
-    return data || [];
+    // Create expanded orders (one entry per meal)
+    const expandedOrders: OrderWithMeals[] = [];
+
+    orders.forEach((order) => {
+      const orderItemsForOrder =
+        orderItems?.filter((item) => item.order_id === order.id) || [];
+
+      if (orderItemsForOrder.length === 0) {
+        // Order with no items, add as is
+        expandedOrders.push(order);
+      } else {
+        // Create one entry per meal (considering quantity)
+        orderItemsForOrder.forEach((orderItem) => {
+          if (orderItem.meal) {
+            // Create multiple entries for quantity > 1
+            for (let i = 0; i < orderItem.quantity; i++) {
+              expandedOrders.push({
+                ...order,
+                meal: orderItem.meal,
+                total_amount: orderItem.meal.price, // Individual meal price
+              });
+            }
+          }
+        });
+      }
+    });
+
+    return expandedOrders;
   } catch (error) {
     console.error("Get orders by table with meals error:", error);
     throw error;
@@ -300,16 +484,23 @@ export const calculateOrderTotal = (cartItems: MenuItem[]): number => {
 };
 
 /**
- * Updated database schema for orders table with meal_id:
+ * Updated database schema with order_items table:
  *
  * CREATE TABLE orders (
- *   id SERIAL PRIMARY KEY,
+ *   id BIGSERIAL PRIMARY KEY,
  *   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
  *   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled')),
  *   total_amount DECIMAL(10,2) NOT NULL,
  *   table_id INTEGER NOT NULL,
- *   meal_id INTEGER REFERENCES menu(id),
- *   order_items JSONB DEFAULT '[]'::jsonb  -- Optional for backward compatibility
+ *   meal_id INTEGER REFERENCES menu(id)  -- Optional, for backward compatibility
+ * );
+ *
+ * CREATE TABLE order_items (
+ *   id BIGSERIAL PRIMARY KEY,
+ *   order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+ *   meal_id BIGINT NOT NULL REFERENCES menu(id) ON DELETE CASCADE,
+ *   quantity INTEGER NOT NULL DEFAULT 1,
+ *   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
  * );
  *
  * -- Enable Row Level Security (optional)

@@ -7,6 +7,7 @@ import { useTableStore } from "@/stores/tableStores";
 import type { MenuItem } from "@/stores/menuData";
 import {
   createOrdersWithMeals,
+  createOrderWithItems,
   getOrdersByTableWithMeals,
   calculateOrderTotal,
   type Order,
@@ -247,12 +248,9 @@ const proceedToPayment = async () => {
         cartItems.value.length.toString()
       );
 
-      // Create orders with meal_id for each cart item
-      const orders = await createOrdersWithMeals(
-        cartItems.value,
-        currentTableId
-      );
-      console.log("Orders created successfully:", orders);
+      // Create single order with order_items table
+      const order = await createOrderWithItems(cartItems.value, currentTableId);
+      console.log("Order created successfully:", order);
 
       // Clear cart items after successful order creation
       cartItems.value = [];
