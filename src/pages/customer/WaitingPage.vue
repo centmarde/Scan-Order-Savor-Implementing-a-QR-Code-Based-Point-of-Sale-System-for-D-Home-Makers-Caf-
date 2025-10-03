@@ -168,15 +168,28 @@ const checkOrderStatus = async () => {
 const handleFeedbackSubmit = async (feedbackData: FeedbackData) => {
   try {
     console.log("Submitting feedback:", feedbackData);
+    console.log("Order IDs to update:", feedbackData.orderIds);
+
+    if (!feedbackData.orderIds || feedbackData.orderIds.length === 0) {
+      console.error("No order IDs provided for feedback");
+      alert("Error: No order found to submit feedback for.");
+      return;
+    }
+
     await updateOrderFeedback(feedbackData);
     feedbackSubmitted.value = true;
     showFeedbackModal.value = false;
 
-    // Show success message or toast
+    // Show success message
     console.log("Feedback submitted successfully!");
+    alert("Thank you for your feedback! It has been submitted successfully.");
   } catch (error) {
     console.error("Error submitting feedback:", error);
-    // Could show error toast here
+    alert(
+      `Error submitting feedback: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
   }
 };
 

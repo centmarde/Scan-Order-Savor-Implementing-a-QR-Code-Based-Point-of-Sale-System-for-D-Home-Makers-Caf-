@@ -561,21 +561,31 @@ export const updateOrderFeedback = async (
       submitted_at: new Date().toISOString(),
     };
 
-    // Update all orders with the feedback
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        feedback: JSON.stringify(feedback),
-        updated_at: new Date().toISOString(),
-      })
-      .in("id", feedbackData.orderIds);
+    console.log("Feedback object to save:", feedback);
 
-    if (error) {
-      console.error("Error updating feedback:", error);
-      throw new Error(`Failed to update feedback: ${error.message}`);
+    // Update each order individually to ensure proper error handling
+    for (const orderId of feedbackData.orderIds) {
+      console.log(`Updating feedback for order ID: ${orderId}`);
+
+      const { data, error } = await supabase
+        .from("orders")
+        .update({
+          feedback: JSON.stringify(feedback),
+        })
+        .eq("id", orderId)
+        .select();
+
+      if (error) {
+        console.error(`Error updating feedback for order ${orderId}:`, error);
+        throw new Error(
+          `Failed to update feedback for order ${orderId}: ${error.message}`
+        );
+      }
+
+      console.log(`Feedback updated successfully for order ${orderId}:`, data);
     }
 
-    console.log("Feedback updated successfully");
+    console.log("All feedback updates completed successfully");
   } catch (error) {
     console.error("Error in updateOrderFeedback:", error);
     throw error;
@@ -591,7 +601,8 @@ export const updateOrderFeedback = async (
  *   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled')),
  *   total_amount DECIMAL(10,2) NOT NULL,
  *   table_id INTEGER NOT NULL,
- *   meal_id INTEGER REFERENCES menu(id)  -- Optional, for backward compatibility
+ *   meal_id INTEGER REFERENCES menu(id),  -- Optional, for backward compatibility
+ *   feedback TEXT  -- Store feedback as JSON string
  * );
  *
  * CREATE TABLE order_items (
@@ -602,14 +613,17 @@ export const updateOrderFeedback = async (
  *   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
  * );
  *
+ * -- Add feedback column if it doesn't exist
+ * ALTER TABLE orders ADD COLUMN IF NOT EXISTS feedback TEXT;
+ *
  * -- Enable Row Level Security (optional)
  * ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
  *
  * -- Create indexes for better performance
- * CREATE INDEX idx_orders_table_id ON orders(table_id);
- * CREATE INDEX idx_orders_status ON orders(status);
- * CREATE INDEX idx_orders_created_at ON orders(created_at);
- * CREATE INDEX idx_orders_meal_id ON orders(meal_id);
+ * CREATE INDEX IF NOT EXISTS idx_orders_table_id ON orders(table_id);
+ * CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+ * CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
+ * CREATE INDEX IF NOT EXISTS idx_orders_meal_id ON orders(meal_id);
  *
  * -- Foreign key constraint for meal_id
  * ALTER TABLE orders ADD CONSTRAINT fk_orders_meal_id
