@@ -35,6 +35,8 @@ const { primaryColor } = useTheme();
 
 // Reactive data
 const loading = ref(false);
+const imageFile = ref<File | null>(null);
+const imagePreview = ref<string>("");
 
 // Form data for new item
 const formData = ref<InventoryItem>({
@@ -74,6 +76,68 @@ const resetForm = () => {
     quantity: 0,
     sales: 0,
   };
+  imageFile.value = null;
+  imagePreview.value = "";
+};
+
+const handleImageSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+
+  if (file) {
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      alert("Please select a valid image file (JPEG, PNG, or WebP)");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      alert("Image file size must be less than 5MB");
+      return;
+    }
+
+    imageFile.value = file;
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const uploadImage = async (): Promise<string | null> => {
+  if (!imageFile.value) return null;
+
+  try {
+    // Generate unique filename
+    const fileExt = imageFile.value.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.${fileExt}`;
+
+    // Upload to Supabase storage
+    const { data, error } = await supabase.storage
+      .from("inventory")
+      .upload(fileName, imageFile.value, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Error uploading image:", error);
+      throw new Error(`Failed to upload image: ${error.message}`);
+    }
+
+    return fileName; // Return the filename, not the full path
+  } catch (error) {
+    console.error("Error in uploadImage:", error);
+    throw error;
+  }
 };
 
 const closeDialog = () => {
@@ -85,7 +149,32 @@ const saveItem = async () => {
   try {
     loading.value = true;
 
-    const { error } = await supabase.from("menu").insert([formData.value]);
+    // Upload image first if one is selected
+    let imagePath = "";
+
+    if (imageFile.value) {
+      try {
+        const uploadedFileName = await uploadImage();
+        if (uploadedFileName) {
+          imagePath = uploadedFileName; // Store just the filename
+        }
+      } catch (uploadError) {
+        alert(
+          `Failed to upload image: ${
+            uploadError instanceof Error ? uploadError.message : "Unknown error"
+          }`
+        );
+        return;
+      }
+    }
+
+    // Create the item data with the image path
+    const itemData = {
+      ...formData.value,
+      image: imagePath,
+    };
+
+    const { error } = await supabase.from("menu").insert([itemData]);
 
     if (error) {
       console.error("Error adding item:", error);
@@ -174,12 +263,47 @@ const saveItem = async () => {
                 min="0"
               />
             </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.image"
-                label="Image URL/Path"
-                variant="outlined"
-              />
+            <v-col cols="12">
+              <div class="d-flex flex-column">
+                <v-file-input
+                  @change="handleImageSelect"
+                  label="Select Image"
+                  variant="outlined"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  prepend-icon="mdi-camera"
+                  show-size
+                  :clearable="true"
+                  hint="Select an image file (JPEG, PNG, WebP) - Max 5MB"
+                  persistent-hint
+                  class="mb-4"
+                />
+
+                <!-- Image Preview -->
+                <div v-if="imagePreview" class="mb-4">
+                  <v-card class="mx-auto" max-width="200" elevation="2">
+                    <v-img
+                      :src="imagePreview"
+                      height="150"
+                      cover
+                      class="text-white"
+                    >
+                      <template #placeholder>
+                        <div
+                          class="d-flex align-center justify-center fill-height"
+                        >
+                          <v-progress-circular
+                            color="grey-lighten-4"
+                            indeterminate
+                          />
+                        </div>
+                      </template>
+                    </v-img>
+                    <v-card-subtitle class="text-center py-2">
+                      Preview
+                    </v-card-subtitle>
+                  </v-card>
+                </div>
+              </div>
             </v-col>
           </v-row>
         </v-form>
