@@ -5,13 +5,16 @@ import { useTheme } from "@/composables/useTheme";
 import { useTableStore } from "@/stores/tableStores";
 import {
   getOrdersByTableWithMeals,
+  updateOrderFeedback,
   type OrderWithMeals,
+  type FeedbackData,
 } from "@/services/orderService";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
 import StatusCard from "@/components/common/customer/StatusCard.vue";
 import StatusMessages from "@/components/common/customer/StatusMessages.vue";
 import StatusInfoCard from "@/components/common/customer/StatusInfoCard.vue";
+import Feedback from "@/components/common/customer/Feedback.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -33,6 +36,11 @@ const loading = ref(false);
 // Animation states
 const showContent = ref(false);
 const pulseAnimation = ref(true);
+
+// Feedback modal state
+const showFeedbackModal = ref(false);
+const feedbackSubmitted = ref(false);
+const previousOrderStatus = ref("");
 
 // Polling interval for status updates
 let statusPollingInterval: number | null = null;
@@ -77,6 +85,20 @@ const fetchOrders = async () => {
 
     console.log("Fetched orders:", fetchedOrders);
     console.log("Current order status:", currentOrderStatus.value);
+
+    // Check if status changed to completed and show feedback modal
+    if (
+      currentOrderStatus.value === "completed" &&
+      previousOrderStatus.value !== "completed" &&
+      !feedbackSubmitted.value
+    ) {
+      setTimeout(() => {
+        showFeedbackModal.value = true;
+      }, 1000); // Show modal after 1 second delay for smooth transition
+    }
+
+    // Update previous status for comparison
+    previousOrderStatus.value = currentOrderStatus.value;
 
     // Update orderStatus for display
     orderStatus.value = currentOrderStatus.value;
@@ -152,6 +174,29 @@ const goBackToMenu = () => {
 const checkOrderStatus = async () => {
   // Manually refresh order status
   await fetchOrders();
+};
+
+// Handle feedback submission
+const handleFeedbackSubmit = async (feedbackData: FeedbackData) => {
+  try {
+    console.log("Submitting feedback:", feedbackData);
+    await updateOrderFeedback(feedbackData);
+    feedbackSubmitted.value = true;
+    showFeedbackModal.value = false;
+
+    // Show success message or toast
+    console.log("Feedback submitted successfully!");
+  } catch (error) {
+    console.error("Error submitting feedback:", error);
+    // Could show error toast here
+  }
+};
+
+// Get order IDs for feedback
+const getOrderIds = (): number[] => {
+  return orders.value
+    .map((order) => order.id!)
+    .filter((id) => id !== undefined);
 };
 </script>
 
@@ -296,5 +341,12 @@ const checkOrderStatus = async () => {
         </div>
       </v-container>
     </v-main>
+
+    <!-- Feedback Modal -->
+    <Feedback
+      v-model="showFeedbackModal"
+      :order-ids="getOrderIds()"
+      @submit-feedback="handleFeedbackSubmit"
+    />
   </v-app>
 </template>

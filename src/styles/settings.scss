@@ -131,3 +131,54 @@
     rgba(139, 92, 42, 0.8) 100%
   );
 }
+
+/* Feedback Modal Animations */
+.feedback-modal :deep(.v-dialog) {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-modal :deep(.v-card) {
+  animation: modalSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Feedback Form Styles */
+.custom-textarea :deep(.v-field__input) {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.custom-textarea :deep(.v-field__field) {
+  --v-field-border-radius: 12px;
+}
+
+/* Rating hover effects */
+:deep(.v-rating .v-btn) {
+  transition: transform 0.2s ease;
+}
+
+:deep(.v-rating .v-btn:hover) {
+  transform: scale(1.1);
+}
+
+/* Gentle hover effects for feedback elements */
+.feedback-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.feedback-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.15);
+}

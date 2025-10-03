@@ -484,6 +484,51 @@ export const calculateOrderTotal = (cartItems: MenuItem[]): number => {
 };
 
 /**
+ * Update order feedback
+ */
+export interface FeedbackData {
+  orderIds: number[];
+  foodRating: number;
+  serviceRating: number;
+  comments: string;
+}
+
+export const updateOrderFeedback = async (
+  feedbackData: FeedbackData
+): Promise<void> => {
+  try {
+    console.log("Updating feedback for orders:", feedbackData.orderIds);
+
+    // Create feedback object
+    const feedback = {
+      food_rating: feedbackData.foodRating,
+      service_rating: feedbackData.serviceRating,
+      comments: feedbackData.comments,
+      submitted_at: new Date().toISOString(),
+    };
+
+    // Update all orders with the feedback
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        feedback: JSON.stringify(feedback),
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", feedbackData.orderIds);
+
+    if (error) {
+      console.error("Error updating feedback:", error);
+      throw new Error(`Failed to update feedback: ${error.message}`);
+    }
+
+    console.log("Feedback updated successfully");
+  } catch (error) {
+    console.error("Error in updateOrderFeedback:", error);
+    throw error;
+  }
+};
+
+/**
  * Updated database schema with order_items table:
  *
  * CREATE TABLE orders (
