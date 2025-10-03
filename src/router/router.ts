@@ -8,6 +8,7 @@ import NotFound from "@/pages/NotFound.vue";
 import ForbiddenView from "@/pages/ForbiddenView.vue";
 import AdminUserRolesView from "@/pages/admin/AdminUserRolesView.vue";
 import UserManagementView from "@/pages/admin/UserManagementView.vue";
+import InventoryView from "@/pages/admin/InventoryView.vue";
 
 import LandingPage from "@/pages/customer/LandingPage.vue";
 import Menu from "@/pages/customer/Menu.vue";
@@ -55,6 +56,11 @@ const routes = setupLayouts([
   {
     path: "/account/home",
     component: Dashboard,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/admin/inventory-management",
+    component: InventoryView,
     meta: { requiresAuth: true },
   },
   {
