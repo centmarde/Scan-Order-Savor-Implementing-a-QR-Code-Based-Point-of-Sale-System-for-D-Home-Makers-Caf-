@@ -263,6 +263,92 @@ export function getStatusText(status: string): string {
   }
 }
 
+/**
+ * Gets the icon associated with an order status
+ * @param status - The order status string
+ * @returns A Material Design icon name for the status
+ */
+export function getStatusIcon(status: string): string {
+  switch (status) {
+    case "pending":
+      return "mdi-clock-outline";
+    case "confirmed":
+      return "mdi-check-circle-outline";
+    case "preparing":
+      return "mdi-chef-hat";
+    case "ready":
+      return "mdi-bell-ring";
+    case "completed":
+      return "mdi-check-all";
+    case "cancelled":
+      return "mdi-close-circle-outline";
+    default:
+      return "mdi-clock-outline";
+  }
+}
+
+/**
+ * Gets the appropriate label for a status info card
+ * @param status - The order status string
+ * @returns A descriptive label for the status
+ */
+export function getStatusLabel(status: string): string {
+  switch (status) {
+    case "pending":
+    case "confirmed":
+    case "preparing":
+      return "Estimated Time";
+    case "ready":
+    case "completed":
+    case "cancelled":
+      return "Status";
+    default:
+      return "Estimated Time";
+  }
+}
+
+/**
+ * Gets the display value for a status (time estimate or status message)
+ * @param status - The order status string
+ * @returns A descriptive value for the status
+ */
+export function getStatusValue(status: string): string {
+  switch (status) {
+    case "pending":
+      return "3-5 minutes";
+    case "confirmed":
+      return "12-15 minutes";
+    case "preparing":
+      return "5-10 minutes";
+    case "ready":
+      return "Ready to Serve!";
+    case "completed":
+      return "Completed";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      return "3-5 minutes";
+  }
+}
+
+/**
+ * Gets the color for status labels (different from main status color)
+ * @param status - The order status string
+ * @param primaryColor - The primary theme color as fallback
+ * @returns A hex color code for the label
+ */
+export function getLabelColor(status: string, primaryColor?: string): string {
+  switch (status) {
+    case "ready":
+    case "completed":
+      return "#4CAF50";
+    case "cancelled":
+      return "#F44336";
+    default:
+      return primaryColor || "#757575";
+  }
+}
+
 // ========================================
 // ORGANIZATION MEMBERS HELPERS
 // ========================================
