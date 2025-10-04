@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useToast } from "vue-toastification";
 import {
   useInventoryDataStore,
   type InventoryItem,
@@ -19,6 +20,9 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
+// Toast
+const toast = useToast();
 
 // Store
 const inventoryStore = useInventoryDataStore();
@@ -42,10 +46,10 @@ const deleteItem = async () => {
 
     closeDialog();
     emit("item-deleted");
-    alert("Item deleted successfully!");
+    toast.success("Item deleted successfully!");
   } catch (error) {
     console.error("Error in deleteItem:", error);
-    alert(
+    toast.error(
       `Error deleting item: ${
         error instanceof Error ? error.message : "Unknown error"
       }`

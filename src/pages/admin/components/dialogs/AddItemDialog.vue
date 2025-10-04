@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useTheme } from "@/composables/useTheme";
+import { useToast } from "vue-toastification";
 import {
   useInventoryDataStore,
   type InventoryItem,
@@ -22,6 +23,9 @@ const emit = defineEmits<Emits>();
 
 // Theme setup
 const { primaryColor } = useTheme();
+
+// Toast
+const toast = useToast();
 
 // Store
 const inventoryStore = useInventoryDataStore();
@@ -80,14 +84,14 @@ const handleImageSelect = (event: Event) => {
     // Validate file type
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!validTypes.includes(file.type)) {
-      alert("Please select a valid image file (JPEG, PNG, or WebP)");
+      toast.error("Please select a valid image file (JPEG, PNG, or WebP)");
       return;
     }
 
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB in bytes
     if (file.size > maxSize) {
-      alert("Image file size must be less than 5MB");
+      toast.error("Image file size must be less than 5MB");
       return;
     }
 
@@ -113,10 +117,10 @@ const saveItem = async () => {
 
     closeDialog();
     emit("item-added");
-    alert("Item added successfully!");
+    toast.success("Item added successfully!");
   } catch (error) {
     console.error("Error in saveItem:", error);
-    alert(
+    toast.error(
       `Error adding item: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
