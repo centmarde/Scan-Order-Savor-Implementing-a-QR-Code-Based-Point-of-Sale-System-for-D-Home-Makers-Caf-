@@ -1,36 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { supabase } from "@/lib/supabase";
 import { useMenuDataStore } from "@/stores/menuData";
-
-// Interface for menu items
-interface MenuItem {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image: string;
-  quantity: number;
-  sales: number;
-  created_at: string;
-}
-
-// Interface for order items
-interface OrderItem {
-  id: number;
-  menu_item_id: number;
-  quantity: number;
-  price: number;
-  created_at: string;
-  menu?: MenuItem;
-}
+import { useOrderItems } from "@/composables/useOrderItems";
 
 // Store
 const menuDataStore = useMenuDataStore();
 
+// Composables
+const {
+  orderItems,
+  loading: orderItemsLoading,
+  fetchOrderItems,
+  getPeriodTotalSales,
+} = useOrderItems();
+
 // Data for analytics
-const orderItems = ref<OrderItem[]>([]);
 const loading = ref(false);
 const selectedPeriod = ref("week"); // week, month, day
 
@@ -60,61 +44,11 @@ const totalMenuItems = computed(() => {
   return menuDataStore.menuItems.length;
 });
 
-const filteredOrderItems = computed(() => {
-  const now = new Date();
-  let startDate = new Date();
-
-  if (selectedPeriod.value === "day") {
-    startDate.setHours(0, 0, 0, 0);
-  } else if (selectedPeriod.value === "week") {
-    startDate.setDate(now.getDate() - 7);
-  } else if (selectedPeriod.value === "month") {
-    startDate.setMonth(now.getMonth() - 1);
-  }
-
-  return orderItems.value.filter((item) => {
-    const itemDate = new Date(item.created_at);
-    return itemDate >= startDate;
-  });
-});
-
 const periodTotalSales = computed(() => {
-  return filteredOrderItems.value.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  return getPeriodTotalSales(selectedPeriod.value);
 });
 
 // Methods
-const fetchOrderItems = async () => {
-  try {
-    const { data, error } = await supabase
-      .from("order_items")
-      .select(
-        `
-        *,
-        menu:meal_id (
-          id,
-          name,
-          category,
-          price,
-          image
-        )
-      `
-      )
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching order items:", error);
-      return;
-    }
-
-    orderItems.value = data || [];
-  } catch (error) {
-    console.error("Error in fetchOrderItems:", error);
-  }
-};
-
 const getImageUrl = (imagePath: string) => {
   if (!imagePath) return "/assets/logo1.png";
   if (imagePath.startsWith("http")) return imagePath;
@@ -406,7 +340,7 @@ onMounted(async () => {
           </v-row>
 
           <div
-            v-else-if="loading || menuDataStore.loading"
+            v-else-if="loading || menuDataStore.loading || orderItemsLoading"
             :class="
               $vuetify.display.xs ? 'text-center py-6' : 'text-center py-8'
             "
