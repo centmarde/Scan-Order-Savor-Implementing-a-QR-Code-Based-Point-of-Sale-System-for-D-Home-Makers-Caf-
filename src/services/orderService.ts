@@ -1,8 +1,12 @@
 /**
- * Orders Service
+ * Orders Service (DEPRECATED - Most functions moved to stores/orderData.ts)
  *
- * Manages order operations with Supabase database
- * Handles order creation, status updates, and retrieval
+ * MIGRATION NOTICE:
+ * Most functions from this service have been moved to stores/orderData.ts for better state management.
+ * Please use useOrderDataStore() instead of importing functions from this service.
+ *
+ * Remaining legacy functions are kept for backward compatibility only.
+ * The interfaces in this file are still used but duplicated in orderData.ts.
  */
 
 import { supabase } from "@/lib/supabase";
@@ -98,80 +102,8 @@ export const createOrder = async (
   }
 };
 
-/**
- * Create a single order with order_items table (recommended approach)
- */
-export const createOrderWithItems = async (
-  cartItems: MenuItem[],
-  tableId: number
-): Promise<Order> => {
-  try {
-    // Calculate total amount
-    const totalAmount = cartItems.reduce(
-      (total, item) => total + item.price,
-      0
-    );
-
-    // Create the main order
-    const orderData: CreateOrderWithItemsData = {
-      status: "pending",
-      total_amount: totalAmount,
-      table_id: tableId,
-    };
-
-    const { data: orderData_result, error: orderError } = await supabase
-      .from("orders")
-      .insert(orderData)
-      .select()
-      .single();
-
-    if (orderError) {
-      console.error("Error creating order:", orderError);
-      throw new Error(`Failed to create order: ${orderError.message}`);
-    }
-
-    // Group cart items by meal ID and count quantities
-    const groupedItems: {
-      [key: number]: { item: MenuItem; quantity: number };
-    } = {};
-
-    cartItems.forEach((item) => {
-      if (groupedItems[item.id]) {
-        groupedItems[item.id].quantity += 1;
-      } else {
-        groupedItems[item.id] = { item, quantity: 1 };
-      }
-    });
-
-    // Create order items
-    const orderItemsData: Omit<OrderItemDB, "id" | "created_at">[] =
-      Object.values(groupedItems).map(({ item, quantity }) => ({
-        order_id: orderData_result.id!,
-        meal_id: item.id,
-        quantity: quantity,
-      }));
-
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .insert(orderItemsData);
-
-    if (itemsError) {
-      console.error("Error creating order items:", itemsError);
-      // Clean up the order if order items failed
-      await supabase.from("orders").delete().eq("id", orderData_result.id);
-      throw new Error(`Failed to create order items: ${itemsError.message}`);
-    }
-
-    console.log(
-      "Order and order items created successfully:",
-      orderData_result.id
-    );
-    return orderData_result;
-  } catch (error) {
-    console.error("Create order with items error:", error);
-    throw error;
-  }
-};
+// NOTE: createOrderWithItems has been moved to stores/orderData.ts
+// Use useOrderDataStore().createOrderWithItems() instead
 
 /**
  * Create a single order with multiple meal IDs (JSON array approach - deprecated)
@@ -320,133 +252,11 @@ export const getOrderWithMeals = async (
   }
 };
 
-/**
- * Get all orders with meal details for a specific table using order_items table
- */
-export const getOrdersByTableWithMeals = async (
-  tableId: number
-): Promise<OrderWithMeals[]> => {
-  try {
-    // Fetch orders for the table
-    const { data: orders, error: ordersError } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("table_id", tableId)
-      .order("created_at", { ascending: false });
+// NOTE: getOrdersByTableWithMeals has been moved to stores/orderData.ts
+// Use useOrderDataStore().getOrdersByTableWithMeals() instead
 
-    if (ordersError) {
-      console.error("Error fetching orders:", ordersError);
-      throw new Error(`Failed to fetch orders: ${ordersError.message}`);
-    }
-
-    if (!orders || orders.length === 0) return [];
-
-    // Fetch order items with meal details for all orders
-    const orderIds = orders.map((order) => order.id);
-
-    const { data: orderItems, error: itemsError } = await supabase
-      .from("order_items")
-      .select(
-        `
-        *,
-        meal:menu(*)
-      `
-      )
-      .in("order_id", orderIds)
-      .order("created_at", { ascending: true });
-
-    if (itemsError) {
-      console.error("Error fetching order items:", itemsError);
-      throw new Error(`Failed to fetch order items: ${itemsError.message}`);
-    }
-
-    // Create expanded orders (one entry per meal)
-    const expandedOrders: OrderWithMeals[] = [];
-
-    orders.forEach((order) => {
-      const orderItemsForOrder =
-        orderItems?.filter((item) => item.order_id === order.id) || [];
-
-      if (orderItemsForOrder.length === 0) {
-        // Order with no items, add as is
-        expandedOrders.push(order);
-      } else {
-        // Create one entry per meal (considering quantity)
-        orderItemsForOrder.forEach((orderItem) => {
-          if (orderItem.meal) {
-            // Create multiple entries for quantity > 1
-            for (let i = 0; i < orderItem.quantity; i++) {
-              expandedOrders.push({
-                ...order,
-                meal: orderItem.meal,
-                total_amount: orderItem.meal.price, // Individual meal price
-              });
-            }
-          }
-        });
-      }
-    });
-
-    return expandedOrders;
-  } catch (error) {
-    console.error("Get orders by table with meals error:", error);
-    throw error;
-  }
-};
-
-/**
- * Get the latest order with meal details for a specific table
- */
-export const getLatestOrderByTableWithMeals = async (
-  tableId: number
-): Promise<OrderWithMeals | null> => {
-  try {
-    // Fetch the most recent order for the table
-    const { data: orders, error: ordersError } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("table_id", tableId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (ordersError) {
-      console.error("Error fetching latest order:", ordersError);
-      throw new Error(`Failed to fetch latest order: ${ordersError.message}`);
-    }
-
-    if (!orders || orders.length === 0) return null;
-
-    const latestOrder = orders[0];
-
-    // Fetch order items with meal details for this specific order
-    const { data: orderItems, error: itemsError } = await supabase
-      .from("order_items")
-      .select(
-        `
-        *,
-        meal:menu(*)
-      `
-      )
-      .eq("order_id", latestOrder.id)
-      .order("created_at", { ascending: true });
-
-    if (itemsError) {
-      console.error("Error fetching order items:", itemsError);
-      throw new Error(`Failed to fetch order items: ${itemsError.message}`);
-    }
-
-    // Create order with items data
-    const orderWithMeals: OrderWithMeals = {
-      ...latestOrder,
-      order_items_db: orderItems || [],
-    };
-
-    return orderWithMeals;
-  } catch (error) {
-    console.error("Get latest order by table with meals error:", error);
-    throw error;
-  }
-};
+// NOTE: getLatestOrderByTableWithMeals has been moved to stores/orderData.ts
+// Use useOrderDataStore().getLatestOrderByTableWithMeals() instead
 
 /**
  * Update order status
@@ -505,178 +315,14 @@ export const cancelOrder = async (orderId: number): Promise<Order | null> => {
   return updateOrderStatus(orderId, "cancelled");
 };
 
-/**
- * Convert cart items to order items format
- */
-export const convertCartToOrderItems = (cartItems: MenuItem[]): OrderItem[] => {
-  // Group items by ID and calculate quantities
-  const grouped: { [key: number]: { item: MenuItem; quantity: number } } = {};
+// NOTE: Utility functions have been moved to stores/orderData.ts
+// Use useOrderDataStore().convertCartToOrderItems() and useOrderDataStore().calculateOrderTotal() instead
 
-  cartItems.forEach((item) => {
-    if (grouped[item.id]) {
-      grouped[item.id].quantity += 1;
-    } else {
-      grouped[item.id] = { item, quantity: 1 };
-    }
-  });
+// NOTE: updateOrderFeedback and FeedbackData interface have been moved to stores/orderData.ts
+// Use useOrderDataStore().updateOrderFeedback() and import FeedbackData from stores/orderData.ts instead
 
-  // Convert to OrderItem format
-  return Object.values(grouped).map(({ item, quantity }) => ({
-    id: item.id,
-    name: item.name,
-    price: item.price,
-    quantity,
-    image: item.image,
-  }));
-};
-
-/**
- * Calculate total amount from cart items
- */
-export const calculateOrderTotal = (cartItems: MenuItem[]): number => {
-  return cartItems.reduce((total, item) => total + item.price, 0);
-};
-
-/**
- * Update order feedback
- */
-export interface FeedbackData {
-  orderIds: number[];
-  foodRating: number;
-  serviceRating: number;
-  comments: string;
-}
-
-export const updateOrderFeedback = async (
-  feedbackData: FeedbackData
-): Promise<void> => {
-  try {
-    console.log("Updating feedback for orders:", feedbackData.orderIds);
-
-    // Create feedback object
-    const feedback = {
-      food_rating: feedbackData.foodRating,
-      service_rating: feedbackData.serviceRating,
-      comments: feedbackData.comments,
-      submitted_at: new Date().toISOString(),
-    };
-
-    console.log("Feedback object to save:", feedback);
-
-    // Update each order individually to ensure proper error handling
-    for (const orderId of feedbackData.orderIds) {
-      console.log(`Updating feedback for order ID: ${orderId}`);
-
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          feedback: JSON.stringify(feedback),
-        })
-        .eq("id", orderId)
-        .select();
-
-      if (error) {
-        console.error(`Error updating feedback for order ${orderId}:`, error);
-        throw new Error(
-          `Failed to update feedback for order ${orderId}: ${error.message}`
-        );
-      }
-
-      console.log(`Feedback updated successfully for order ${orderId}:`, data);
-    }
-
-    console.log("All feedback updates completed successfully");
-  } catch (error) {
-    console.error("Error in updateOrderFeedback:", error);
-    throw error;
-  }
-};
-
-/**
- * Update meal sales and deduct quantities when order is completed
- */
-export const updateMealSales = async (
-  orderWithMeals: OrderWithMeals
-): Promise<void> => {
-  try {
-    if (
-      !orderWithMeals.order_items_db ||
-      orderWithMeals.order_items_db.length === 0
-    ) {
-      console.log("No order items found to update sales and quantities");
-      return;
-    }
-
-    console.log(
-      "Updating meal sales and quantities for order:",
-      orderWithMeals.id
-    );
-
-    // Update sales and quantities for each meal in the order
-    for (const orderItem of orderWithMeals.order_items_db) {
-      const mealId = orderItem.meal_id;
-      const quantity = orderItem.quantity;
-
-      console.log(
-        `Updating sales and quantity for meal ID ${mealId} by ${quantity}`
-      );
-
-      // Get current sales count and quantity
-      const { data: currentMeal, error: fetchError } = await supabase
-        .from("menu")
-        .select("sales, quantity")
-        .eq("id", mealId)
-        .single();
-
-      if (fetchError) {
-        console.error(`Error fetching meal ${mealId}:`, fetchError);
-        continue; // Continue with other meals
-      }
-
-      const currentSales = currentMeal?.sales || 0;
-      const currentQuantity = currentMeal?.quantity || 0;
-      const newSales = currentSales + quantity;
-      const newQuantity = Math.max(0, currentQuantity - quantity); // Ensure quantity doesn't go below 0
-
-      // Update both sales count and quantity
-      const { error: updateError } = await supabase
-        .from("menu")
-        .update({
-          sales: newSales,
-          quantity: newQuantity,
-        })
-        .eq("id", mealId);
-
-      if (updateError) {
-        console.error(
-          `Error updating sales and quantity for meal ${mealId}:`,
-          updateError
-        );
-        continue; // Continue with other meals
-      }
-
-      console.log(`Successfully updated meal ${mealId}:`);
-      console.log(`  Sales: ${currentSales} → ${newSales}`);
-      console.log(`  Quantity: ${currentQuantity} → ${newQuantity}`);
-
-      // Log warning if quantity reaches zero or goes negative
-      if (newQuantity === 0) {
-        console.warn(
-          `Warning: Meal ${mealId} is now out of stock (quantity: 0)`
-        );
-      } else if (currentQuantity < quantity) {
-        console.warn(
-          `Warning: Meal ${mealId} had insufficient stock. Ordered: ${quantity}, Available: ${currentQuantity}, New quantity: ${newQuantity}`
-        );
-      }
-    }
-
-    console.log("All meal sales and quantity updates completed successfully");
-  } catch (error) {
-    console.error("Error in updateMealSales:", error);
-    throw error;
-  }
-};
+// NOTE: updateMealSales has been moved to stores/orderData.ts
+// Use useOrderDataStore().updateMealSales() instead
 
 /**
  * Updated database schema with order_items table:

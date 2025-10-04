@@ -4,12 +4,10 @@ import { useRouter, useRoute } from "vue-router";
 import { useTheme } from "@/composables/useTheme";
 import { useTableStore } from "@/stores/tableStores";
 import {
-  getLatestOrderByTableWithMeals,
-  updateOrderFeedback,
-  updateMealSales,
+  useOrderDataStore,
   type OrderWithMeals,
   type FeedbackData,
-} from "@/services/orderService";
+} from "@/stores/orderData";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
 import StatusCard from "@/components/common/customer/StatusCard.vue";
@@ -22,6 +20,9 @@ const route = useRoute();
 
 // Table store for managing table ID
 const tableStore = useTableStore();
+
+// Order data store for managing orders
+const orderDataStore = useOrderDataStore();
 
 // Theme setup
 const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
@@ -75,7 +76,9 @@ const fetchOrders = async () => {
     const currentTableId = tableId.value;
     console.log("Fetching latest order for table:", currentTableId);
 
-    const fetchedOrder = await getLatestOrderByTableWithMeals(currentTableId);
+    const fetchedOrder = await orderDataStore.getLatestOrderByTableWithMeals(
+      currentTableId
+    );
     currentOrder.value = fetchedOrder;
 
     console.log("Fetched latest order:", fetchedOrder);
@@ -92,7 +95,7 @@ const fetchOrders = async () => {
           console.log(
             "Order completed! Updating meal sales and deducting quantities..."
           );
-          await updateMealSales(fetchedOrder);
+          await orderDataStore.updateMealSales(fetchedOrder);
           salesUpdated.value = true;
           console.log("Meal sales and quantities updated successfully");
         } catch (error) {
@@ -194,7 +197,7 @@ const handleFeedbackSubmit = async (feedbackData: FeedbackData) => {
       return;
     }
 
-    await updateOrderFeedback(feedbackData);
+    await orderDataStore.updateOrderFeedback(feedbackData);
     feedbackSubmitted.value = true;
     showFeedbackModal.value = false;
 

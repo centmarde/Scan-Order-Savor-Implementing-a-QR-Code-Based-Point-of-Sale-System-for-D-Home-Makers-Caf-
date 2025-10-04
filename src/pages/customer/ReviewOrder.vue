@@ -6,13 +6,10 @@ import { useTheme } from "@/composables/useTheme";
 import { useTableStore } from "@/stores/tableStores";
 import type { MenuItem } from "@/stores/menuData";
 import {
-  createOrdersWithMeals,
-  createOrderWithItems,
-  getOrdersByTableWithMeals,
-  calculateOrderTotal,
+  useOrderDataStore,
   type Order,
   type OrderWithMeals,
-} from "@/services/orderService";
+} from "@/stores/orderData";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
 import StatusCard from "@/components/common/customer/StatusCard.vue";
@@ -23,6 +20,9 @@ const route = useRoute();
 
 // Table store for managing table ID from QR code
 const tableStore = useTableStore();
+
+// Order data store for managing orders
+const orderDataStore = useOrderDataStore();
 
 // Theme setup
 const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
@@ -214,7 +214,9 @@ const fetchOrdersForTable = async () => {
     loadingOrders.value = true;
     const currentTableId = tableId.value;
     console.log("Fetching orders for table:", currentTableId);
-    const orders = await getOrdersByTableWithMeals(currentTableId);
+    const orders = await orderDataStore.getOrdersByTableWithMeals(
+      currentTableId
+    );
     ordersWithMeals.value = orders;
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -249,7 +251,10 @@ const proceedToPayment = async () => {
       );
 
       // Create single order with order_items table
-      const order = await createOrderWithItems(cartItems.value, currentTableId);
+      const order = await orderDataStore.createOrderWithItems(
+        cartItems.value,
+        currentTableId
+      );
       console.log("Order created successfully:", order);
 
       // Clear cart items after successful order creation
