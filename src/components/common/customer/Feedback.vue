@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useTheme } from "@/composables/useTheme";
+import { getRatingText } from "@/utils/helpers";
 
 // Props
 interface Props {
@@ -78,24 +79,6 @@ const resetForm = () => {
 const closeModal = () => {
   resetForm();
   isOpen.value = false;
-};
-
-// Rating descriptions
-const getRatingText = (rating: number) => {
-  switch (rating) {
-    case 1:
-      return "Needs Improvement";
-    case 2:
-      return "Fair";
-    case 3:
-      return "Good";
-    case 4:
-      return "Very Good";
-    case 5:
-      return "Excellent";
-    default:
-      return "";
-  }
 };
 </script>
 
