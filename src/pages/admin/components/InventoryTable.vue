@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { useTheme } from "@/composables/useTheme";
-import { useMenuDataStore, type MenuItem } from "@/stores/menuData";
+import {
+  useInventoryDataStore,
+  type InventoryItem,
+} from "@/stores/inventoryData";
 import AddItemDialog from "./dialogs/AddItemDialog.vue";
 import EditItemDialog from "./dialogs/EditItemDialog.vue";
 import DeleteItemDialog from "./dialogs/DeleteItemDialog.vue";
@@ -10,14 +13,14 @@ import DeleteItemDialog from "./dialogs/DeleteItemDialog.vue";
 const { primaryColor } = useTheme();
 
 // Store
-const menuDataStore = useMenuDataStore();
+const inventoryStore = useInventoryDataStore();
 
 // Reactive data
 const search = ref("");
 const dialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
-const selectedItem = ref<MenuItem | null>(null);
+const selectedItem = ref<InventoryItem | null>(null);
 
 // Table headers
 const headers = [
@@ -34,9 +37,9 @@ const headers = [
 
 // Computed properties
 const filteredItems = computed(() => {
-  if (!search.value) return menuDataStore.menuItems;
+  if (!search.value) return inventoryStore.inventoryItems;
 
-  return menuDataStore.searchItems(search.value);
+  return inventoryStore.searchItems(search.value);
 });
 
 // Methods
@@ -44,26 +47,26 @@ const openAddDialog = () => {
   dialog.value = true;
 };
 
-const openEditDialog = (item: MenuItem) => {
+const openEditDialog = (item: InventoryItem) => {
   selectedItem.value = item;
   editDialog.value = true;
 };
 
-const openDeleteDialog = (item: MenuItem) => {
+const openDeleteDialog = (item: InventoryItem) => {
   selectedItem.value = item;
   deleteDialog.value = true;
 };
 
 const handleItemAdded = async () => {
-  await menuDataStore.refreshMenuItems();
+  // Store automatically refreshes after add/update/delete operations
 };
 
 const handleItemUpdated = async () => {
-  await menuDataStore.refreshMenuItems();
+  // Store automatically refreshes after add/update/delete operations
 };
 
 const handleItemDeleted = async () => {
-  await menuDataStore.refreshMenuItems();
+  // Store automatically refreshes after add/update/delete operations
 };
 
 const formatPrice = (price: number) => {
@@ -72,9 +75,9 @@ const formatPrice = (price: number) => {
 
 // Lifecycle
 onMounted(async () => {
-  // Initialize menu data if not already loaded
-  if (menuDataStore.menuItems.length === 0) {
-    await menuDataStore.fetchMenuItems();
+  // Initialize inventory data if not already loaded
+  if (inventoryStore.inventoryItems.length === 0) {
+    await inventoryStore.fetchInventoryItems();
   }
 });
 </script>
@@ -203,7 +206,7 @@ onMounted(async () => {
         v-else
         :headers="headers"
         :items="filteredItems"
-        :loading="menuDataStore.loading"
+        :loading="inventoryStore.loading"
         class="elevation-1"
         :items-per-page="10"
         :search="search"
@@ -281,7 +284,7 @@ onMounted(async () => {
 
       <!-- Mobile Loading State -->
       <div
-        v-if="menuDataStore.loading && $vuetify.display.xs"
+        v-if="inventoryStore.loading && $vuetify.display.xs"
         class="mobile-loading"
       >
         <v-skeleton-loader v-for="n in 5" :key="n" type="card" class="mb-3" />

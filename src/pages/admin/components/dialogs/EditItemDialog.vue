@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useTheme } from "@/composables/useTheme";
-import { supabase } from "@/lib/supabase";
-import type { MenuItem } from "@/stores/menuData";
+import {
+  useInventoryDataStore,
+  type InventoryItem,
+} from "@/stores/inventoryData";
 
 // Props
 interface Props {
   modelValue: boolean;
-  item: MenuItem | null;
+  item: InventoryItem | null;
 }
 
 // Emits
@@ -22,13 +24,15 @@ const emit = defineEmits<Emits>();
 // Theme setup
 const { primaryColor } = useTheme();
 
+// Store
+const inventoryStore = useInventoryDataStore();
+
 // Reactive data
-const loading = ref(false);
 const imageFile = ref<File | null>(null);
 const imagePreview = ref<string>("");
 
 // Form data for edit item
-const formData = ref<Omit<MenuItem, "id" | "created_at">>({
+const formData = ref<Omit<InventoryItem, "id" | "created_at">>({
   name: "",
   description: "",
   price: 0,
@@ -105,73 +109,6 @@ const handleImageSelect = (event: Event) => {
   }
 };
 
-const uploadImage = async (): Promise<string | null> => {
-  if (!imageFile.value) return null;
-
-  try {
-    // Generate unique filename
-    const fileExt = imageFile.value.name.split(".").pop();
-    const fileName = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2)}.${fileExt}`;
-
-    console.log("Attempting to upload file:", fileName, "to bucket: inventory");
-
-    // Upload directly to Supabase storage (bucket exists as confirmed)
-    const { data, error } = await supabase.storage
-      .from("inventory")
-      .upload(fileName, imageFile.value, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (error) {
-      console.error("Error uploading image:", error);
-      console.error("Full error details:", JSON.stringify(error, null, 2));
-
-      // Provide more specific error messages
-      if (
-        error.message.includes("row-level security") ||
-        error.message.includes("policy")
-      ) {
-        throw new Error(
-          "Permission denied: Storage policies need configuration. Please check Supabase storage policies."
-        );
-      } else if (error.message.includes("Bucket not found")) {
-        throw new Error(
-          "Storage bucket access issue. Please verify bucket permissions."
-        );
-      } else if (error.message.includes("duplicate")) {
-        // Try with a different filename if duplicate
-        const retryFileName = `${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(2)}-retry.${fileExt}`;
-        const { data: retryData, error: retryError } = await supabase.storage
-          .from("inventory")
-          .upload(retryFileName, imageFile.value, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (retryError) {
-          throw new Error(`Upload retry failed: ${retryError.message}`);
-        }
-
-        console.log("Upload successful on retry:", retryData);
-        return retryFileName;
-      } else {
-        throw new Error(`Upload failed: ${error.message}`);
-      }
-    }
-
-    console.log("Upload successful:", data);
-    return fileName; // Return the filename, not the full path
-  } catch (error) {
-    console.error("Error in uploadImage:", error);
-    throw error;
-  }
-};
-
 const getImageUrl = (imagePath: string) => {
   if (!imagePath) return "";
   if (imagePath.startsWith("http")) return imagePath;
@@ -182,52 +119,22 @@ const updateItem = async () => {
   try {
     if (!props.item?.id) return;
 
-    loading.value = true;
-
-    // Upload new image if one is selected
-    let imagePath = formData.value.image; // Keep existing image if no new one
-
-    if (imageFile.value) {
-      try {
-        const uploadedFileName = await uploadImage();
-        if (uploadedFileName) {
-          imagePath = uploadedFileName; // Store just the filename
-        }
-      } catch (uploadError) {
-        alert(
-          `Failed to upload image: ${
-            uploadError instanceof Error ? uploadError.message : "Unknown error"
-          }`
-        );
-        return;
-      }
-    }
-
-    // Create the item data with the image path
-    const itemData = {
-      ...formData.value,
-      image: imagePath,
-    };
-
-    const { error } = await supabase
-      .from("menu")
-      .update(itemData)
-      .eq("id", props.item.id);
-
-    if (error) {
-      console.error("Error updating item:", error);
-      alert("Error updating item: " + error.message);
-      return;
-    }
+    await inventoryStore.updateInventoryItem(
+      props.item.id,
+      formData.value,
+      imageFile.value
+    );
 
     closeDialog();
     emit("item-updated");
     alert("Item updated successfully!");
   } catch (error) {
     console.error("Error in updateItem:", error);
-    alert("Error updating item");
-  } finally {
-    loading.value = false;
+    alert(
+      `Error updating item: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
   }
 };
 </script>
@@ -388,7 +295,7 @@ const updateItem = async () => {
             :color="primaryColor"
             variant="flat"
             @click="updateItem"
-            :loading="loading"
+            :loading="inventoryStore.loading"
           >
             Update
           </v-btn>

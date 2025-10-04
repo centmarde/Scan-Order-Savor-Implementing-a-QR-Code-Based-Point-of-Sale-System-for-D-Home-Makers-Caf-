@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { supabase } from "@/lib/supabase";
-import type { MenuItem } from "@/stores/menuData";
+import { computed } from "vue";
+import {
+  useInventoryDataStore,
+  type InventoryItem,
+} from "@/stores/inventoryData";
 
 // Props
 interface Props {
   modelValue: boolean;
-  item: MenuItem | null;
+  item: InventoryItem | null;
 }
 
 // Emits
@@ -18,8 +20,8 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-// Reactive data
-const loading = ref(false);
+// Store
+const inventoryStore = useInventoryDataStore();
 
 // Computed properties
 const dialog = computed({
@@ -36,27 +38,18 @@ const deleteItem = async () => {
   try {
     if (!props.item?.id) return;
 
-    loading.value = true;
-
-    const { error } = await supabase
-      .from("menu")
-      .delete()
-      .eq("id", props.item.id);
-
-    if (error) {
-      console.error("Error deleting item:", error);
-      alert("Error deleting item: " + error.message);
-      return;
-    }
+    await inventoryStore.deleteInventoryItem(props.item.id);
 
     closeDialog();
     emit("item-deleted");
     alert("Item deleted successfully!");
   } catch (error) {
     console.error("Error in deleteItem:", error);
-    alert("Error deleting item");
-  } finally {
-    loading.value = false;
+    alert(
+      `Error deleting item: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
   }
 };
 </script>
@@ -92,7 +85,7 @@ const deleteItem = async () => {
             color="error"
             variant="flat"
             @click="deleteItem"
-            :loading="loading"
+            :loading="inventoryStore.loading"
           >
             Delete
           </v-btn>
