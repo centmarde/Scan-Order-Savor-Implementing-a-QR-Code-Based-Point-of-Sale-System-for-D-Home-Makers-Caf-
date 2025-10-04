@@ -60,11 +60,11 @@ const addToCart = (item: MenuItem) => {
               <div class="flex-grow-1 pr-3">
                 <h3
                   class="text-body-1 font-weight-bold mb-1"
-                  :style="{ color: textPrimary }"
+                  :style="{ color: '#2D2D2D' }"
                 >
                   {{ item.name }}
                 </h3>
-                <p class="text-caption mb-2" :style="{ color: secondaryColor }">
+                <p class="text-caption mb-2" :style="{ color: '#555555' }">
                   {{ item.description }}
                 </p>
                 <span

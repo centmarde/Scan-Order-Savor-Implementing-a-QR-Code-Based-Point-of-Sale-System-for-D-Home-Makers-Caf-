@@ -199,10 +199,9 @@ export function useTheme(): UseTheme {
   const accentColor = computed(() => colors.value?.accent || "#a67c52");
   const backgroundColor = computed(() => colors.value?.background || "#FEFFFE");
   const surfaceColor = computed(() => colors.value?.surface || "#FFFFFF");
-  const textPrimary = computed(() => colors.value?.["on-surface"] || "#1C1D1A");
-  const textSecondary = computed(
-    () => colors.value?.["on-secondary"] || "#FFFFFF"
-  );
+  // Force dark text colors for better visibility on light/tan backgrounds
+  const textPrimary = computed(() => "#2D2D2D"); // Always dark text
+  const textSecondary = computed(() => "#FFFFFF"); // White text for dark backgrounds
   const textOnPrimary = computed(
     () => colors.value?.["on-primary"] || "#FFFFFF"
   );

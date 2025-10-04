@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, withDefaults } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
 import type { MenuItem } from "@/stores/menuData";
@@ -8,9 +8,12 @@ import SearchDialog from "./SearchDialog.vue";
 // Props
 interface Props {
   menuItems?: MenuItem[];
+  pageTitle?: string;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  pageTitle: "Menu",
+});
 
 // Emits
 const emit = defineEmits<{
@@ -50,7 +53,9 @@ const addToCart = (item: MenuItem) => {
       <h2 class="text-h6 font-weight-bold" :style="{ color: primaryColor }">
         {{ APP_CONFIG.APP_NAME }}
       </h2>
-      <p class="text-caption ma-0" :style="{ color: textPrimary }">Menu</p>
+      <p class="text-caption ma-0" :style="{ color: textPrimary }">
+        {{ pageTitle }}
+      </p>
     </div>
 
     <v-spacer />

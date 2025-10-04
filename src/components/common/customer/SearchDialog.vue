@@ -123,13 +123,13 @@ watch(isOpen, (newValue) => {
                     <div style="flex-grow: 1" class="pr-3">
                       <h4
                         class="text-body-1 font-weight-bold mb-1"
-                        :style="{ color: primaryColor }"
+                        :style="{ color: '#2D2D2D' }"
                       >
                         {{ item.name }}
                       </h4>
                       <p
                         class="text-caption mb-2"
-                        :style="{ color: secondaryColor }"
+                        :style="{ color: '#555555' }"
                       >
                         {{ item.description }}
                       </p>
@@ -236,10 +236,10 @@ watch(isOpen, (newValue) => {
             <v-icon size="64" class="mb-4" :style="{ color: secondaryColor }">
               mdi-food-off
             </v-icon>
-            <p class="text-h6 mb-2" :style="{ color: primaryColor }">
+            <p class="text-h6 mb-2" :style="{ color: '#2D2D2D' }">
               No Results Found
             </p>
-            <p class="text-body-2" :style="{ color: secondaryColor }">
+            <p class="text-body-2" :style="{ color: '#555555' }">
               Try searching with different keywords
             </p>
           </div>
@@ -250,10 +250,10 @@ watch(isOpen, (newValue) => {
           <v-icon size="64" class="mb-4" :style="{ color: primaryColor }">
             mdi-magnify
           </v-icon>
-          <p class="text-h6 mb-2" :style="{ color: primaryColor }">
+          <p class="text-h6 mb-2" :style="{ color: '#2D2D2D' }">
             Search for Menu Items
           </p>
-          <p class="text-body-2" :style="{ color: secondaryColor }">
+          <p class="text-body-2" :style="{ color: '#555555' }">
             Enter the name of a meal to find what you're looking for
           </p>
         </div>

@@ -138,11 +138,11 @@ const addToCart = (item: MenuItem) => {
             <div class="flex-grow-1 pr-3">
               <h3
                 class="text-body-1 font-weight-bold mb-1"
-                :style="{ color: primaryColor }"
+                :style="{ color: '#2D2D2D' }"
               >
                 {{ item.name }}
               </h3>
-              <p class="text-caption mb-2" :style="{ color: secondaryColor }">
+              <p class="text-caption mb-2" :style="{ color: '#555555' }">
                 {{ item.description }}
               </p>
 
@@ -216,7 +216,7 @@ const addToCart = (item: MenuItem) => {
       <v-icon :style="{ color: secondaryColor }" size="64" class="mb-4"
         >mdi-food-off</v-icon
       >
-      <p class="text-h6 mb-2" :style="{ color: textPrimary }">
+      <p class="text-h6 mb-2" :style="{ color: '#2D2D2D' }">
         No Items Available
       </p>
       <p class="text-body-2" :style="{ color: secondaryColor }">

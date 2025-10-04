@@ -1,12 +1,20 @@
-import { useToast } from 'vue-toastification';
-import { useAuthUserStore } from '@/stores/authUser';
-import { useUserPagesStore } from '@/stores/pages';
-import type { RouteLocationNormalized, NavigationGuardNext, Router } from 'vue-router';
+import { useToast } from "vue-toastification";
+import { useAuthUserStore } from "@/stores/authUser";
+import { useUserPagesStore } from "@/stores/pages";
+import type {
+  RouteLocationNormalized,
+  NavigationGuardNext,
+  Router,
+} from "vue-router";
 
 /**
  * Authentication and role-based page access guard
  */
-export const authGuard = async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+export const authGuard = async (
+  to: RouteLocationNormalized,
+  from: RouteLocationNormalized,
+  next: NavigationGuardNext
+) => {
   const isLoggedIn = localStorage.getItem("access_token") !== null;
   const publicPages = ["/", "/auth"];
   const toast = useToast();
@@ -25,6 +33,14 @@ export const authGuard = async (to: RouteLocationNormalized, from: RouteLocation
 
   // Check role-based page access for authenticated users on protected routes
   if (isLoggedIn && to.meta.requiresAuth && to.path !== "/account/home") {
+    // Allow access to inventory management for any authenticated user
+    if (to.path === "/admin/inventory-management") {
+      console.log(
+        "Allowing access to inventory management for authenticated user"
+      );
+      return next();
+    }
+
     try {
       const authStore = useAuthUserStore();
       const pagesStore = useUserPagesStore();
@@ -36,36 +52,43 @@ export const authGuard = async (to: RouteLocationNormalized, from: RouteLocation
         const userRoleId = currentUserResult.user.user_metadata?.role;
 
         if (userRoleId) {
-          console.log('Checking page access for role ID:', userRoleId);
-          console.log('Requested path:', to.path);
+          console.log("Checking page access for role ID:", userRoleId);
+          console.log("Requested path:", to.path);
 
           // Fetch pages accessible by this role
           const rolePages = await pagesStore.fetchRolePagesByRoleId(userRoleId);
 
           if (rolePages && rolePages.length > 0) {
             // Check if the current path is in the allowed pages
-            const allowedPages = rolePages.map(rolePage => rolePage.pages).filter(Boolean);
+            const allowedPages = rolePages
+              .map((rolePage) => rolePage.pages)
+              .filter(Boolean);
             const isPageAllowed = allowedPages.includes(to.path);
 
-            console.log('Allowed pages for role:', allowedPages);
-            console.log('Is page allowed:', isPageAllowed);
+            console.log("Allowed pages for role:", allowedPages);
+            console.log("Is page allowed:", isPageAllowed);
 
             if (!isPageAllowed) {
-              console.log('Access denied for path:', to.path, 'Role ID:', userRoleId);
+              console.log(
+                "Access denied for path:",
+                to.path,
+                "Role ID:",
+                userRoleId
+              );
               return next("/forbidden"); // Redirect to forbidden page if access denied
             }
           } else {
             // No pages defined for this role - redirect to forbidden page
-            console.log('No pages configured for role ID:', userRoleId);
+            console.log("No pages configured for role ID:", userRoleId);
             return next("/forbidden");
           }
         } else {
-          console.log('No role ID found in user metadata');
+          console.log("No role ID found in user metadata");
           // If no role ID, allow access but log the issue
         }
       }
     } catch (error) {
-      console.error('Error checking role-based page access:', error);
+      console.error("Error checking role-based page access:", error);
       // Continue with navigation if there's an error to avoid blocking the user
     }
   }
