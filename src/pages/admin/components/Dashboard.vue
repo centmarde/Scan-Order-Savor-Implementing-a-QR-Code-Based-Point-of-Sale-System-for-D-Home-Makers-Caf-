@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { supabase } from "@/lib/supabase";
+import { useMenuDataStore } from "@/stores/menuData";
 
 // Interface for menu items
 interface MenuItem {
@@ -25,27 +26,38 @@ interface OrderItem {
   menu?: MenuItem;
 }
 
-// Data for best sellers and analytics
-const bestSellers = ref<MenuItem[]>([]);
-const salesData = ref<MenuItem[]>([]);
+// Store
+const menuDataStore = useMenuDataStore();
+
+// Data for analytics
 const orderItems = ref<OrderItem[]>([]);
-const totalMenuItems = ref(0);
 const loading = ref(false);
 const selectedPeriod = ref("week"); // week, month, day
 
 // Computed properties for analytics
 const totalSales = computed(() => {
-  const total = salesData.value.reduce(
+  const total = menuDataStore.menuItems.reduce(
     (total, item) => total + (item.sales || 0),
     0
   );
   console.log(
     "Total sales calculation:",
-    salesData.value.map((item) => ({ name: item.name, sales: item.sales })),
+    menuDataStore.menuItems.map((item) => ({
+      name: item.name,
+      sales: item.sales,
+    })),
     "Total:",
     total
   );
   return total;
+});
+
+const bestSellers = computed(() => {
+  return menuDataStore.getBestSellerItems(3);
+});
+
+const totalMenuItems = computed(() => {
+  return menuDataStore.menuItems.length;
 });
 
 const filteredOrderItems = computed(() => {
@@ -74,43 +86,6 @@ const periodTotalSales = computed(() => {
 });
 
 // Methods
-const fetchBestSellers = async () => {
-  try {
-    const { data, error } = await supabase
-      .from("menu")
-      .select("*")
-      .order("sales", { ascending: false })
-      .limit(3);
-
-    if (error) {
-      console.error("Error fetching best sellers:", error);
-      return;
-    }
-
-    bestSellers.value = data || [];
-  } catch (error) {
-    console.error("Error in fetchBestSellers:", error);
-  }
-};
-
-const fetchSalesData = async () => {
-  try {
-    const { data, error } = await supabase
-      .from("menu")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching sales data:", error);
-      return;
-    }
-
-    salesData.value = data || [];
-  } catch (error) {
-    console.error("Error in fetchSalesData:", error);
-  }
-};
-
 const fetchOrderItems = async () => {
   try {
     const { data, error } = await supabase
@@ -140,23 +115,6 @@ const fetchOrderItems = async () => {
   }
 };
 
-const fetchMenuItemsCount = async () => {
-  try {
-    const { count, error } = await supabase
-      .from("menu")
-      .select("*", { count: "exact", head: true });
-
-    if (error) {
-      console.error("Error fetching menu items count:", error);
-      return;
-    }
-
-    totalMenuItems.value = count || 0;
-  } catch (error) {
-    console.error("Error in fetchMenuItemsCount:", error);
-  }
-};
-
 const getImageUrl = (imagePath: string) => {
   if (!imagePath) return "/assets/logo1.png";
   if (imagePath.startsWith("http")) return imagePath;
@@ -173,16 +131,18 @@ const formatCurrency = (amount: number) => {
 const refreshData = async () => {
   loading.value = true;
   await Promise.all([
-    fetchBestSellers(),
-    fetchSalesData(),
+    menuDataStore.fetchMenuItems(true), // Force refresh
     fetchOrderItems(),
-    fetchMenuItemsCount(),
   ]);
   loading.value = false;
 };
 
-onMounted(() => {
-  refreshData();
+onMounted(async () => {
+  // Initialize menu data if not already loaded
+  if (menuDataStore.menuItems.length === 0) {
+    await menuDataStore.fetchMenuItems();
+  }
+  await refreshData();
 });
 </script>
 
@@ -446,7 +406,7 @@ onMounted(() => {
           </v-row>
 
           <div
-            v-else-if="loading"
+            v-else-if="loading || menuDataStore.loading"
             :class="
               $vuetify.display.xs ? 'text-center py-6' : 'text-center py-8'
             "
