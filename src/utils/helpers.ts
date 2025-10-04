@@ -215,6 +215,54 @@ export function getRatingText(rating: number): string {
   }
 }
 
+/**
+ * Gets the color associated with an order status
+ * @param status - The order status string
+ * @returns A hex color code for the status
+ */
+export function getStatusColor(status: string): string {
+  switch (status) {
+    case "pending":
+      return "#FFA726";
+    case "confirmed":
+      return "#42A5F5";
+    case "preparing":
+      return "#FF7043";
+    case "ready":
+      return "#66BB6A";
+    case "completed":
+      return "#4CAF50";
+    case "cancelled":
+      return "#EF5350";
+    default:
+      return "#757575"; // Default grey color
+  }
+}
+
+/**
+ * Gets the display text for an order status
+ * @param status - The order status string
+ * @returns A human-readable status text
+ */
+export function getStatusText(status: string): string {
+  switch (status) {
+    case "pending":
+      return "Pending";
+    case "confirmed":
+      return "Confirmed";
+    case "preparing":
+      return "Preparing";
+    case "ready":
+      return "Ready";
+    case "completed":
+      return "Completed";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      return "Unknown";
+  }
+}
+
 // ========================================
 // ORGANIZATION MEMBERS HELPERS
 // ========================================

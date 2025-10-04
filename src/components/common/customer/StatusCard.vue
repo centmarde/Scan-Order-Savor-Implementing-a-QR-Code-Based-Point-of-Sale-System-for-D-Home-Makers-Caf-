@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useTheme } from "@/composables/useTheme";
+import { getStatusColor, getStatusText } from "@/utils/helpers";
 
 // Props
 interface Props {
@@ -11,44 +12,6 @@ const props = defineProps<Props>();
 
 // Theme setup
 const { primaryColor } = useTheme();
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "pending":
-      return "#FFA726";
-    case "confirmed":
-      return "#42A5F5";
-    case "preparing":
-      return "#FF7043";
-    case "ready":
-      return "#66BB6A";
-    case "completed":
-      return "#4CAF50";
-    case "cancelled":
-      return "#EF5350";
-    default:
-      return primaryColor.value;
-  }
-};
-
-const getStatusText = (status: string) => {
-  switch (status) {
-    case "pending":
-      return "Pending";
-    case "confirmed":
-      return "Confirmed";
-    case "preparing":
-      return "Preparing";
-    case "ready":
-      return "Ready";
-    case "completed":
-      return "Completed";
-    case "cancelled":
-      return "Cancelled";
-    default:
-      return "Unknown";
-  }
-};
 </script>
 
 <template>
