@@ -1,35 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { useTheme } from "@/composables/useTheme";
-import { supabase } from "@/lib/supabase";
+import { useMenuDataStore, type MenuItem } from "@/stores/menuData";
 import AddItemDialog from "./dialogs/AddItemDialog.vue";
 import EditItemDialog from "./dialogs/EditItemDialog.vue";
 import DeleteItemDialog from "./dialogs/DeleteItemDialog.vue";
 
-// Interface for inventory items
-interface InventoryItem {
-  id?: number;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image: string;
-  quantity: number;
-  sales: number;
-  created_at?: string;
-}
-
 // Theme setup
 const { primaryColor } = useTheme();
 
+// Store
+const menuDataStore = useMenuDataStore();
+
 // Reactive data
-const loading = ref(false);
 const search = ref("");
-const inventoryItems = ref<InventoryItem[]>([]);
 const dialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
-const selectedItem = ref<InventoryItem | null>(null);
+const selectedItem = ref<MenuItem | null>(null);
 
 // Table headers
 const headers = [
@@ -46,77 +34,48 @@ const headers = [
 
 // Computed properties
 const filteredItems = computed(() => {
-  if (!search.value) return inventoryItems.value;
+  if (!search.value) return menuDataStore.menuItems;
 
-  return inventoryItems.value.filter(
-    (item) =>
-      item.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      item.description.toLowerCase().includes(search.value.toLowerCase()) ||
-      item.category.toLowerCase().includes(search.value.toLowerCase())
-  );
+  return menuDataStore.searchItems(search.value);
 });
 
 // Methods
-const fetchInventoryItems = async () => {
-  try {
-    loading.value = true;
-    const { data, error } = await supabase
-      .from("menu")
-      .select("*")
-      .order("id", { ascending: true });
-
-    if (error) {
-      console.error("Error fetching inventory items:", error);
-      return;
-    }
-
-    inventoryItems.value = data || [];
-  } catch (error) {
-    console.error("Error in fetchInventoryItems:", error);
-  } finally {
-    loading.value = false;
-  }
-};
-
 const openAddDialog = () => {
   dialog.value = true;
 };
 
-const openEditDialog = (item: InventoryItem) => {
+const openEditDialog = (item: MenuItem) => {
   selectedItem.value = item;
   editDialog.value = true;
 };
 
-const openDeleteDialog = (item: InventoryItem) => {
+const openDeleteDialog = (item: MenuItem) => {
   selectedItem.value = item;
   deleteDialog.value = true;
 };
 
 const handleItemAdded = async () => {
-  await fetchInventoryItems();
+  await menuDataStore.refreshMenuItems();
 };
 
 const handleItemUpdated = async () => {
-  await fetchInventoryItems();
+  await menuDataStore.refreshMenuItems();
 };
 
 const handleItemDeleted = async () => {
-  await fetchInventoryItems();
+  await menuDataStore.refreshMenuItems();
 };
 
 const formatPrice = (price: number) => {
   return `₱${price.toFixed(2)}`;
 };
 
-const getImageUrl = (imagePath: string) => {
-  if (!imagePath) return "";
-  if (imagePath.startsWith("http")) return imagePath;
-  return `https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory/${imagePath}`;
-};
-
 // Lifecycle
-onMounted(() => {
-  fetchInventoryItems();
+onMounted(async () => {
+  // Initialize menu data if not already loaded
+  if (menuDataStore.menuItems.length === 0) {
+    await menuDataStore.fetchMenuItems();
+  }
 });
 </script>
 
@@ -171,7 +130,7 @@ onMounted(() => {
           <v-card-text class="pa-4">
             <div class="d-flex align-start mb-3">
               <v-avatar size="50" class="mr-3">
-                <v-img :src="getImageUrl(item.image)" :alt="item.name" cover>
+                <v-img :src="item.image" :alt="item.name" cover>
                   <template #error>
                     <v-icon color="grey">mdi-image-off</v-icon>
                   </template>
@@ -244,7 +203,7 @@ onMounted(() => {
         v-else
         :headers="headers"
         :items="filteredItems"
-        :loading="loading"
+        :loading="menuDataStore.loading"
         class="elevation-1"
         :items-per-page="10"
         :search="search"
@@ -252,7 +211,7 @@ onMounted(() => {
         <!-- Image Column -->
         <template #item.image="{ item }">
           <v-avatar size="40" class="my-2">
-            <v-img :src="getImageUrl(item.image)" :alt="item.name" cover>
+            <v-img :src="item.image" :alt="item.name" cover>
               <template #error>
                 <v-icon color="grey">mdi-image-off</v-icon>
               </template>
@@ -321,7 +280,10 @@ onMounted(() => {
       </v-data-table>
 
       <!-- Mobile Loading State -->
-      <div v-if="loading && $vuetify.display.xs" class="mobile-loading">
+      <div
+        v-if="menuDataStore.loading && $vuetify.display.xs"
+        class="mobile-loading"
+      >
         <v-skeleton-loader v-for="n in 5" :key="n" type="card" class="mb-3" />
       </div>
     </v-card-text>

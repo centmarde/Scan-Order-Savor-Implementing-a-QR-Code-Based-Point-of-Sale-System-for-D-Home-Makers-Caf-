@@ -1,24 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { supabase } from "@/lib/supabase";
-
-// Interface for inventory items
-interface InventoryItem {
-  id?: number;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image: string;
-  quantity: number;
-  sales: number;
-  created_at?: string;
-}
+import type { MenuItem } from "@/stores/menuData";
 
 // Props
 interface Props {
   modelValue: boolean;
-  item: InventoryItem | null;
+  item: MenuItem | null;
 }
 
 // Emits

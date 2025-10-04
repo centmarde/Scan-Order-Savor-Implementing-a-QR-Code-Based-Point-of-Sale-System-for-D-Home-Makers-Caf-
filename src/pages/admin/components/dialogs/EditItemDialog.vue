@@ -2,24 +2,12 @@
 import { ref, computed, watch } from "vue";
 import { useTheme } from "@/composables/useTheme";
 import { supabase } from "@/lib/supabase";
-
-// Interface for inventory items
-interface InventoryItem {
-  id?: number;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image: string;
-  quantity: number;
-  sales: number;
-  created_at?: string;
-}
+import type { MenuItem } from "@/stores/menuData";
 
 // Props
 interface Props {
   modelValue: boolean;
-  item: InventoryItem | null;
+  item: MenuItem | null;
 }
 
 // Emits
@@ -40,7 +28,7 @@ const imageFile = ref<File | null>(null);
 const imagePreview = ref<string>("");
 
 // Form data for edit item
-const formData = ref<InventoryItem>({
+const formData = ref<Omit<MenuItem, "id" | "created_at">>({
   name: "",
   description: "",
   price: 0,
