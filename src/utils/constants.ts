@@ -30,6 +30,16 @@ export const MENU_CATEGORIES = [
   // You can add more categories here as needed
 ];
 
+// Menu item categories for forms and dropdowns
+export const MENU_ITEM_CATEGORIES = [
+  "Main Dish",
+  "Soup",
+  "Vegetable Dish",
+  "Appetizer",
+  "Dessert",
+  "Beverage",
+];
+
 // App configuration
 export const APP_CONFIG = {
   CURRENCY: "₱", // Philippine Peso

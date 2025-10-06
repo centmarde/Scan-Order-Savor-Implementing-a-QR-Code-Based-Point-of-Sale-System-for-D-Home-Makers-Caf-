@@ -6,6 +6,7 @@ import {
   useInventoryDataStore,
   type InventoryItem,
 } from "@/stores/inventoryData";
+import { MENU_ITEM_CATEGORIES } from "@/utils/constants";
 
 // Props
 interface Props {
@@ -44,16 +45,6 @@ const formData = ref<Omit<InventoryItem, "id" | "created_at">>({
   quantity: 0,
   sales: 0,
 });
-
-// Categories for the select dropdown
-const categories = [
-  "Main Dish",
-  "Soup",
-  "Vegetable Dish",
-  "Appetizer",
-  "Dessert",
-  "Beverage",
-];
 
 // Computed properties
 const dialog = computed({
@@ -172,7 +163,7 @@ const saveItem = async () => {
             <v-col cols="12" md="6">
               <v-select
                 v-model="formData.category"
-                :items="categories"
+                :items="MENU_ITEM_CATEGORIES"
                 label="Category"
                 variant="outlined"
                 required
