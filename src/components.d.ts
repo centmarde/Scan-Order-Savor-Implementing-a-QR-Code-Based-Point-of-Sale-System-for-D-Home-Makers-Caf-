@@ -8,10 +8,12 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AdminBestSellers: typeof import('./components/admin/AdminBestSellers.vue')['default']
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     BestSellers: typeof import('./components/common/customer/BestSellers.vue')['default']
     BottomBar: typeof import('./components/common/BottomBar.vue')['default']
     CategorySelector: typeof import('./components/common/customer/CategorySelector.vue')['default']
+    Feedback: typeof import('./components/common/customer/Feedback.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     InnerNavBar: typeof import('./components/common/InnerNavBar.vue')['default']
     InsideNavbar1: typeof import('./components/common/insideNavbar/InsideNavbar1.vue')['default']
@@ -20,6 +22,7 @@ declare module 'vue' {
     InsideNavbar4: typeof import('./components/common/insideNavbar/InsideNavbar4.vue')['default']
     LoginForm: typeof import('./components/auth/LoginForm.vue')['default']
     Navbar: typeof import('./components/common/customer/Navbar.vue')['default']
+    OrderItems: typeof import('./components/common/customer/OrderItems.vue')['default']
     OuterFooter: typeof import('./components/common/outerFooters/OuterFooter.vue')['default']
     OuterFooter2: typeof import('./components/common/outerFooters/OuterFooter2.vue')['default']
     OuterNavbar1: typeof import('./components/common/outerNavbars/OuterNavbar1.vue')['default']
@@ -32,5 +35,9 @@ declare module 'vue' {
     SearchDialog: typeof import('./components/common/customer/SearchDialog.vue')['default']
     Sidebar: typeof import('./components/common/sideBar/Sidebar.vue')['default']
     SlugName: typeof import('./components/common/insideNavbar/SlugName.vue')['default']
+    StatusCard: typeof import('./components/common/customer/StatusCard.vue')['default']
+    StatusInfoCard: typeof import('./components/common/customer/StatusInfoCard.vue')['default']
+    StatusMessages: typeof import('./components/common/customer/StatusMessages.vue')['default']
+    YourOrder: typeof import('./components/common/customer/YourOrder.vue')['default']
   }
 }

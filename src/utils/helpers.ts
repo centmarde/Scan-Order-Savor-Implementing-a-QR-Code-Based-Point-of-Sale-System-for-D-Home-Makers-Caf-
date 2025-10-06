@@ -8,16 +8,16 @@
  * @returns A human-readable error message string
  */
 export function getErrorMessage(error: any): string {
-  if (typeof error === 'string') {
-    return error
+  if (typeof error === "string") {
+    return error;
   }
   if (error?.message) {
-    return error.message
+    return error.message;
   }
   if (error?.msg) {
-    return error.msg
+    return error.msg;
   }
-  return 'Unknown error occurred'
+  return "Unknown error occurred";
 }
 
 /**
@@ -26,13 +26,13 @@ export function getErrorMessage(error: any): string {
  * @returns A string of 1-2 uppercase letters representing the user's initials
  */
 export function getEmailInitials(email: string | null | undefined): string {
-  if (!email) return 'U'; // Default to 'U' for User if no email
+  if (!email) return "U"; // Default to 'U' for User if no email
 
   // Extract the local part (before @) from email
-  const localPart = email.split('@')[0];
+  const localPart = email.split("@")[0];
 
   // Split by common separators (dots, underscores, hyphens, numbers)
-  const parts = localPart.split(/[\._\-\d]+/).filter(part => part.length > 0);
+  const parts = localPart.split(/[\._\-\d]+/).filter((part) => part.length > 0);
 
   if (parts.length >= 2) {
     // Take first letter of first two parts
@@ -54,26 +54,29 @@ export function getEmailInitials(email: string | null | undefined): string {
  * @param userData - User data object containing name/email information
  * @returns A formatted display name
  */
-export function getUserDisplayName(userData: {
-  user_metadata?: { full_name?: string };
-  email?: string
-} | null): string {
-  if (!userData) return 'User';
+export function getUserDisplayName(
+  userData: {
+    user_metadata?: { full_name?: string };
+    email?: string;
+  } | null
+): string {
+  if (!userData) return "User";
 
   const fullName = userData.user_metadata?.full_name;
   if (fullName) return fullName;
 
   if (userData.email) {
     // Extract name from email (part before @)
-    const emailLocal = userData.email.split('@')[0];
+    const emailLocal = userData.email.split("@")[0];
     // Replace dots/underscores with spaces and capitalize
-    return emailLocal.replace(/[\._]/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return emailLocal
+      .replace(/[\._]/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
-  return 'User';
+  return "User";
 }
 
 /**
@@ -82,13 +85,17 @@ export function getUserDisplayName(userData: {
  * @returns A color string for Vuetify components
  */
 export function getRoleColor(roleId: number | null | undefined): string {
-  if (!roleId) return 'grey'
+  if (!roleId) return "grey";
   // You can customize colors based on role ID or title
   switch (roleId) {
-    case 1: return 'red' // Admin
-    case 2: return 'blue' // Student
-    case 3: return 'green' // Organization Leader
-    default: return 'grey'
+    case 1:
+      return "red"; // Admin
+    case 2:
+      return "blue"; // Student
+    case 3:
+      return "green"; // Organization Leader
+    default:
+      return "grey";
   }
 }
 
@@ -98,10 +105,13 @@ export function getRoleColor(roleId: number | null | undefined): string {
  * @param roles - The roles array to search in
  * @returns A human-readable role title
  */
-export function getRoleTitle(roleId: number | null | undefined, roles: Array<{ id: number; title: string | null }>): string {
-  if (!roleId) return 'Unknown'
-  const role = roles.find(r => r.id === roleId)
-  return role?.title || 'Unknown'
+export function getRoleTitle(
+  roleId: number | null | undefined,
+  roles: Array<{ id: number; title: string | null }>
+): string {
+  if (!roleId) return "Unknown";
+  const role = roles.find((r) => r.id === roleId);
+  return role?.title || "Unknown";
 }
 
 /**
@@ -111,16 +121,16 @@ export function getRoleTitle(roleId: number | null | undefined, roles: Array<{ i
  */
 export function getRoleText(roleId: number | null | undefined): string {
   switch (roleId) {
-    case 1: return 'Admin'
-    case 2: return 'Student'
-    case 3: return 'Organization Leader'
-    default: return 'Unknown'
+    case 1:
+      return "Admin";
+    case 2:
+      return "Student";
+    case 3:
+      return "Organization Leader";
+    default:
+      return "Unknown";
   }
 }
-
-
-
-
 
 /**
  * Formats a date string into a human-readable format
@@ -128,14 +138,14 @@ export function getRoleText(roleId: number | null | undefined): string {
  * @returns A formatted date string or 'N/A' if no date provided
  */
 export function formatDate(dateString: string | undefined): string {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 /**
@@ -144,16 +154,16 @@ export function formatDate(dateString: string | undefined): string {
  * @returns A formatted slug name string
  */
 export function createSlugName(email: string | null | undefined): string {
-  if (!email) return 'user';
+  if (!email) return "user";
 
   // Extract the local part (before @) from email
-  const localPart = email.split('@')[0];
+  const localPart = email.split("@")[0];
 
   // Replace dots, underscores, hyphens, and numbers with spaces
-  const cleaned = localPart.replace(/[\._\-\d]+/g, ' ');
+  const cleaned = localPart.replace(/[\._\-\d]+/g, " ");
 
   // Split by spaces and filter out empty parts
-  const parts = cleaned.split(' ').filter(part => part.length > 0);
+  const parts = cleaned.split(" ").filter((part) => part.length > 0);
 
   if (parts.length === 0) {
     // Fallback: use first part of email before @
@@ -161,7 +171,7 @@ export function createSlugName(email: string | null | undefined): string {
   }
 
   // Join parts with dots to create slug-like name
-  return parts.map(part => part.toLowerCase()).join('.');
+  return parts.map((part) => part.toLowerCase()).join(".");
 }
 
 /**
@@ -169,19 +179,202 @@ export function createSlugName(email: string | null | undefined): string {
  * @param email - The email address to convert
  * @returns A capitalized display name
  */
-export function createDisplaySlugName(email: string | null | undefined): string {
-  if (!email) return 'User';
+export function createDisplaySlugName(
+  email: string | null | undefined
+): string {
+  if (!email) return "User";
 
   const slugName = createSlugName(email);
 
   // Split by dots and capitalize each part
   return slugName
-    .split('.')
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+    .split(".")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
+/**
+ * Gets the text description for a rating value (1-5 stars)
+ * @param rating - The rating value (1-5)
+ * @returns A descriptive text for the rating
+ */
+export function getRatingText(rating: number): string {
+  switch (rating) {
+    case 1:
+      return "Needs Improvement";
+    case 2:
+      return "Fair";
+    case 3:
+      return "Good";
+    case 4:
+      return "Very Good";
+    case 5:
+      return "Excellent";
+    default:
+      return "";
+  }
+}
 
+/**
+ * Gets the color associated with an order status
+ * @param status - The order status string
+ * @returns A hex color code for the status
+ */
+export function getStatusColor(status: string): string {
+  switch (status) {
+    case "pending":
+      return "#FFA726";
+    case "confirmed":
+      return "#42A5F5";
+    case "preparing":
+      return "#FF7043";
+    case "ready":
+      return "#66BB6A";
+    case "completed":
+      return "#4CAF50";
+    case "cancelled":
+      return "#EF5350";
+    default:
+      return "#757575"; // Default grey color
+  }
+}
+
+/**
+ * Gets the display text for an order status
+ * @param status - The order status string
+ * @returns A human-readable status text
+ */
+export function getStatusText(status: string): string {
+  switch (status) {
+    case "pending":
+      return "Pending";
+    case "confirmed":
+      return "Confirmed";
+    case "preparing":
+      return "Preparing";
+    case "ready":
+      return "Ready";
+    case "completed":
+      return "Completed";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      return "Unknown";
+  }
+}
+
+/**
+ * Gets the icon associated with an order status
+ * @param status - The order status string
+ * @returns A Material Design icon name for the status
+ */
+export function getStatusIcon(status: string): string {
+  switch (status) {
+    case "pending":
+      return "mdi-clock-outline";
+    case "confirmed":
+      return "mdi-check-circle-outline";
+    case "preparing":
+      return "mdi-chef-hat";
+    case "ready":
+      return "mdi-bell-ring";
+    case "completed":
+      return "mdi-check-all";
+    case "cancelled":
+      return "mdi-close-circle-outline";
+    default:
+      return "mdi-clock-outline";
+  }
+}
+
+/**
+ * Gets the appropriate label for a status info card
+ * @param status - The order status string
+ * @returns A descriptive label for the status
+ */
+export function getStatusLabel(status: string): string {
+  switch (status) {
+    case "pending":
+    case "confirmed":
+    case "preparing":
+      return "Estimated Time";
+    case "ready":
+    case "completed":
+    case "cancelled":
+      return "Status";
+    default:
+      return "Estimated Time";
+  }
+}
+
+/**
+ * Gets the display value for a status (time estimate or status message)
+ * @param status - The order status string
+ * @returns A descriptive value for the status
+ */
+export function getStatusValue(status: string): string {
+  switch (status) {
+    case "pending":
+      return "3-5 minutes";
+    case "confirmed":
+      return "12-15 minutes";
+    case "preparing":
+      return "5-10 minutes";
+    case "ready":
+      return "Ready to Serve!";
+    case "completed":
+      return "Completed";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      return "3-5 minutes";
+  }
+}
+
+/**
+ * Gets the color for status labels (different from main status color)
+ * @param status - The order status string
+ * @param primaryColor - The primary theme color as fallback
+ * @returns A hex color code for the label
+ */
+export function getLabelColor(status: string, primaryColor?: string): string {
+  switch (status) {
+    case "ready":
+    case "completed":
+      return "#4CAF50";
+    case "cancelled":
+      return "#F44336";
+    default:
+      return primaryColor || "#757575";
+  }
+}
+
+/**
+ * Formats a URL to access the image from Supabase storage or returns a default
+ * @param imagePath - The image path/URL to format
+ * @param useDefault - Whether to return default image for empty paths (default: true)
+ * @returns A properly formatted image URL
+ */
+export function getImageUrl(
+  imagePath: string,
+  useDefault: boolean = true
+): string {
+  if (!imagePath) return useDefault ? "/assets/logo1.png" : "";
+  if (imagePath.startsWith("http")) return imagePath;
+  return `https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory/${imagePath}`;
+}
+
+/**
+ * Formats a number as Philippine Peso currency
+ * @param amount - The amount to format
+ * @returns A formatted currency string
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  }).format(amount);
+}
 
 // ========================================
 // ORGANIZATION MEMBERS HELPERS
@@ -191,68 +384,103 @@ export function createDisplaySlugName(email: string | null | undefined): string 
  * Organization member management configuration
  */
 export const memberStatusOptions = [
-  { value: 'active', title: 'Active', color: 'success', icon: 'mdi-check-circle' },
-  { value: 'pending', title: 'Pending', color: 'warning', icon: 'mdi-clock' },
-  { value: 'inactive', title: 'Inactive', color: 'grey', icon: 'mdi-minus-circle' },
-  { value: 'suspended', title: 'Suspended', color: 'error', icon: 'mdi-alert-circle' }
-] as const
+  {
+    value: "active",
+    title: "Active",
+    color: "success",
+    icon: "mdi-check-circle",
+  },
+  { value: "pending", title: "Pending", color: "warning", icon: "mdi-clock" },
+  {
+    value: "inactive",
+    title: "Inactive",
+    color: "grey",
+    icon: "mdi-minus-circle",
+  },
+  {
+    value: "suspended",
+    title: "Suspended",
+    color: "error",
+    icon: "mdi-alert-circle",
+  },
+] as const;
 
 export const memberRoleOptions = [
-  { value: 'member', title: 'Member', description: 'Regular organization member' },
-  { value: 'officer', title: 'Officer', description: 'Organization officer with special responsibilities' },
-  { value: 'secretary', title: 'Secretary', description: 'Handles documentation and communications' },
-  { value: 'treasurer', title: 'Treasurer', description: 'Manages organization finances' },
-  { value: 'vice_president', title: 'Vice President', description: 'Second-in-command of the organization' }
-] as const
+  {
+    value: "member",
+    title: "Member",
+    description: "Regular organization member",
+  },
+  {
+    value: "officer",
+    title: "Officer",
+    description: "Organization officer with special responsibilities",
+  },
+  {
+    value: "secretary",
+    title: "Secretary",
+    description: "Handles documentation and communications",
+  },
+  {
+    value: "treasurer",
+    title: "Treasurer",
+    description: "Manages organization finances",
+  },
+  {
+    value: "vice_president",
+    title: "Vice President",
+    description: "Second-in-command of the organization",
+  },
+] as const;
 
-export type MemberStatus = typeof memberStatusOptions[number]['value']
-export type MemberRole = typeof memberRoleOptions[number]['value']
+export type MemberStatus = (typeof memberStatusOptions)[number]["value"];
+export type MemberRole = (typeof memberRoleOptions)[number]["value"];
 
 /**
  * Gets the color for a member status
  */
 export const getMemberStatusColor = (status: string): string => {
-  const option = memberStatusOptions.find(opt => opt.value === status)
-  return option?.color || 'grey'
-}
+  const option = memberStatusOptions.find((opt) => opt.value === status);
+  return option?.color || "grey";
+};
 
 /**
  * Gets the icon for a member status
  */
 export const getMemberStatusIcon = (status: string): string => {
-  const option = memberStatusOptions.find(opt => opt.value === status)
-  return option?.icon || 'mdi-help-circle'
-}
+  const option = memberStatusOptions.find((opt) => opt.value === status);
+  return option?.icon || "mdi-help-circle";
+};
 
 /**
  * Gets the title for a member role
  */
 export const getMemberRoleTitle = (role: string): string => {
-  const option = memberRoleOptions.find(opt => opt.value === role)
-  return option?.title || role
-}
+  const option = memberRoleOptions.find((opt) => opt.value === role);
+  return option?.title || role;
+};
 
 /**
  * Gets the description for a member role
  */
 export const getMemberRoleDescription = (role: string): string => {
-  const option = memberRoleOptions.find(opt => opt.value === role)
-  return option?.description || ''
-}
+  const option = memberRoleOptions.find((opt) => opt.value === role);
+  return option?.description || "";
+};
 
 /**
  * Validates if a member status is valid
  */
 export const isValidMemberStatus = (status: string): status is MemberStatus => {
-  return memberStatusOptions.some(opt => opt.value === status)
-}
+  return memberStatusOptions.some((opt) => opt.value === status);
+};
 
 /**
  * Validates if a member role is valid
  */
 export const isValidMemberRole = (role: string): role is MemberRole => {
-  return memberRoleOptions.some(opt => opt.value === role)
-}
+  return memberRoleOptions.some((opt) => opt.value === role);
+};
 
 // ========================================
 // ORGANIZATION VIEW HELPERS
@@ -264,10 +492,13 @@ export const isValidMemberRole = (role: string): role is MemberRole => {
  * @param leaderId - ID of the leader to filter by
  * @returns Organizations where the user is the leader
  */
-export const filterOrganizationsByLeader = (organizations: any[], leaderId: string | undefined): any[] => {
-  if (!leaderId) return []
-  return organizations.filter(org => org.leader_id === leaderId)
-}
+export const filterOrganizationsByLeader = (
+  organizations: any[],
+  leaderId: string | undefined
+): any[] => {
+  if (!leaderId) return [];
+  return organizations.filter((org) => org.leader_id === leaderId);
+};
 
 /**
  * Filters organization members by search term
@@ -275,16 +506,20 @@ export const filterOrganizationsByLeader = (organizations: any[], leaderId: stri
  * @param searchTerm - Search term to filter by
  * @returns Filtered members matching the search term
  */
-export const filterMembersBySearch = (members: any[], searchTerm: string): any[] => {
-  if (!searchTerm) return members
+export const filterMembersBySearch = (
+  members: any[],
+  searchTerm: string
+): any[] => {
+  if (!searchTerm) return members;
 
-  const term = searchTerm.toLowerCase()
-  return members.filter(member =>
-    member.student?.full_name?.toLowerCase().includes(term) ||
-    member.student?.email?.toLowerCase().includes(term) ||
-    member.student?.student_number?.toLowerCase().includes(term)
-  )
-}
+  const term = searchTerm.toLowerCase();
+  return members.filter(
+    (member) =>
+      member.student?.full_name?.toLowerCase().includes(term) ||
+      member.student?.email?.toLowerCase().includes(term) ||
+      member.student?.student_number?.toLowerCase().includes(term)
+  );
+};
 
 /**
  * Prepares organization data for card display
@@ -294,13 +529,13 @@ export const filterMembersBySearch = (members: any[], searchTerm: string): any[]
 export const prepareOrganizationCardData = (organization: any) => {
   return {
     id: organization.id,
-    title: organization.title || 'Untitled Organization',
+    title: organization.title || "Untitled Organization",
     createdAt: organization.created_at,
     formattedCreatedAt: formatDate(organization.created_at),
     isLeader: true, // This would be determined by the calling component
-    memberCount: organization.member_count || 0
-  }
-}
+    memberCount: organization.member_count || 0,
+  };
+};
 
 /**
  * Creates member management handlers factory
@@ -308,81 +543,83 @@ export const prepareOrganizationCardData = (organization: any) => {
  * @returns Object with standardized member management handlers
  */
 export const createMemberManagementHandlers = (config: {
-  setSelectedOrganization: (org: any) => void
-  setMembersDialog: (open: boolean) => void
-  fetchOrganizationMembers: (orgId: string) => Promise<any>
-  fetchAvailableStudents: (orgId: string) => Promise<any>
-  addMemberToOrganization: () => Promise<boolean>
-  updateOrganizationMember: (memberId: string, updates: any) => Promise<boolean>
-  removeMemberFromOrganization: (memberId: string) => Promise<boolean>
-  resetMemberForm: () => void
-  clearMembersData: () => void
-  getSelectedOrganization: () => any
+  setSelectedOrganization: (org: any) => void;
+  setMembersDialog: (open: boolean) => void;
+  fetchOrganizationMembers: (orgId: string) => Promise<any>;
+  fetchAvailableStudents: (orgId: string) => Promise<any>;
+  addMemberToOrganization: () => Promise<boolean>;
+  updateOrganizationMember: (
+    memberId: string,
+    updates: any
+  ) => Promise<boolean>;
+  removeMemberFromOrganization: (memberId: string) => Promise<boolean>;
+  resetMemberForm: () => void;
+  clearMembersData: () => void;
+  getSelectedOrganization: () => any;
 }) => {
-
   const handleManageMembers = async (organization: any) => {
-    config.setSelectedOrganization(organization)
-    config.setMembersDialog(true)
+    config.setSelectedOrganization(organization);
+    config.setMembersDialog(true);
 
     // Fetch members and available students
     await Promise.all([
       config.fetchOrganizationMembers(organization.id),
-      config.fetchAvailableStudents(organization.id)
-    ])
-  }
+      config.fetchAvailableStudents(organization.id),
+    ]);
+  };
 
   const handleAddMember = async () => {
-    const success = await config.addMemberToOrganization()
+    const success = await config.addMemberToOrganization();
     if (success) {
-      config.resetMemberForm()
+      config.resetMemberForm();
       // Refresh members list
-      const selectedOrg = config.getSelectedOrganization()
+      const selectedOrg = config.getSelectedOrganization();
       if (selectedOrg) {
         await Promise.all([
           config.fetchOrganizationMembers(selectedOrg.id),
-          config.fetchAvailableStudents(selectedOrg.id)
-        ])
+          config.fetchAvailableStudents(selectedOrg.id),
+        ]);
       }
     }
-  }
+  };
 
   const handleUpdateMember = async (memberId: string, updates: any) => {
-    const success = await config.updateOrganizationMember(memberId, updates)
+    const success = await config.updateOrganizationMember(memberId, updates);
     if (success) {
-      const selectedOrg = config.getSelectedOrganization()
+      const selectedOrg = config.getSelectedOrganization();
       if (selectedOrg) {
         // Refresh members list
-        await config.fetchOrganizationMembers(selectedOrg.id)
+        await config.fetchOrganizationMembers(selectedOrg.id);
       }
     }
-  }
+  };
 
   const handleRemoveMember = async (memberId: string) => {
-    const success = await config.removeMemberFromOrganization(memberId)
+    const success = await config.removeMemberFromOrganization(memberId);
     if (success) {
-      const selectedOrg = config.getSelectedOrganization()
+      const selectedOrg = config.getSelectedOrganization();
       if (selectedOrg) {
         // Refresh members list
-        await config.fetchOrganizationMembers(selectedOrg.id)
+        await config.fetchOrganizationMembers(selectedOrg.id);
       }
     }
-  }
+  };
 
   const handleCloseMembersDialog = () => {
-    config.setMembersDialog(false)
-    config.setSelectedOrganization(null)
+    config.setMembersDialog(false);
+    config.setSelectedOrganization(null);
     // Clear members data to prevent showing stale data
-    config.clearMembersData()
-  }
+    config.clearMembersData();
+  };
 
   return {
     handleManageMembers,
     handleAddMember,
     handleUpdateMember,
     handleRemoveMember,
-    handleCloseMembersDialog
-  }
-}
+    handleCloseMembersDialog,
+  };
+};
 
 /**
  * Creates a handler for viewing organization members (admin/read-only mode)
@@ -390,30 +627,29 @@ export const createMemberManagementHandlers = (config: {
  * @returns Handler function for viewing members
  */
 export const createViewMembersHandler = (config: {
-  setSelectedOrganization: (org: any) => void
-  setMembersDialog: (open: boolean) => void
-  fetchOrganizationMembers: (orgId: string) => Promise<any>
-  fetchAvailableStudents?: (orgId: string) => Promise<any> // Optional for view-only mode
-  viewOnly?: boolean // If true, won't fetch available students
+  setSelectedOrganization: (org: any) => void;
+  setMembersDialog: (open: boolean) => void;
+  fetchOrganizationMembers: (orgId: string) => Promise<any>;
+  fetchAvailableStudents?: (orgId: string) => Promise<any>; // Optional for view-only mode
+  viewOnly?: boolean; // If true, won't fetch available students
 }) => {
-
   return async (organization: any) => {
-    config.setSelectedOrganization(organization)
-    config.setMembersDialog(true)
+    config.setSelectedOrganization(organization);
+    config.setMembersDialog(true);
 
     // Fetch members, and optionally available students based on mode
     if (config.viewOnly || !config.fetchAvailableStudents) {
       // View-only mode: fetch members only
-      await config.fetchOrganizationMembers(organization.id)
+      await config.fetchOrganizationMembers(organization.id);
     } else {
       // Full management mode: fetch both members and available students
       await Promise.all([
         config.fetchOrganizationMembers(organization.id),
-        config.fetchAvailableStudents(organization.id)
-      ])
+        config.fetchAvailableStudents(organization.id),
+      ]);
     }
-  }
-}
+  };
+};
 
 // ========================================
 // ORGANIZATION CONFIGURATION
@@ -423,17 +659,15 @@ export const createViewMembersHandler = (config: {
  * Table configuration for Organizations data table
  */
 export const organizationsTableHeaders = [
-  { title: 'Organization Name', key: 'title', sortable: true },
-  { title: 'Leader', key: 'leader', sortable: true },
-  { title: 'Created Date', key: 'created_at', sortable: true },
-  { title: 'Actions', key: 'actions', sortable: false },
-]
+  { title: "Organization Name", key: "title", sortable: true },
+  { title: "Leader", key: "leader", sortable: true },
+  { title: "Created Date", key: "created_at", sortable: true },
+  { title: "Actions", key: "actions", sortable: false },
+];
 
 /**
  * Form validation rules for organizations
  */
 export const organizationValidationRules = {
-  title: [
-    (v: string) => !!v || 'Organization name is required'
-  ]
-}
+  title: [(v: string) => !!v || "Organization name is required"],
+};
