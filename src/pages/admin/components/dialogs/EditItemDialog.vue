@@ -7,6 +7,7 @@ import {
   type InventoryItem,
 } from "@/stores/inventoryData";
 import { MENU_ITEM_CATEGORIES } from "@/utils/constants";
+import { getImageUrl } from "@/utils/helpers";
 
 // Props
 interface Props {
@@ -102,12 +103,6 @@ const handleImageSelect = (event: Event) => {
     };
     reader.readAsDataURL(file);
   }
-};
-
-const getImageUrl = (imagePath: string) => {
-  if (!imagePath) return "";
-  if (imagePath.startsWith("http")) return imagePath;
-  return `https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory/${imagePath}`;
 };
 
 const updateItem = async () => {
@@ -222,7 +217,7 @@ const updateItem = async () => {
                 <div v-if="!imagePreview && formData.image" class="mb-4">
                   <v-card class="mx-auto" max-width="200" elevation="2">
                     <v-img
-                      :src="getImageUrl(formData.image)"
+                      :src="getImageUrl(formData.image, false)"
                       height="150"
                       cover
                       class="text-white"

@@ -352,10 +352,14 @@ export function getLabelColor(status: string, primaryColor?: string): string {
 /**
  * Formats a URL to access the image from Supabase storage or returns a default
  * @param imagePath - The image path/URL to format
+ * @param useDefault - Whether to return default image for empty paths (default: true)
  * @returns A properly formatted image URL
  */
-export function getImageUrl(imagePath: string): string {
-  if (!imagePath) return "/assets/logo1.png";
+export function getImageUrl(
+  imagePath: string,
+  useDefault: boolean = true
+): string {
+  if (!imagePath) return useDefault ? "/assets/logo1.png" : "";
   if (imagePath.startsWith("http")) return imagePath;
   return `https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory/${imagePath}`;
 }
