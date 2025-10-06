@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useMenuDataStore } from "@/stores/menuData";
 import { useOrderItems } from "@/composables/useOrderItems";
-import BestSellers from "@/components/admin/BestSellers.vue";
+import BestSellers from "@/components/admin/AdminBestSellers.vue";
 
 // Store
 const menuDataStore = useMenuDataStore();

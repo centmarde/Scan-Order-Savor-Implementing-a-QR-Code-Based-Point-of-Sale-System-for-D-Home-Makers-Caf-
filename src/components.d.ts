@@ -8,8 +8,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AdminBestSellers: typeof import('./components/admin/AdminBestSellers.vue')['default']
     AppFooter: typeof import('./components/AppFooter.vue')['default']
-    BestSellers: typeof import('./components/admin/BestSellers.vue')['default']
+    BestSellers: typeof import('./components/common/customer/BestSellers.vue')['default']
     BottomBar: typeof import('./components/common/BottomBar.vue')['default']
     CategorySelector: typeof import('./components/common/customer/CategorySelector.vue')['default']
     Feedback: typeof import('./components/common/customer/Feedback.vue')['default']
