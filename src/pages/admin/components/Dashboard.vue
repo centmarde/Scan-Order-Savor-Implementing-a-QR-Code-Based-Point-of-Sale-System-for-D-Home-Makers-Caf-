@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useMenuDataStore } from "@/stores/menuData";
 import { useOrderItems } from "@/composables/useOrderItems";
+import { getImageUrl, formatCurrency } from "@/utils/helpers";
 
 // Store
 const menuDataStore = useMenuDataStore();
@@ -49,19 +50,6 @@ const periodTotalSales = computed(() => {
 });
 
 // Methods
-const getImageUrl = (imagePath: string) => {
-  if (!imagePath) return "/assets/logo1.png";
-  if (imagePath.startsWith("http")) return imagePath;
-  return `https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory/${imagePath}`;
-};
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(amount);
-};
-
 const refreshData = async () => {
   loading.value = true;
   await Promise.all([

@@ -349,6 +349,29 @@ export function getLabelColor(status: string, primaryColor?: string): string {
   }
 }
 
+/**
+ * Formats a URL to access the image from Supabase storage or returns a default
+ * @param imagePath - The image path/URL to format
+ * @returns A properly formatted image URL
+ */
+export function getImageUrl(imagePath: string): string {
+  if (!imagePath) return "/assets/logo1.png";
+  if (imagePath.startsWith("http")) return imagePath;
+  return `https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory/${imagePath}`;
+}
+
+/**
+ * Formats a number as Philippine Peso currency
+ * @param amount - The amount to format
+ * @returns A formatted currency string
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  }).format(amount);
+}
+
 // ========================================
 // ORGANIZATION MEMBERS HELPERS
 // ========================================
