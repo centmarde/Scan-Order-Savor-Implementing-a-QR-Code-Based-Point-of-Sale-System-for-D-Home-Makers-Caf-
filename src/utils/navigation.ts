@@ -1,80 +1,93 @@
 export interface NavigationItem {
-  title: string
-  icon: string
-  route: string
-  selected?: boolean
-  permission?: string // Optional permission key for role-based access
+  title: string;
+  icon: string;
+  route: string;
+  selected?: boolean;
+  permission?: string; // Optional permission key for role-based access
 }
 
 export interface NavigationGroup {
-  title: string
-  icon: string
-  permission?: string // Optional permission key for the entire group
-  children: NavigationItem[]
+  title: string;
+  icon: string;
+  permission?: string; // Optional permission key for the entire group
+  children: NavigationItem[];
 }
 
 export const navigationConfig: NavigationGroup[] = [
   {
-    title: 'My Account',
-    icon: 'mdi-account',
+    title: "My Account",
+    icon: "mdi-account",
     children: [
-       {
-        title: 'Home',
-        icon: 'mdi-home',
-        route: '/account/home',
-        permission: 'admin.dashboard.view'
+      {
+        title: "Home",
+        icon: "mdi-home",
+        route: "/account/home",
+        permission: "admin.dashboard.view",
       },
-    ]
+    ],
   },
   {
-    title: 'Admin Controls',
-    icon: 'mdi-cog',
-    permission: 'admin.access',
+    title: "Admin Controls",
+    icon: "mdi-cog",
+    permission: "admin.access",
     children: [
-
       {
-        title: 'User Management',
-        icon: 'mdi-account-multiple',
-        route: '/admin/user-management',
-        permission: 'admin.users.manage'
+        title: "Inventory Management",
+        icon: "mdi-warehouse",
+        route: "/admin/inventory-management",
+        permission: "admin.inventory.manage",
       },
       {
-        title: 'User Roles',
-        icon: 'mdi-account-key',
-        route: '/admin/user-roles',
-        permission: 'admin.roles.manage'
+        title: "User Management",
+        icon: "mdi-account-multiple",
+        route: "/admin/user-management",
+        permission: "admin.users.manage",
       },
-    ]
+      {
+        title: "User Roles",
+        icon: "mdi-account-key",
+        route: "/admin/user-roles",
+        permission: "admin.roles.manage",
+      },
+      {
+        title: "QR Code Generator",
+        icon: "mdi-qrcode-scan",
+        route: "/admin/qr-generator",
+        permission: "admin.qr.generate",
+      },
+    ],
   },
-
-]
+];
 
 // Helper function to get all permissions from navigation config
 export const getAllPermissions = (): string[] => {
-  const permissions: string[] = []
+  const permissions: string[] = [];
 
-  navigationConfig.forEach(group => {
+  navigationConfig.forEach((group) => {
     if (group.permission) {
-      permissions.push(group.permission)
+      permissions.push(group.permission);
     }
 
-    group.children.forEach(item => {
+    group.children.forEach((item) => {
       if (item.permission) {
-        permissions.push(item.permission)
+        permissions.push(item.permission);
       }
-    })
-  })
+    });
+  });
 
-  return [...new Set(permissions)] // Remove duplicates
-}
+  return [...new Set(permissions)]; // Remove duplicates
+};
 
 // Helper function to get navigation items with selected state
-export const getNavigationWithSelection = (selectedPermissions: string[] = []): NavigationGroup[] => {
-  return navigationConfig.map(group => ({
+export const getNavigationWithSelection = (
+  selectedPermissions: string[] = []
+): NavigationGroup[] => {
+  return navigationConfig.map((group) => ({
     ...group,
-    children: group.children.map(item => ({
+    children: group.children.map((item) => ({
       ...item,
-      selected: selectedPermissions.includes(item.permission || item.route)
-    }))
-  }))
-}
+      // Checks if the user has the required permission OR if the route itself is used as the permission key
+      selected: selectedPermissions.includes(item.permission || item.route),
+    })),
+  }));
+};

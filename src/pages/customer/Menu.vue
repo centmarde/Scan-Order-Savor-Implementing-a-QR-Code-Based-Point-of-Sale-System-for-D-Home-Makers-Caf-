@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router"; // <-- Import useRoute
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
 import { useMenu } from "@/composables/useMenu";
+import { useTableStore } from "@/stores/tableStores"; // <-- Import new store
 import type { MenuItem } from "@/stores/menuData";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
 import BestSellers from "@/components/common/customer/BestSellers.vue";
 import CategorySelector from "@/components/common/customer/CategorySelector.vue";
+import YourOrder from "@/components/common/customer/YourOrder.vue";
 
 const router = useRouter();
+const route = useRoute(); // <-- Initialize useRoute
+
+// Initialize the new table store
+const tableStore = useTableStore();
 
 // Theme setup
 const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
@@ -36,13 +42,75 @@ const addToCart = (item: MenuItem) => {
   // You could add a toast notification here
 };
 
+const removeFromCart = (itemId: number) => {
+  // Find the first occurrence of the item with this ID and remove it
+  const index = cartItems.value.findIndex((item) => item.id === itemId);
+  if (index !== -1) {
+    cartItems.value.splice(index, 1);
+  }
+};
+
 const viewCart = () => {
   // Navigate to cart page (you'll need to create this)
   router.push("/customer/cart");
 };
 
+const cancelOrder = () => {
+  // Clear all cart items
+  cartItems.value = [];
+};
+
+const reviewOrder = () => {
+  console.log("Navigating to review order with cart items:", cartItems.value);
+
+  // Store cart data in sessionStorage as backup
+  sessionStorage.setItem(
+    "reviewOrderCartItems",
+    JSON.stringify(cartItems.value)
+  );
+
+  // Also store in a more persistent way
+  sessionStorage.setItem("cartItems", JSON.stringify(cartItems.value));
+
+  // Navigate to review order page with cart data and table ID
+  const queryParams: Record<string, string> = {
+    hasCartItems: cartItems.value.length > 0 ? "true" : "false",
+    itemCount: cartItems.value.length.toString(),
+  };
+
+  // Include table ID if available
+  if (tableStore.currentTableId) {
+    queryParams.table = tableStore.currentTableId.toString();
+  }
+
+  router.push({
+    path: "/customer/review-order",
+    query: queryParams,
+  });
+};
+
 // Lifecycle
 onMounted(async () => {
+  // 1. CAPTURE TABLE ID FROM URL
+  if (route.query.table && typeof route.query.table === "string") {
+    const tableId = parseInt(route.query.table, 10);
+
+    if (!isNaN(tableId) && tableId > 0) {
+      // Set the table ID in the session store
+      tableStore.setTableId(tableId);
+    } else {
+      console.warn(
+        `[Table Capture] Invalid table ID found: ${route.query.table}`
+      );
+    }
+  } else if (tableStore.currentTableId === null) {
+    // Optional: Log a warning or prompt the user if they navigate here directly
+    console.warn(
+      "[Table Capture] Menu accessed without a table ID query parameter."
+    );
+    // In a production app, you might show a modal asking them to manually enter their table number.
+  }
+
   // Initialize theme first
   await initializeTheme();
   // Fetch menu items from Supabase
@@ -135,41 +203,15 @@ onMounted(async () => {
         <!-- Category Selector and Menu Items -->
         <CategorySelector :menu-items="menuItems" @add-to-cart="addToCart" />
       </div>
-    </v-main>
 
-    <!-- Fixed Bottom Cart -->
-    <v-bottom-navigation
-      v-if="cartItems.length > 0"
-      grow
-      class="px-4"
-      height="80"
-      color="secondary"
-    >
-      <v-btn
-        @click="viewCart"
-        variant="flat"
-        block
-        size="large"
-        rounded="xl"
-        class="font-weight-bold ma-2"
-        :style="{ backgroundColor: primaryColor, color: 'white' }"
-      >
-        <template v-slot:prepend>
-          <v-icon :style="{ color: secondaryColor }">mdi-cart</v-icon>
-        </template>
-        <span class="mx-2"
-          >{{ cartItems.length }} item{{
-            cartItems.length > 1 ? "s" : ""
-          }}</span
-        >
-        <v-spacer />
-        <span class="mr-2"
-          >{{ APP_CONFIG.CURRENCY }}{{ cartTotal.toFixed(2) }}</span
-        >
-        <template v-slot:append>
-          <v-icon :style="{ color: secondaryColor }">mdi-chevron-right</v-icon>
-        </template>
-      </v-btn>
-    </v-bottom-navigation>
+      <!-- Your Order Section -->
+      <YourOrder
+        :cart-items="cartItems"
+        @view-cart="viewCart"
+        @cancel-order="cancelOrder"
+        @review-order="reviewOrder"
+        @remove-item="removeFromCart"
+      />
+    </v-main>
   </v-app>
 </template>
