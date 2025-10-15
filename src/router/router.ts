@@ -16,6 +16,10 @@ import TableQRCodeGenerator from "@/pages/admin/components/TableQRCodeGenerator.
 import ReviewOrder from "@/pages/customer/ReviewOrder.vue";
 import WaitingPage from "@/pages/customer/WaitingPage.vue";
 
+// Cashier imports
+import CashierOrdersView from "@/pages/cashier/CashierOrdersView.vue";
+import CashierHistoryView from "@/pages/cashier/CashierHistoryView.vue";
+
 /**
  * Route definitions for the application
  */
@@ -79,6 +83,29 @@ const routes = setupLayouts([
     component: UserManagementView,
     meta: { requiresAuth: true },
   },
+
+  // Cashier routes
+  {
+    path: "/cashier",
+    name: "CashierOrders",
+    component: CashierOrdersView,
+    meta: {
+      requiresAuth: true,
+      allowedRoles: [1, 3], // Admin and Organization Leader (adjust based on your role system)
+      title: "Cashier - Pending Orders",
+    },
+  },
+  {
+    path: "/cashier/history",
+    name: "CashierHistory",
+    component: CashierHistoryView,
+    meta: {
+      requiresAuth: true,
+      allowedRoles: [1, 3], // Admin and Organization Leader
+      title: "Cashier - Order History",
+    },
+  },
+
   {
     path: "/forbidden",
     component: ForbiddenView,

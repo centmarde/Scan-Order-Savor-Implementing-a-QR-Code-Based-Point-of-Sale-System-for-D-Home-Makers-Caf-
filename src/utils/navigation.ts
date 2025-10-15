@@ -57,6 +57,25 @@ export const navigationConfig: NavigationGroup[] = [
       },
     ],
   },
+  {
+    title: "Cashier Operations",
+    icon: "mdi-cash-register",
+    permission: "cashier.access",
+    children: [
+      {
+        title: "Pending Orders",
+        icon: "mdi-clock-outline",
+        route: "/cashier",
+        permission: "cashier.orders.view",
+      },
+      {
+        title: "Order History",
+        icon: "mdi-history",
+        route: "/cashier/history",
+        permission: "cashier.orders.history",
+      },
+    ],
+  },
 ];
 
 // Helper function to get all permissions from navigation config
@@ -90,4 +109,154 @@ export const getNavigationWithSelection = (
       selected: selectedPermissions.includes(item.permission || item.route),
     })),
   }));
+};
+
+// Helper function to filter navigation based on user permissions
+export const getFilteredNavigation = (
+  userPermissions: string[] = []
+): NavigationGroup[] => {
+  return navigationConfig
+    .filter((group) => {
+      // If group has permission requirement, check if user has it
+      if (group.permission && !userPermissions.includes(group.permission)) {
+        return false;
+      }
+      // Keep groups that have at least one accessible child
+      return group.children.some(
+        (item) =>
+          !item.permission || userPermissions.includes(item.permission)
+      );
+    })
+    .map((group) => ({
+      ...group,
+      children: group.children.filter(
+        (item) =>
+          !item.permission || userPermissions.includes(item.permission)
+      ),
+    }));
+};
+
+// Helper function to filter navigation based on user role ID
+export const getNavigationByRole = (roleId: number): NavigationGroup[] => {
+  // Define role-based access
+  const rolePermissions: Record<number, string[]> = {
+    1: [
+      // Admin - Full access
+      "admin.dashboard.view",
+      "admin.access",
+      "admin.inventory.manage",
+      "admin.users.manage",
+      "admin.roles.manage",
+      "admin.qr.generate",
+      "cashier.access",
+      "cashier.orders.view",
+      "cashier.orders.history",
+    ],
+    2: [
+      // Student - Limited access
+      "admin.dashboard.view",
+    ],
+    3: [
+      // Cashier - Cashier operations only
+      "admin.dashboard.view",
+      "cashier.access",
+      "cashier.orders.view",
+      "cashier.orders.history",
+    ],
+  };
+
+  const permissions = rolePermissions[roleId] || [];
+  return getFilteredNavigation(permissions);
+};
+
+// Helper function to get cashier-specific navigation
+export const getCashierNavigation = (): NavigationGroup[] => {
+  return navigationConfig.filter(
+    (group) => group.title === "Cashier Operations"
+  );
+};
+
+// Helper function to get admin-specific navigation
+export const getAdminNavigation = (): NavigationGroup[] => {
+  return navigationConfig.filter(
+    (group) => group.title === "Admin Controls" || group.title === "My Account"
+  );
+};
+
+// Helper function to check if a route requires permission
+export const requiresPermission = (route: string): string | undefined => {
+  for (const group of navigationConfig) {
+    const item = group.children.find((child) => child.route === route);
+    if (item) {
+      return item.permission;
+    }
+  }
+  return undefined;
+};
+
+// Helper function to get breadcrumb trail
+export const getBreadcrumbs = (
+  currentRoute: string
+): Array<{ title: string; route: string }> => {
+  const breadcrumbs: Array<{ title: string; route: string }> = [];
+
+  for (const group of navigationConfig) {
+    const item = group.children.find((child) => child.route === currentRoute);
+    if (item) {
+      breadcrumbs.push(
+        { title: group.title, route: "#" },
+        { title: item.title, route: item.route }
+      );
+      break;
+    }
+  }
+
+  return breadcrumbs;
+};
+
+// Helper function to check if user has access to a specific route
+export const canAccessRoute = (route: string, roleId: number): boolean => {
+  const rolePermissions: Record<number, string[]> = {
+    1: [
+      "admin.dashboard.view",
+      "admin.access",
+      "admin.inventory.manage",
+      "admin.users.manage",
+      "admin.roles.manage",
+      "admin.qr.generate",
+      "cashier.access",
+      "cashier.orders.view",
+      "cashier.orders.history",
+    ],
+    2: ["admin.dashboard.view"],
+    3: [
+      "admin.dashboard.view",
+      "cashier.access",
+      "cashier.orders.view",
+      "cashier.orders.history",
+    ],
+  };
+
+  const userPermissions = rolePermissions[roleId] || [];
+  const requiredPermission = requiresPermission(route);
+
+  // If no permission required, allow access
+  if (!requiredPermission) return true;
+
+  // Check if user has the required permission
+  return userPermissions.includes(requiredPermission);
+};
+
+// Helper to get user's default landing page based on role
+export const getDefaultLandingPage = (roleId: number): string => {
+  switch (roleId) {
+    case 1: // Admin
+      return "/account/home";
+    case 2: // Student
+      return "/account/home";
+    case 3: // Cashier
+      return "/cashier";
+    default:
+      return "/account/home";
+  }
 };
