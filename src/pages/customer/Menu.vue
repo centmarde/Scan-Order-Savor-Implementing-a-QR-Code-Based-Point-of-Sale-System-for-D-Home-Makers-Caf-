@@ -179,14 +179,20 @@ onMounted(async () => {
                     class="mr-1"
                     >mdi-star</v-icon
                   >
-                  <span class="text-body-2 mr-3 text-grey-lighten-2">4.8</span>
+                  <span
+                    class="text-body-2 mr-3"
+                    :style="{ color: secondaryColor }"
+                    >4.8</span
+                  >
                   <v-icon
                     :style="{ color: secondaryColor }"
                     size="16"
                     class="mr-1"
                     >mdi-clock-outline</v-icon
                   >
-                  <span class="text-body-2 text-grey-lighten-2">3-5 min</span>
+                  <span class="text-body-2" :style="{ color: secondaryColor }"
+                    >3-5 min</span
+                  >
                 </div>
               </div>
             </div>
