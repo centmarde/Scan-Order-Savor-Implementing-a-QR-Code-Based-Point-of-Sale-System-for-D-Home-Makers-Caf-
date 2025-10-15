@@ -267,34 +267,60 @@ export const useCashierDataStore = defineStore("cashierData", () => {
   };
 
   /**
-   * Approve order and send to kitchen
+   * Update order status
+   * Generic method to update any order to any status
    */
-  const approveOrder = async (orderId: number): Promise<boolean> => {
+  const updateOrderStatus = async (
+    orderId: number,
+    status: string
+  ): Promise<boolean> => {
     try {
       loading.value = true;
       error.value = null;
 
+      console.log(`Updating order ${orderId} to status: ${status}`);
+
       const { data, error: updateError } = await supabase
         .from("orders")
-        .update({ status: "confirmed" })
+        .update({ status })
         .eq("id", orderId)
         .select()
         .single();
 
       if (updateError) throw updateError;
 
-      // Remove from pending orders
-      pendingOrders.value = pendingOrders.value.filter((o) => o.id !== orderId);
+      console.log(`Order ${orderId} updated to ${status}`);
 
-      console.log(`Order ${orderId} approved and sent to kitchen`);
+      // Update local state
+      // Remove from pending if status changed from pending
+      if (status !== "pending") {
+        pendingOrders.value = pendingOrders.value.filter((o) => o.id !== orderId);
+      }
+
+      // Update in order history if it exists there
+      const historyIndex = orderHistory.value.findIndex((o) => o.id === orderId);
+      if (historyIndex !== -1 && data) {
+        orderHistory.value[historyIndex] = {
+          ...orderHistory.value[historyIndex],
+          ...data,
+        };
+      }
+
       return true;
     } catch (err) {
-      console.error("Error approving order:", err);
-      error.value = "Failed to approve order";
-      return false;
+      console.error(`Error updating order ${orderId} status:`, err);
+      error.value = `Failed to update order status to ${status}`;
+      throw err;
     } finally {
       loading.value = false;
     }
+  };
+
+  /**
+   * Approve order and send to kitchen
+   */
+  const approveOrder = async (orderId: number): Promise<boolean> => {
+    return await updateOrderStatus(orderId, "confirmed");
   };
 
   /**
@@ -483,6 +509,7 @@ export const useCashierDataStore = defineStore("cashierData", () => {
     fetchPendingOrders,
     fetchOrderHistory,
     getOrderDetails,
+    updateOrderStatus, // ← NEW METHOD ADDED
     approveOrder,
     rejectOrder,
     approveMultipleOrders,

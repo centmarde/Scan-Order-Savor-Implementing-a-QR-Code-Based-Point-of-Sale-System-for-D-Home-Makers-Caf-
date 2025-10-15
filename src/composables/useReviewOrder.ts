@@ -7,13 +7,13 @@
 
 import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
-import { useTableStore } from "@/stores/tableStores";
+import { useTableContext } from "@/pages/admin/composables/useTableContext"; 
 import { useOrderDataStore, type OrderWithMeals } from "@/stores/orderData";
 import type { MenuItem } from "@/stores/menuData";
 
 export function useReviewOrder() {
   const route = useRoute();
-  const tableStore = useTableStore();
+  const { tableId: contextTableId, getCurrentTableId } = useTableContext(); // ← Use table context
   const orderDataStore = useOrderDataStore();
 
   // Reactive data
@@ -24,7 +24,7 @@ export function useReviewOrder() {
 
   // Computed properties
   const tableId = computed(() => {
-    return tableStore.currentTableId || 1; // Default to table 1 if no table ID is set
+    return contextTableId.value || 1; // Default to table 1 if no table ID is set
   });
 
   const groupedCartItems = computed(() => {
@@ -107,18 +107,8 @@ export function useReviewOrder() {
 
   // Methods
   const initializeTableId = () => {
-    // Ensure table ID is set from query params if available (fallback for direct navigation)
-    if (route.query.table && !tableStore.currentTableId) {
-      const tableParam = route.query.table;
-      const tableValue = Array.isArray(tableParam) ? tableParam[0] : tableParam;
-      if (tableValue) {
-        const parsedTableId = parseInt(tableValue, 10);
-        if (!isNaN(parsedTableId) && parsedTableId > 0) {
-          tableStore.setTableId(parsedTableId);
-          console.log("Table ID set from query params:", parsedTableId);
-        }
-      }
-    }
+    // Table context handles initialization automatically
+    // This method kept for backward compatibility
     console.log("Current table ID for orders:", tableId.value);
   };
 
@@ -201,13 +191,11 @@ export function useReviewOrder() {
       return null;
     }
 
-    const currentTableId = tableId.value;
-    console.log(
-      "Creating orders for table:",
-      currentTableId,
-      "with items:",
-      cartItems.value
-    );
+    // 🔥 CRITICAL FIX: Get the actual table ID from context
+    const actualTableId = getCurrentTableId();
+    
+    console.log("📝 Creating order for table:", actualTableId);
+    console.log("📦 Cart items:", cartItems.value);
 
     // Store item count for the waiting page
     sessionStorage.setItem(
@@ -215,12 +203,14 @@ export function useReviewOrder() {
       cartItems.value.length.toString()
     );
 
-    // Create single order with order_items table
+    // Create single order with order_items table - pass the ACTUAL table ID
     const order = await orderDataStore.createOrderWithItems(
       cartItems.value,
-      currentTableId
+      actualTableId  // ← Use the actual table ID from context!
     );
-    console.log("Order created successfully:", order);
+    
+    console.log("✅ Order created successfully:", order);
+    console.log("✅ Order table_id:", order?.table_id);
 
     // Clear cart items after successful order creation
     cartItems.value = [];

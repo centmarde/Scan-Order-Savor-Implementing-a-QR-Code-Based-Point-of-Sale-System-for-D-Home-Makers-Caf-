@@ -32,3 +32,4 @@ export const useTableStore = defineStore('table', () => {
         clearTableId,
     };
 });
+

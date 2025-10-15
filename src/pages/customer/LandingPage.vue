@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { getInventoryImageUrl } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
+import { useTableContext } from "@/pages/admin/composables/useTableContext"; 
 
 const router = useRouter();
 
@@ -12,16 +13,23 @@ const { initializeTheme, primaryColor, secondaryColor } = useTheme();
 // Carousel state
 const currentSlide = ref(0);
 
+// Table context - captures table ID from URL
+const { tableId, initializeTable } = useTableContext();
+
 // Auto-advance carousel every 3 seconds
 let intervalId: number | undefined;
 onMounted(async () => {
   // Initialize theme first
   await initializeTheme();
+  
+  // Initialize table from URL query parameter
+  initializeTable(); // ← Captures table from URL
 
   intervalId = window.setInterval(() => {
     currentSlide.value = (currentSlide.value + 1) % carouselImages.length;
   }, 5000);
 });
+
 onUnmounted(() => {
   if (intervalId) window.clearInterval(intervalId);
 });
@@ -61,6 +69,14 @@ const navigateToEmployeeAccess = () => {
   <v-container class="pa-0 fill-height" fluid>
     <v-row justify="center" align="center" class="ma-0 pa-0 fill-height">
       <v-col cols="12" sm="8" md="6" lg="4" class="pa-4">
+        <!-- Table ID Chip: Visible if tableId is set -->
+        <div v-if="tableId" class="text-center">
+          <v-chip color="primary" class="mb-4">
+            <v-icon start>mdi-table-furniture</v-icon>
+            Table {{ tableId }}
+          </v-chip>
+        </div>
+
         <div class="d-flex flex-column justify-space-between fill-height">
           <!-- Top section with carousel -->
           <div class="text-center mb-8">
