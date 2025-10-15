@@ -166,7 +166,7 @@ onMounted(async () => {
           <v-card-text class="pa-6">
             <div class="d-flex align-center mb-3">
               <v-avatar size="60" class="mr-4">
-                <v-img src="/public/assets/logo1.png" />
+                <v-img src="/public/assets/logo2.jpg" />
               </v-avatar>
               <div>
                 <h1 class="text-h5 font-weight-bold mb-1 text-white">
