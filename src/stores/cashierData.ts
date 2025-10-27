@@ -320,7 +320,7 @@ export const useCashierDataStore = defineStore("cashierData", () => {
    * Approve order and send to kitchen
    */
   const approveOrder = async (orderId: number): Promise<boolean> => {
-    return await updateOrderStatus(orderId, "confirmed");
+    return await updateOrderStatus(orderId, "preparing");
   };
 
   /**
