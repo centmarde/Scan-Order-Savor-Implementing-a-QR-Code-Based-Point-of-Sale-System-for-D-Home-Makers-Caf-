@@ -1,3 +1,4 @@
+//navigation.ts
 export interface NavigationItem {
   title: string;
   icon: string;
@@ -76,6 +77,19 @@ export const navigationConfig: NavigationGroup[] = [
       },
     ],
   },
+  {
+    title: "Kitchen Operations",
+    icon: "mdi-chef-hat",
+    permission: "kitchen.access",
+    children: [
+      {
+        title: "Kitchen Orders",
+        icon: "mdi-silverware-fork-knife",
+        route: "/kitchen",
+        permission: "kitchen.orders.view",
+      },
+    ],
+  },
 ];
 
 // Helper function to get all permissions from navigation config
@@ -151,6 +165,8 @@ export const getNavigationByRole = (roleId: number): NavigationGroup[] => {
       "cashier.access",
       "cashier.orders.view",
       "cashier.orders.history",
+      "kitchen.access",
+      "kitchen.orders.view",
     ],
     2: [
       // Student - Limited access
@@ -163,6 +179,12 @@ export const getNavigationByRole = (roleId: number): NavigationGroup[] => {
       "cashier.orders.view",
       "cashier.orders.history",
     ],
+    4: [
+      // Kitchen Staff - Kitchen operations only
+      "admin.dashboard.view",
+      "kitchen.access",
+      "kitchen.orders.view",
+    ],
   };
 
   const permissions = rolePermissions[roleId] || [];
@@ -173,6 +195,13 @@ export const getNavigationByRole = (roleId: number): NavigationGroup[] => {
 export const getCashierNavigation = (): NavigationGroup[] => {
   return navigationConfig.filter(
     (group) => group.title === "Cashier Operations"
+  );
+};
+
+// Helper function to get kitchen-specific navigation
+export const getKitchenNavigation = (): NavigationGroup[] => {
+  return navigationConfig.filter(
+    (group) => group.title === "Kitchen Operations"
   );
 };
 
@@ -227,6 +256,8 @@ export const canAccessRoute = (route: string, roleId: number): boolean => {
       "cashier.access",
       "cashier.orders.view",
       "cashier.orders.history",
+      "kitchen.access",
+      "kitchen.orders.view",
     ],
     2: ["admin.dashboard.view"],
     3: [
@@ -234,6 +265,11 @@ export const canAccessRoute = (route: string, roleId: number): boolean => {
       "cashier.access",
       "cashier.orders.view",
       "cashier.orders.history",
+    ],
+    4: [
+      "admin.dashboard.view",
+      "kitchen.access",
+      "kitchen.orders.view",
     ],
   };
 
@@ -256,6 +292,8 @@ export const getDefaultLandingPage = (roleId: number): string => {
       return "/account/home";
     case 3: // Cashier
       return "/cashier";
+    case 4: // Kitchen Staff
+      return "/kitchen";
     default:
       return "/account/home";
   }

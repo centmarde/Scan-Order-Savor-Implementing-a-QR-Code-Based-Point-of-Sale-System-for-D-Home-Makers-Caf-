@@ -1,3 +1,4 @@
+//router.ts
 import { setupLayouts } from "virtual:generated-layouts";
 import { createRouter, createWebHistory } from "vue-router";
 
@@ -19,6 +20,9 @@ import WaitingPage from "@/pages/customer/WaitingPage.vue";
 // Cashier imports
 import CashierOrdersView from "@/pages/cashier/CashierOrdersView.vue";
 import CashierHistoryView from "@/pages/cashier/CashierHistoryView.vue";
+
+// Kitchen imports
+import KitchenOrdersView from "@/pages/kitchen/KitchenOrdersView.vue";
 
 /**
  * Route definitions for the application
@@ -91,7 +95,7 @@ const routes = setupLayouts([
     component: CashierOrdersView,
     meta: {
       requiresAuth: true,
-      allowedRoles: [1, 3], // Admin and Organization Leader (adjust based on your role system)
+      allowedRoles: [1, 3], // Admin and Cashier
       title: "Cashier - Pending Orders",
     },
   },
@@ -101,8 +105,20 @@ const routes = setupLayouts([
     component: CashierHistoryView,
     meta: {
       requiresAuth: true,
-      allowedRoles: [1, 3], // Admin and Organization Leader
+      allowedRoles: [1, 3], // Admin and Cashier
       title: "Cashier - Order History",
+    },
+  },
+
+  // Kitchen routes
+  {
+    path: "/kitchen",
+    name: "KitchenOrders",
+    component: KitchenOrdersView,
+    meta: {
+      requiresAuth: true,
+      allowedRoles: [1, 4], // Admin and Kitchen Staff
+      title: "Kitchen - Order Management",
     },
   },
 
