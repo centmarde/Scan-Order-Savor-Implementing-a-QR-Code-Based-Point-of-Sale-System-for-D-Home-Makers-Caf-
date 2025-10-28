@@ -28,6 +28,10 @@ const organizationGroupExpanded = ref(true)
 // Control my account group expansion - make it persistent
 const myAccountGroupExpanded = ref(true)
 
+// Control cashier group expansion - make it persistent
+const cashierGroupExpanded = ref(true)
+
+
 // Watch for route changes and keep admin group expanded if we're on an admin route
 watch(
 	() => route.path,
