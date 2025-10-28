@@ -47,6 +47,7 @@ const localFormData = computed({
 const adminGroupExpanded = ref(true)
 const organizationGroupExpanded = ref(true)
 const myAccountGroupExpanded = ref(true)
+const cashierGroupExpanded = ref(true)
 
 // Selected permissions for the role - initialized from current role permissions when editing
 const selectedPermissions = ref<string[]>([])
@@ -90,6 +91,8 @@ const getGroupExpansion = (groupTitle: string) => {
   if (groupTitle === 'Admin Controls') return adminGroupExpanded
   if (groupTitle === 'My Organization') return organizationGroupExpanded
   if (groupTitle === 'My Account') return myAccountGroupExpanded
+  if (groupTitle === 'Cashier Operations') return cashierGroupExpanded
+  
   return ref(true)
 }
 
