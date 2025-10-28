@@ -63,6 +63,7 @@ const getGroupExpansion = (groupTitle: string) => {
 	if (groupTitle === 'My Organization') return organizationGroupExpanded
 	if (groupTitle === 'My Account') return myAccountGroupExpanded
 	if (groupTitle === 'Cashier Operations') return cashierGroupExpanded
+	if (groupTitle === 'Kitchen Operations') return kitchenGroupExpanded
 	return ref(true)
 }
 
