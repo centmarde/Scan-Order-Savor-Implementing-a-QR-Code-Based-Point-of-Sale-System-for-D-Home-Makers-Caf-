@@ -31,6 +31,8 @@ const myAccountGroupExpanded = ref(true)
 // Control cashier group expansion - make it persistent
 const cashierGroupExpanded = ref(true)
 
+// Control kitchen group expansion - make it persistent
+const kitchenGroupExpanded = ref(true)
 
 // Watch for route changes and keep admin group expanded if we're on an admin route
 watch(
