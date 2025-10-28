@@ -62,6 +62,7 @@ const getGroupExpansion = (groupTitle: string) => {
 	if (groupTitle === 'Admin Controls') return adminGroupExpanded
 	if (groupTitle === 'My Organization') return organizationGroupExpanded
 	if (groupTitle === 'My Account') return myAccountGroupExpanded
+	if (groupTitle === 'Cashier Operations') return cashierGroupExpanded
 	return ref(true)
 }
 
