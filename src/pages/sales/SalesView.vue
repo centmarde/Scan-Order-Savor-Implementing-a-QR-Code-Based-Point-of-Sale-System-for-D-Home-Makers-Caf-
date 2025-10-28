@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useSalesDataStore } from "@/stores/salesData";
+import { useSalesDataStore } from "@/stores/salesDatas";
 import { formatCurrency, formatDate } from "@/utils/helpers";
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
@@ -18,9 +18,13 @@ const selectedCategory = ref<string>("all");
 const loading = computed(() => salesStore.loading);
 const salesSummary = computed(() => salesStore.salesSummary);
 const topSellingItems = computed(() => salesStore.topSellingItems);
-const recentOrders = computed(() => salesStore.recentOrders);
 const salesTrend = computed(() => salesStore.salesTrend);
 const categorySales = computed(() => salesStore.categorySales);
+
+const recentOrdersLimited = computed(() => {
+    // Takes the full array from the store and returns only the first 5 orders
+    return salesStore.recentOrders.slice(0, 5);
+});
 
 const periodLabel = computed(() => {
   switch (selectedPeriod.value) {
@@ -323,7 +327,7 @@ onMounted(async () => {
 
               <v-list>
                 <v-list-item
-                  v-for="order in recentOrders"
+                  v-for="order in recentOrdersLimited"
                   :key="order.id"
                 >
                   <template v-slot:prepend>

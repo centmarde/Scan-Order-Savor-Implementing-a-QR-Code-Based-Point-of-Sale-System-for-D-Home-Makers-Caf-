@@ -96,9 +96,9 @@ const completeOrder = async (): Promise<void> => {
     // Refresh the order history
     await cashierStore.fetchOrderHistory();
     
-    snackbarText.value = `Order #${orderToComplete.value.id} marked as completed`;
-    snackbarColor.value = "success";
-    snackbar.value = true;
+    // snackbarText.value = `Order #${orderToComplete.value.id} marked as completed`;
+    // snackbarColor.value = "success";
+    // snackbar.value = true;
     
     confirmDialog.value = false;
     orderToComplete.value = null;
@@ -121,9 +121,9 @@ const completeOrderFromDialog = async (): Promise<void> => {
     await cashierStore.updateOrderStatus(selectedOrder.value.id, "completed");
     await cashierStore.fetchOrderHistory();
     
-    snackbarText.value = `Order #${selectedOrder.value.id} marked as completed`;
-    snackbarColor.value = "success";
-    snackbar.value = true;
+    // snackbarText.value = `Order #${selectedOrder.value.id} marked as completed`;
+    // snackbarColor.value = "success";
+    // snackbar.value = true;
     
     detailsDialog.value = false;
   } catch (error) {
@@ -142,10 +142,10 @@ const resetFilters = (): void => {
 
 const refreshHistory = async (): Promise<void> => {
   try {
-    await cashierStore.fetchOrderHistory();
-    snackbarText.value = "History refreshed";
-    snackbarColor.value = "success";
-    snackbar.value = true;
+    // await cashierStore.fetchOrderHistory();
+    // snackbarText.value = "History refreshed";
+    // snackbarColor.value = "success";
+    // snackbar.value = true;
   } catch (error) {
     snackbarText.value = "Failed to refresh history";
     snackbarColor.value = "error";
