@@ -131,9 +131,9 @@ const handleReject = async (): Promise<void> => {
 const refreshOrders = async (): Promise<void> => {
   try {
     await cashierStore.fetchPendingOrders();
-    snackbarText.value = "Orders refreshed";
-    snackbarColor.value = "success";
-    snackbar.value = true;
+    // snackbarText.value = "Orders refreshed";
+    // snackbarColor.value = "success";
+    // snackbar.value = true;
   } catch (error) {
     snackbarText.value = "Failed to refresh orders";
     snackbarColor.value = "error";
