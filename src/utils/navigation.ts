@@ -90,6 +90,19 @@ export const navigationConfig: NavigationGroup[] = [
       },
     ],
   },
+  {
+    title: "Sales & Analytics",
+    icon: "mdi-chart-line",
+    permission: "sales.access",
+    children: [
+      {
+        title: "Sales Dashboard",
+        icon: "mdi-chart-bar",
+        route: "/sales",
+        permission: "sales.dashboard.view",
+      },
+    ],
+  },
 ];
 
 // Helper function to get all permissions from navigation config
@@ -294,6 +307,8 @@ export const getDefaultLandingPage = (roleId: number): string => {
       return "/cashier";
     case 4: // Kitchen Staff
       return "/kitchen";
+    case 5: // Sales
+      return "/sales";
     default:
       return "/account/home";
   }
