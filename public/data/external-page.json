@@ -37,8 +37,8 @@
   "author": "D'Home Makers Café Development Team",
   "lastUpdated": "2025-10-01",
   "theme": {
-    "primaryColor": "#8b5c2a",
-    "secondaryColor": "#c19a6b"
+    "primaryColor": "#ff69b4",
+    "secondaryColor": "#370504"
   },
   "ui": {
     "showNavbar": true,
