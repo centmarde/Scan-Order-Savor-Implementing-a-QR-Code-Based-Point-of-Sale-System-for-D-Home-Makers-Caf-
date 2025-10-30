@@ -60,16 +60,16 @@ const navigateToEmployeeAccess = () => {
 <template>
   <v-container class="pa-0 fill-height" fluid>
     <v-row justify="center" align="center" class="ma-0 pa-0 fill-height">
-      <v-col cols="12" sm="8" md="6" lg="4" class="pa-4">
+      <v-col cols="12" sm="8" md="6" lg="4" class="pa-3 pa-sm-4">
         <div class="d-flex flex-column justify-space-between fill-height">
           <!-- Top section with carousel -->
-          <div class="text-center mb-8">
+          <div class="text-center mb-4 mb-sm-8">
             <v-carousel
               v-model="currentSlide"
-              height="400"
+              :height="$vuetify.display.xs ? 350 : 400"
               hide-delimiters
               show-arrows="hover"
-              class="mb-6"
+              class="mb-4 mb-sm-6"
               touch
               transition="fade-transition"
             >
@@ -80,16 +80,19 @@ const navigateToEmployeeAccess = () => {
                 <v-img
                   :src="image.src"
                   :alt="image.alt"
-                  height="400"
+                  :height="$vuetify.display.xs ? 350 : 400"
                   class="mx-auto"
-                  style="border-radius: 16px; max-width: 400px"
+                  :style="{
+                    borderRadius: '16px',
+                    maxWidth: $vuetify.display.xs ? '100%' : '400px',
+                  }"
                   cover
                 />
               </v-carousel-item>
             </v-carousel>
 
             <!-- Carousel indicators -->
-            <div class="d-flex justify-center align-center mb-6">
+            <div class="d-flex justify-center align-center mb-4 mb-sm-6">
               <v-chip
                 v-for="(image, index) in carouselImages"
                 :key="index"
@@ -112,19 +115,20 @@ const navigateToEmployeeAccess = () => {
           <!-- Middle section with text -->
           <div class="text-center mb-auto">
             <div
-              class="text-caption text-grey-darken-1 mb-4 font-weight-medium"
+              class="text-caption text-grey-darken-1 mb-2 mb-sm-4 font-weight-medium"
+              :style="{ fontSize: $vuetify.display.xs ? '0.65rem' : '' }"
             >
               30K+ FOOD ITEMS HERE
             </div>
 
             <h1
-              class="text-h3 font-weight-bold mb-2"
+              class="text-h4 text-sm-h3 font-weight-bold mb-1 mb-sm-2"
               :style="{ color: primaryColor }"
             >
               Enjoy Healthy
             </h1>
             <h1
-              class="text-h3 font-weight-bold mb-8"
+              class="text-h4 text-sm-h3 font-weight-bold mb-4 mb-sm-8"
               :style="{ color: secondaryColor }"
             >
               Food
@@ -135,14 +139,14 @@ const navigateToEmployeeAccess = () => {
           <div class="text-center">
             <v-btn
               @click="navigateToMenu"
-              size="x-large"
+              :size="$vuetify.display.xs ? 'large' : 'x-large'"
               rounded="xl"
               elevation="0"
               block
-              class="text-white font-weight-bold text-capitalize mb-4"
+              class="text-white font-weight-bold text-capitalize mb-3 mb-sm-4"
               :style="{
                 backgroundColor: primaryColor,
-                height: '56px',
+                height: $vuetify.display.xs ? '48px' : '56px',
               }"
             >
               Get Started
