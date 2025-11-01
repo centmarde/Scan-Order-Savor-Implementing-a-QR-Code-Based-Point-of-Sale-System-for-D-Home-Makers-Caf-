@@ -13,6 +13,8 @@ import {
 import type { OrderHistoryItem } from "@/stores/cashierData";
 import OrderStatistics from "@/pages/cashier/components/OrderStatistics.vue";
 import OrderDetailsDialog from "@/pages/cashier/dialogs/OrderDetailsDialog.vue";
+import ConfirmCompleteDialog from "@/pages/cashier/dialogs/ConfirmCompleteDialog.vue";
+
 
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
@@ -468,27 +470,12 @@ watch(
         />
 
         <!-- Confirmation Dialog for Completing Order -->
-        <v-dialog v-model="confirmDialog" max-width="400">
-          <v-card>
-            <v-card-title class="text-h6">Confirm Completion</v-card-title>
-            <v-card-text>
-              Are you sure you want to mark Order #{{ orderToComplete?.id }} (Table
-              {{ orderToComplete?.table_id }}) as completed?
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn variant="text" @click="confirmDialog = false">Cancel</v-btn>
-              <v-btn
-                color="success"
-                variant="flat"
-                @click="completeOrder"
-                :loading="processingComplete"
-              >
-                Confirm
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+        <ConfirmCompleteDialog
+          v-model="confirmDialog"
+          :order="orderToComplete"
+          :processing="processingComplete"
+          @confirm="completeOrder"
+        />
 
         <!-- Snackbar -->
         <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="3000">
