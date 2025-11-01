@@ -7,6 +7,7 @@ import type { OrderWithMeals } from "@/stores/orderData";
 import CashierStatistics from "@/pages/cashier/components/CashierStatistics.vue";
 import PendingOrderDetailsDialog from "@/pages/cashier/dialogs/PendingOrderDetailsDialog.vue";
 import ApproveOrderDialog from "@/pages/cashier/dialogs/ApproveOrderDialog.vue";
+import RejectOrderDialog from "@/pages/cashier/dialogs/RejectOrderDialog.vue";
 
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
@@ -333,36 +334,13 @@ onUnmounted(() => {
         />
 
     <!-- Confirm Reject Dialog -->
-    <v-dialog v-model="rejectDialog" max-width="400">
-      <v-card>
-        <v-card-title>Reject Order?</v-card-title>
-        <v-card-text>
-          <p class="mb-4">
-            Are you sure you want to reject Order #{{ orderToProcess?.id }} for
-            Table {{ orderToProcess?.table_id }}?
-          </p>
-          <v-textarea
-            v-model="rejectReason"
-            label="Reason for rejection (optional)"
-            rows="3"
-            variant="outlined"
-            hide-details
-          ></v-textarea>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn variant="text" @click="rejectDialog = false">Cancel</v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            @click="handleReject"
-            :loading="processing"
-          >
-            Reject
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+   <RejectOrderDialog
+          v-model="rejectDialog"
+          :order="orderToProcess"
+          :processing="processing"
+          v-model:reason="rejectReason"
+          @confirm="handleReject"
+        />
 
     <!-- Success Snackbar -->
     <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="3000">
