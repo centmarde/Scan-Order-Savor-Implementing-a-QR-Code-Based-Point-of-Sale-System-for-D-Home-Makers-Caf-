@@ -5,6 +5,7 @@ import { useCashierDataStore } from "@/stores/cashierData";
 import { formatCurrency, formatDate, getStatusColor, getStatusText, getImageUrl } from "@/utils/helpers";
 import type { OrderWithMeals } from "@/stores/orderData";
 import CashierStatistics from "@/pages/cashier/components/CashierStatistics.vue";
+import PendingOrderDetailsDialog from "@/pages/cashier/dialogs/PendingOrderDetailsDialog.vue";
 
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
@@ -314,97 +315,13 @@ onUnmounted(() => {
     </v-row>
 
     <!-- Order Details Dialog -->
-    <v-dialog v-model="detailsDialog" max-width="600">
-      <v-card v-if="selectedOrder">
-        <v-card-title class="d-flex align-center justify-space-between">
-          <span>Order #{{ selectedOrder.id }} Details</span>
-          <v-btn
-            icon="mdi-close"
-            variant="text"
-            @click="detailsDialog = false"
-          ></v-btn>
-        </v-card-title>
-
-        <v-divider></v-divider>
-
-        <v-card-text class="pa-4">
-          <!-- Order Info -->
-          <div class="mb-4">
-            <div class="d-flex justify-space-between mb-2">
-              <span class="text-grey">Table Number:</span>
-              <span class="font-weight-bold">{{ selectedOrder.table_id }}</span>
-            </div>
-            <div class="d-flex justify-space-between mb-2">
-              <span class="text-grey">Order Time:</span>
-              <span>{{ formatDate(selectedOrder.created_at) }}</span>
-            </div>
-            <div class="d-flex justify-space-between">
-              <span class="text-grey">Status:</span>
-              <v-chip :color="getStatusColor(selectedOrder.status)" size="small">
-                {{ getStatusText(selectedOrder.status) }}
-              </v-chip>
-            </div>
-          </div>
-
-          <v-divider class="my-4"></v-divider>
-
-          <!-- Order Items -->
-          <div class="mb-4">
-            <h3 class="text-subtitle-1 font-weight-bold mb-3">Order Items</h3>
-            <div
-              v-for="item in orderSummary.items"
-              :key="item.meal.id"
-              class="d-flex justify-space-between align-center mb-3"
-            >
-              <div class="d-flex align-center">
-                <v-avatar size="48" class="mr-3" rounded>
-                  <v-img :src="getImageUrl(item.meal.image)"></v-img>
-                </v-avatar>
-                <div>
-                  <div class="font-weight-medium">{{ item.meal.name }}</div>
-                  <div class="text-caption text-grey">
-                    {{ formatCurrency(item.meal.price) }} × {{ item.quantity }}
-                  </div>
-                </div>
-              </div>
-              <div class="font-weight-bold">
-                {{ formatCurrency(item.subtotal) }}
-              </div>
-            </div>
-          </div>
-
-          <v-divider class="my-4"></v-divider>
-
-          <!-- Total -->
-          <div class="d-flex justify-space-between align-center">
-            <span class="text-h6 font-weight-bold">Total</span>
-            <span class="text-h6 font-weight-bold text-primary">
-              {{ formatCurrency(orderSummary.total) }}
-            </span>
-          </div>
-        </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions class="pa-4">
-          <v-spacer></v-spacer>
-          <v-btn
-            color="error"
-            variant="outlined"
-            @click="confirmReject(selectedOrder)"
-          >
-            Reject Order
-          </v-btn>
-          <v-btn
-            color="success"
-            variant="flat"
-            @click="confirmApprove(selectedOrder)"
-          >
-            Approve & Send to Kitchen
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        <PendingOrderDetailsDialog
+          v-model="detailsDialog"
+          :order="selectedOrder"
+          :order-summary="orderSummary"
+          @approve="confirmApprove"
+          @reject="confirmReject"
+        />
 
     <!-- Confirm Approve Dialog -->
     <v-dialog v-model="approveDialog" max-width="400">
