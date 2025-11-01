@@ -1,3 +1,4 @@
+//InventoryTable.vue
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { useTheme } from "@/composables/useTheme";

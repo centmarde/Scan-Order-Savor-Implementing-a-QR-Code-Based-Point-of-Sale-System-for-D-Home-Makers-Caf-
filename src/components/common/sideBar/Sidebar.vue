@@ -28,6 +28,12 @@ const organizationGroupExpanded = ref(true)
 // Control my account group expansion - make it persistent
 const myAccountGroupExpanded = ref(true)
 
+// Control cashier group expansion - make it persistent
+const cashierGroupExpanded = ref(true)
+
+// Control kitchen group expansion - make it persistent
+const kitchenGroupExpanded = ref(true)
+
 // Watch for route changes and keep admin group expanded if we're on an admin route
 watch(
 	() => route.path,
@@ -56,6 +62,8 @@ const getGroupExpansion = (groupTitle: string) => {
 	if (groupTitle === 'Admin Controls') return adminGroupExpanded
 	if (groupTitle === 'My Organization') return organizationGroupExpanded
 	if (groupTitle === 'My Account') return myAccountGroupExpanded
+	if (groupTitle === 'Cashier Operations') return cashierGroupExpanded
+	if (groupTitle === 'Kitchen Operations') return kitchenGroupExpanded
 	return ref(true)
 }
 

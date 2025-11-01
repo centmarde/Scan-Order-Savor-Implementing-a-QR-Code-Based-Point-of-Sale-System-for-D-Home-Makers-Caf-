@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { getInventoryImageUrl } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
+import { useTableContext } from "@/pages/admin/composables/useTableContext"; 
 
 const router = useRouter();
 
@@ -12,16 +13,23 @@ const { initializeTheme, primaryColor, secondaryColor } = useTheme();
 // Carousel state
 const currentSlide = ref(0);
 
+// Table context - captures table ID from URL
+const { tableId, initializeTable } = useTableContext();
+
 // Auto-advance carousel every 3 seconds
 let intervalId: number | undefined;
 onMounted(async () => {
   // Initialize theme first
   await initializeTheme();
+  
+  // Initialize table from URL query parameter
+  initializeTable(); // ← Captures table from URL
 
   intervalId = window.setInterval(() => {
     currentSlide.value = (currentSlide.value + 1) % carouselImages.length;
   }, 5000);
 });
+
 onUnmounted(() => {
   if (intervalId) window.clearInterval(intervalId);
 });
