@@ -11,6 +11,7 @@ import {
   getImageUrl,
 } from "@/utils/helpers";
 import type { OrderHistoryItem } from "@/stores/cashierData";
+import OrderStatistics from "@/pages/cashier/components/OrderStatistics.vue";
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
 const router = useRouter();
@@ -314,71 +315,12 @@ watch(
         </v-row>
 
         <!-- Statistics Summary (keeping your existing stats) -->
-        <v-row class="mb-4">
-          <v-col cols="12" sm="6" md="3">
-            <v-card color="blue-lighten-5">
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between">
-                  <div>
-                    <div class="text-caption text-grey-darken-1">Confirmed</div>
-                    <div class="text-h5 font-weight-bold text-blue">
-                      {{ getStatusCount("confirmed") }}
-                    </div>
-                  </div>
-                  <v-icon color="blue" size="36">mdi-check-circle</v-icon>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card color="orange-lighten-5">
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between">
-                  <div>
-                    <div class="text-caption text-grey-darken-1">Preparing</div>
-                    <div class="text-h5 font-weight-bold text-orange">
-                      {{ getStatusCount("preparing") }}
-                    </div>
-                  </div>
-                  <v-icon color="orange" size="36">mdi-chef-hat</v-icon>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card color="green-lighten-5">
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between">
-                  <div>
-                    <div class="text-caption text-grey-darken-1">Completed</div>
-                    <div class="text-h5 font-weight-bold text-green">
-                      {{ getStatusCount("completed") }}
-                    </div>
-                  </div>
-                  <v-icon color="green" size="36">mdi-check-all</v-icon>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card color="red-lighten-5">
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between">
-                  <div>
-                    <div class="text-caption text-grey-darken-1">Cancelled</div>
-                    <div class="text-h5 font-weight-bold text-red">
-                      {{ getStatusCount("cancelled") }}
-                    </div>
-                  </div>
-                  <v-icon color="red" size="36">mdi-close-circle</v-icon>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+        <OrderStatistics
+          :confirmed-count="getStatusCount('confirmed')"
+          :preparing-count="getStatusCount('preparing')"
+          :completed-count="getStatusCount('completed')"
+          :cancelled-count="getStatusCount('cancelled')"
+        />
 
         <!-- Orders Table -->
         <v-row>
