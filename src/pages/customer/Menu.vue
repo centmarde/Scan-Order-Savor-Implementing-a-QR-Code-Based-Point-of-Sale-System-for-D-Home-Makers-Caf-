@@ -166,7 +166,7 @@ onMounted(async () => {
           <v-card-text class="pa-6">
             <div class="d-flex align-center mb-3">
               <v-avatar size="60" class="mr-4">
-                <v-img src="/public/assets/logo1.png" />
+                <v-img src="/public/assets/logo2.jpg" />
               </v-avatar>
               <div>
                 <h1 class="text-h5 font-weight-bold mb-1 text-white">
@@ -179,14 +179,20 @@ onMounted(async () => {
                     class="mr-1"
                     >mdi-star</v-icon
                   >
-                  <span class="text-body-2 mr-3 text-grey-lighten-2">4.8</span>
+                  <span
+                    class="text-body-2 mr-3"
+                    :style="{ color: secondaryColor }"
+                    >4.8</span
+                  >
                   <v-icon
                     :style="{ color: secondaryColor }"
                     size="16"
                     class="mr-1"
                     >mdi-clock-outline</v-icon
                   >
-                  <span class="text-body-2 text-grey-lighten-2">3-5 min</span>
+                  <span class="text-body-2" :style="{ color: secondaryColor }"
+                    >3-5 min</span
+                  >
                 </div>
               </div>
             </div>
