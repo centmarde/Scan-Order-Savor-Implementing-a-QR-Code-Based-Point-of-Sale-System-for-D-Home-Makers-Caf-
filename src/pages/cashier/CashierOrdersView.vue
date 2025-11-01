@@ -6,6 +6,7 @@ import { formatCurrency, formatDate, getStatusColor, getStatusText, getImageUrl 
 import type { OrderWithMeals } from "@/stores/orderData";
 import CashierStatistics from "@/pages/cashier/components/CashierStatistics.vue";
 import PendingOrderDetailsDialog from "@/pages/cashier/dialogs/PendingOrderDetailsDialog.vue";
+import ApproveOrderDialog from "@/pages/cashier/dialogs/ApproveOrderDialog.vue";
 
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
@@ -324,28 +325,12 @@ onUnmounted(() => {
         />
 
     <!-- Confirm Approve Dialog -->
-    <v-dialog v-model="approveDialog" max-width="400">
-      <v-card>
-        <v-card-title>Approve Order?</v-card-title>
-        <v-card-text>
-          Are you sure you want to approve Order #{{ orderToProcess?.id }} for
-          Table {{ orderToProcess?.table_id }}? This will send the order to the
-          kitchen.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn variant="text" @click="approveDialog = false">Cancel</v-btn>
-          <v-btn
-            color="success"
-            variant="flat"
-            @click="handleApprove"
-            :loading="processing"
-          >
-            Approve
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+     <ApproveOrderDialog
+          v-model="approveDialog"
+          :order="orderToProcess"
+          :processing="processing"
+          @confirm="handleApprove"
+        />
 
     <!-- Confirm Reject Dialog -->
     <v-dialog v-model="rejectDialog" max-width="400">
