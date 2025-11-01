@@ -40,6 +40,8 @@ declare module 'vue-router/auto-routes' {
     '/cashier/components/OrderCard': RouteRecordInfo<'/cashier/components/OrderCard', '/cashier/components/OrderCard', Record<never, never>, Record<never, never>>,
     '/cashier/components/OrderFilters': RouteRecordInfo<'/cashier/components/OrderFilters', '/cashier/components/OrderFilters', Record<never, never>, Record<never, never>>,
     '/cashier/components/OrderStatistics': RouteRecordInfo<'/cashier/components/OrderStatistics', '/cashier/components/OrderStatistics', Record<never, never>, Record<never, never>>,
+    '/cashier/dialogs/ConfirmCompleteDialog': RouteRecordInfo<'/cashier/dialogs/ConfirmCompleteDialog', '/cashier/dialogs/ConfirmCompleteDialog', Record<never, never>, Record<never, never>>,
+    '/cashier/dialogs/OrderDetailsDialog': RouteRecordInfo<'/cashier/dialogs/OrderDetailsDialog', '/cashier/dialogs/OrderDetailsDialog', Record<never, never>, Record<never, never>>,
     '/customer/LandingPage': RouteRecordInfo<'/customer/LandingPage', '/customer/LandingPage', Record<never, never>, Record<never, never>>,
     '/customer/Menu': RouteRecordInfo<'/customer/Menu', '/customer/Menu', Record<never, never>, Record<never, never>>,
     '/customer/ReviewOrder': RouteRecordInfo<'/customer/ReviewOrder', '/customer/ReviewOrder', Record<never, never>, Record<never, never>>,
