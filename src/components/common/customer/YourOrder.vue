@@ -231,7 +231,7 @@ const removeItem = (itemId: number) => {
               class="text-caption font-weight-bold"
               elevation="2"
             >
-              REVIEW + PAY ORDER
+              <span class="d-sm-inline">REVIEW + PAY</span>
             </v-btn>
           </v-col>
 
