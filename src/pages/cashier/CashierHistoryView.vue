@@ -11,6 +11,11 @@ import {
   getImageUrl,
 } from "@/utils/helpers";
 import type { OrderHistoryItem } from "@/stores/cashierData";
+import OrderStatistics from "@/pages/cashier/components/OrderStatistics.vue";
+import OrderDetailsDialog from "@/pages/cashier/dialogs/OrderDetailsDialog.vue";
+import ConfirmCompleteDialog from "@/pages/cashier/dialogs/ConfirmCompleteDialog.vue";
+
+
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
 const router = useRouter();
@@ -96,9 +101,7 @@ const completeOrder = async (): Promise<void> => {
     // Refresh the order history
     await cashierStore.fetchOrderHistory();
     
-    // snackbarText.value = `Order #${orderToComplete.value.id} marked as completed`;
-    // snackbarColor.value = "success";
-    // snackbar.value = true;
+
     
     confirmDialog.value = false;
     orderToComplete.value = null;
@@ -121,9 +124,6 @@ const completeOrderFromDialog = async (): Promise<void> => {
     await cashierStore.updateOrderStatus(selectedOrder.value.id, "completed");
     await cashierStore.fetchOrderHistory();
     
-    // snackbarText.value = `Order #${selectedOrder.value.id} marked as completed`;
-    // snackbarColor.value = "success";
-    // snackbar.value = true;
     
     detailsDialog.value = false;
   } catch (error) {
@@ -142,10 +142,6 @@ const resetFilters = (): void => {
 
 const refreshHistory = async (): Promise<void> => {
   try {
-    // await cashierStore.fetchOrderHistory();
-    // snackbarText.value = "History refreshed";
-    // snackbarColor.value = "success";
-    // snackbar.value = true;
   } catch (error) {
     snackbarText.value = "Failed to refresh history";
     snackbarColor.value = "error";
@@ -314,71 +310,12 @@ watch(
         </v-row>
 
         <!-- Statistics Summary (keeping your existing stats) -->
-        <v-row class="mb-4">
-          <v-col cols="12" sm="6" md="3">
-            <v-card color="blue-lighten-5">
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between">
-                  <div>
-                    <div class="text-caption text-grey-darken-1">Confirmed</div>
-                    <div class="text-h5 font-weight-bold text-blue">
-                      {{ getStatusCount("confirmed") }}
-                    </div>
-                  </div>
-                  <v-icon color="blue" size="36">mdi-check-circle</v-icon>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card color="orange-lighten-5">
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between">
-                  <div>
-                    <div class="text-caption text-grey-darken-1">Preparing</div>
-                    <div class="text-h5 font-weight-bold text-orange">
-                      {{ getStatusCount("preparing") }}
-                    </div>
-                  </div>
-                  <v-icon color="orange" size="36">mdi-chef-hat</v-icon>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card color="green-lighten-5">
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between">
-                  <div>
-                    <div class="text-caption text-grey-darken-1">Completed</div>
-                    <div class="text-h5 font-weight-bold text-green">
-                      {{ getStatusCount("completed") }}
-                    </div>
-                  </div>
-                  <v-icon color="green" size="36">mdi-check-all</v-icon>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card color="red-lighten-5">
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between">
-                  <div>
-                    <div class="text-caption text-grey-darken-1">Cancelled</div>
-                    <div class="text-h5 font-weight-bold text-red">
-                      {{ getStatusCount("cancelled") }}
-                    </div>
-                  </div>
-                  <v-icon color="red" size="36">mdi-close-circle</v-icon>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+        <OrderStatistics
+          :confirmed-count="getStatusCount('confirmed')"
+          :preparing-count="getStatusCount('preparing')"
+          :completed-count="getStatusCount('completed')"
+          :cancelled-count="getStatusCount('cancelled')"
+        />
 
         <!-- Orders Table -->
         <v-row>
@@ -514,149 +451,22 @@ watch(
         </v-row>
 
         <!-- Order Details Dialog -->
-        <v-dialog v-model="detailsDialog" max-width="700">
-          <v-card v-if="selectedOrder">
-            <v-card-title class="d-flex align-center justify-space-between">
-              <div class="d-flex align-center">
-                <span class="text-h5">Order #{{ selectedOrder.id }}</span>
-                <v-chip
-                  :color="getStatusColor(selectedOrder.status)"
-                  size="small"
-                  class="ml-3"
-                >
-                  {{ getStatusText(selectedOrder.status) }}
-                </v-chip>
-              </div>
-              <v-btn
-                icon="mdi-close"
-                variant="text"
-                @click="detailsDialog = false"
-              ></v-btn>
-            </v-card-title>
-
-            <v-divider></v-divider>
-
-            <v-card-text class="pa-6">
-              <!-- Order Information -->
-              <v-row class="mb-4">
-                <v-col cols="6">
-                  <div class="text-caption text-grey mb-1">Table Number</div>
-                  <div class="text-h6 font-weight-bold">
-                    Table {{ selectedOrder.table_id }}
-                  </div>
-                </v-col>
-                <v-col cols="6">
-                  <div class="text-caption text-grey mb-1">Order Time</div>
-                  <div class="font-weight-medium">
-                    {{ formatDate(selectedOrder.created_at) }}
-                  </div>
-                </v-col>
-                <v-col cols="6">
-                  <div class="text-caption text-grey mb-1">Total Items</div>
-                  <div class="font-weight-medium">
-                    {{ orderSummary.itemCount }} items
-                  </div>
-                </v-col>
-                <v-col cols="6">
-                  <div class="text-caption text-grey mb-1">Total Amount</div>
-                  <div class="text-h6 font-weight-bold text-primary">
-                    {{ formatCurrency(selectedOrder.total_amount) }}
-                  </div>
-                </v-col>
-              </v-row>
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- Order Items -->
-              <div>
-                <h3 class="text-subtitle-1 font-weight-bold mb-3">Order Items</h3>
-
-                <v-list lines="two">
-                  <v-list-item
-                    v-for="item in orderSummary.items"
-                    :key="item.meal.id"
-                    class="px-0"
-                  >
-                    <template v-slot:prepend>
-                      <v-avatar size="56" rounded class="mr-3">
-                        <v-img :src="getImageUrl(item.meal.image)"></v-img>
-                      </v-avatar>
-                    </template>
-
-                    <v-list-item-title class="font-weight-medium">
-                      {{ item.meal.name }}
-                    </v-list-item-title>
-
-                    <v-list-item-subtitle>
-                      {{ formatCurrency(item.meal.price) }} × {{ item.quantity }}
-                    </v-list-item-subtitle>
-
-                    <template v-slot:append>
-                      <div class="text-h6 font-weight-bold">
-                        {{ formatCurrency(item.subtotal) }}
-                      </div>
-                    </template>
-                  </v-list-item>
-                </v-list>
-              </div>
-
-              <v-divider class="my-4"></v-divider>
-
-              <!-- Total -->
-              <div
-                class="d-flex justify-space-between align-center pa-4 bg-grey-lighten-4 rounded"
-              >
-                <span class="text-h6 font-weight-bold">Total Amount</span>
-                <span class="text-h5 font-weight-bold text-primary">
-                  {{ formatCurrency(orderSummary.total) }}
-                </span>
-              </div>
-            </v-card-text>
-
-            <v-divider></v-divider>
-
-            <v-card-actions class="pa-4">
-              <!-- Complete Button (only show for ready/preparing orders) -->
-              <v-btn
-                v-if="canCompleteOrder(selectedOrder)"
-                color="success"
-                variant="flat"
-                prepend-icon="mdi-check-circle"
-                @click="completeOrderFromDialog"
-                :loading="processingComplete"
-              >
-                Mark as Completed
-              </v-btn>
-              <v-spacer></v-spacer>
-              <v-btn color="primary" variant="flat" @click="detailsDialog = false">
-                Close
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+       <OrderDetailsDialog
+          v-model="detailsDialog"
+          :order="selectedOrder"
+          :order-summary="orderSummary"
+          :can-complete="selectedOrder ? canCompleteOrder(selectedOrder) : false"
+          :processing="processingComplete"
+          @complete="completeOrderFromDialog"
+        />
 
         <!-- Confirmation Dialog for Completing Order -->
-        <v-dialog v-model="confirmDialog" max-width="400">
-          <v-card>
-            <v-card-title class="text-h6">Confirm Completion</v-card-title>
-            <v-card-text>
-              Are you sure you want to mark Order #{{ orderToComplete?.id }} (Table
-              {{ orderToComplete?.table_id }}) as completed?
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn variant="text" @click="confirmDialog = false">Cancel</v-btn>
-              <v-btn
-                color="success"
-                variant="flat"
-                @click="completeOrder"
-                :loading="processingComplete"
-              >
-                Confirm
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+        <ConfirmCompleteDialog
+          v-model="confirmDialog"
+          :order="orderToComplete"
+          :processing="processingComplete"
+          @confirm="completeOrder"
+        />
 
         <!-- Snackbar -->
         <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="3000">
