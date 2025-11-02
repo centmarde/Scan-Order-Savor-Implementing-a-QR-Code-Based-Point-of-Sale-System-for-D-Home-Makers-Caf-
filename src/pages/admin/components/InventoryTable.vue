@@ -1,3 +1,4 @@
+//InventoryTable.vue
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { useTheme } from "@/composables/useTheme";
@@ -215,9 +216,9 @@ onMounted(async () => {
         <template #item.image="{ item }">
           <v-avatar size="40" class="my-2">
             <v-img :src="item.image" :alt="item.name" cover>
-              <template #error>
+              <!-- <template #error>
                 <v-icon color="grey">mdi-image-off</v-icon>
-              </template>
+              </template> -->
             </v-img>
           </v-avatar>
         </template>

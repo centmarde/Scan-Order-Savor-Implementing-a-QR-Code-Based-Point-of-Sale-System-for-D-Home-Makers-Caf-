@@ -6,11 +6,11 @@
 export const STORAGE_URLS = {
   // Base URL for Supabase storage
   SUPABASE_STORAGE_BASE:
-    "https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public",
+    "https://zbmsbhwybyguxpzxyjkz.supabase.co/storage/v1/object/public/",
 
   // Specific bucket URLs
   INVENTORY_BUCKET:
-    "https://gsknjidllnenmauutahp.supabase.co/storage/v1/object/public/inventory",
+    "https://zbmsbhwybyguxpzxyjkz.supabase.co/storage/v1/object/public/inventory/",
 };
 
 // Helper function to get image URL from inventory bucket

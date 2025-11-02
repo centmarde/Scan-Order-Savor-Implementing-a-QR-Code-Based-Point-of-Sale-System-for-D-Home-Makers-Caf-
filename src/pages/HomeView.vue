@@ -14,7 +14,7 @@ const { userName } = storeToRefs(authStore);
     <template #content>
       <v-container fluid class="home-container">
         <!-- Welcome Section -->
-        <v-row justify="center" class="welcome-section">
+        <!-- <v-row justify="center" class="welcome-section">
           <v-col cols="12" md="8" lg="6">
             <v-card elevation="4" class="pa-6">
               <v-card-title class="text-h4 text-center mb-4">
@@ -42,7 +42,7 @@ const { userName } = storeToRefs(authStore);
               </v-card-text>
             </v-card>
           </v-col>
-        </v-row>
+        </v-row> -->
 
         <!-- Dashboard Component -->
         <div class="dashboard-section">

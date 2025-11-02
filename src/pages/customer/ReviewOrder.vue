@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
 import { useReviewOrder } from "@/composables/useReviewOrder";
-
+import { useTableContext } from "@/pages/admin/composables/useTableContext";
 import Navbar from "@/components/common/customer/Navbar.vue";
 import StatusCard from "@/components/common/customer/StatusCard.vue";
 import OrderItems from "@/components/common/customer/OrderItems.vue";
@@ -14,6 +14,9 @@ const router = useRouter();
 // Theme setup
 const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
   useTheme();
+
+// Table context - CRITICAL for getting the actual table ID
+const { tableId: contextTableId, getCurrentTableId } = useTableContext();
 
 // Review Order composable
 const {
@@ -52,10 +55,10 @@ watchEffect(() => {
   console.log("Cart items changed:", cartItems.value);
   console.log("Display items changed:", displayItems.value);
   console.log("Display total:", displayTotal.value);
+  console.log("Table ID from context:", contextTableId.value);
 });
 
 // Methods
-
 const cancelOrder = () => {
   // Navigate back to menu
   router.push("/customer/menu");
@@ -67,29 +70,37 @@ const proceedToPayment = async () => {
 
     // Only create new orders if we have cart items (new order)
     if (cartItems.value.length > 0) {
-      // Create order using composable
+      // 🔥 CRITICAL FIX: Get the actual table ID from context
+      const actualTableId = getCurrentTableId();
+      
+      console.log('📝 Placing order for table:', actualTableId);
+      
+      // Create order using composable with the ACTUAL table ID
       const order = await createOrder();
 
       if (order) {
-        console.log("Order created successfully:", order);
+        console.log("✅ Order created successfully:", order);
+        console.log("✅ Order table_id:", order.table_id);
+        
         // Update local state
         orderStatus.value = "pending";
 
         // Navigate to waiting page with table information
         router.push({
           path: "/customer/waiting",
-          query: { table: tableId.value.toString() },
+          query: { table: actualTableId.toString() },
         });
       }
     } else {
       // If no cart items, just go to waiting page (existing orders)
+      const actualTableId = getCurrentTableId();
       router.push({
         path: "/customer/waiting",
-        query: { table: tableId.value.toString() },
+        query: { table: actualTableId.toString() },
       });
     }
   } catch (error) {
-    console.error("Error processing order:", error);
+    console.error("❌ Error processing order:", error);
     // Show error message and stay on current page
     alert("There was an error placing your order. Please try again.");
   } finally {
@@ -106,6 +117,16 @@ const proceedToPayment = async () => {
     <!-- Content Area -->
     <v-main style="background-color: #f5f3ef">
       <v-container class="pa-2">
+        <!-- Table Display -->
+        <v-card v-if="contextTableId" class="mb-3" rounded="lg" elevation="1">
+          <v-card-text class="pa-3 text-center">
+            <v-chip color="primary">
+              <v-icon start>mdi-table-furniture</v-icon>
+              Table {{ contextTableId }}
+            </v-chip>
+          </v-card-text>
+        </v-card>
+
         <!-- Order Status Card -->
         <StatusCard :order-status="orderStatus" :item-count="itemCount" />
 

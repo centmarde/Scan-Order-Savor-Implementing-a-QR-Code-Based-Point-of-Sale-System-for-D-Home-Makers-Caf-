@@ -1,0 +1,491 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useCashierDataStore } from "@/stores/cashierData";
+import {
+  formatCurrency,
+  formatDate,
+  getStatusColor,
+  getStatusText,
+  getStatusIcon,
+  getImageUrl,
+} from "@/utils/helpers";
+import type { OrderHistoryItem } from "@/stores/cashierData";
+import OrderStatistics from "@/pages/cashier/components/OrderStatistics.vue";
+import OrderDetailsDialog from "@/pages/cashier/dialogs/OrderDetailsDialog.vue";
+import ConfirmCompleteDialog from "@/pages/cashier/dialogs/ConfirmCompleteDialog.vue";
+
+
+import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
+
+const router = useRouter();
+const cashierStore = useCashierDataStore();
+
+// State
+const detailsDialog = ref(false);
+const confirmDialog = ref(false);
+const orderToComplete = ref<OrderHistoryItem | null>(null);
+const snackbar = ref(false);
+const snackbarText = ref("");
+const snackbarColor = ref("success");
+const processingComplete = ref(false);
+
+// Computed
+const loading = computed(() => cashierStore.loading);
+const filteredOrders = computed(() => cashierStore.filteredOrderHistory);
+const selectedOrder = computed(() => cashierStore.selectedOrder);
+const filters = computed({
+  get: () => cashierStore.filters,
+  set: (value) => cashierStore.setFilters(value),
+});
+
+const orderSummary = computed(() => {
+  if (!selectedOrder.value) return { items: [], total: 0, itemCount: 0 };
+  return cashierStore.getOrderSummary(selectedOrder.value);
+});
+
+// Check if order can be completed
+const canCompleteOrder = (order: OrderHistoryItem): boolean => {
+  return order.status === "ready" || order.status === "preparing";
+};
+
+// Table headers
+const tableHeaders = [
+  { title: "Order ID", key: "id", sortable: true },
+  { title: "Table", key: "table_id", sortable: true },
+  { title: "Status", key: "status", sortable: true },
+  { title: "Items", key: "items", sortable: false },
+  { title: "Total", key: "total_amount", sortable: true },
+  { title: "Date/Time", key: "created_at", sortable: true },
+  { title: "Actions", key: "actions", sortable: false },
+];
+
+// Status filter options
+const statusOptions = [
+  { title: "All Orders", value: "all" },
+  { title: "Confirmed", value: "confirmed" },
+  { title: "Preparing", value: "preparing" },
+  { title: "Ready", value: "ready" },
+  { title: "Completed", value: "completed" },
+  { title: "Cancelled", value: "cancelled" },
+];
+
+// Methods
+const getStatusCount = (status: string): number => {
+  return cashierStore.ordersByStatus(status).length;
+};
+
+const getOrderItems = (order: OrderHistoryItem) => {
+  return cashierStore.getOrderSummary(order).items;
+};
+
+const viewOrderDetails = (order: OrderHistoryItem): void => {
+  cashierStore.getOrderDetails(order.id!);
+  detailsDialog.value = true;
+};
+
+const showCompleteConfirmation = (order: OrderHistoryItem): void => {
+  orderToComplete.value = order;
+  confirmDialog.value = true;
+};
+
+const completeOrder = async (): Promise<void> => {
+  if (!orderToComplete.value?.id) return;
+
+  try {
+    processingComplete.value = true;
+    
+    // Update order status to completed
+    await cashierStore.updateOrderStatus(orderToComplete.value.id, "completed");
+    
+    // Refresh the order history
+    await cashierStore.fetchOrderHistory();
+    
+
+    
+    confirmDialog.value = false;
+    orderToComplete.value = null;
+  } catch (error) {
+    console.error("Error completing order:", error);
+    snackbarText.value = "Failed to complete order";
+    snackbarColor.value = "error";
+    snackbar.value = true;
+  } finally {
+    processingComplete.value = false;
+  }
+};
+
+const completeOrderFromDialog = async (): Promise<void> => {
+  if (!selectedOrder.value?.id) return;
+
+  try {
+    processingComplete.value = true;
+    
+    await cashierStore.updateOrderStatus(selectedOrder.value.id, "completed");
+    await cashierStore.fetchOrderHistory();
+    
+    
+    detailsDialog.value = false;
+  } catch (error) {
+    console.error("Error completing order:", error);
+    snackbarText.value = "Failed to complete order";
+    snackbarColor.value = "error";
+    snackbar.value = true;
+  } finally {
+    processingComplete.value = false;
+  }
+};
+
+const resetFilters = (): void => {
+  cashierStore.resetFilters();
+};
+
+const refreshHistory = async (): Promise<void> => {
+  try {
+  } catch (error) {
+    snackbarText.value = "Failed to refresh history";
+    snackbarColor.value = "error";
+    snackbar.value = true;
+  }
+};
+
+const exportHistory = (): void => {
+  try {
+    const csv = cashierStore.exportOrderHistory();
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `order-history-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    
+    snackbarText.value = "History exported successfully";
+    snackbarColor.value = "success";
+    snackbar.value = true;
+  } catch (error) {
+    snackbarText.value = "Failed to export history";
+    snackbarColor.value = "error";
+    snackbar.value = true;
+  }
+};
+
+const navigateBack = (): void => {
+  router.push("/cashier");
+};
+
+// Lifecycle
+onMounted(async () => {
+  await cashierStore.fetchOrderHistory();
+});
+
+// Watch filters
+watch(
+  filters,
+  () => {
+    // Filters are reactive, no need to manually filter
+  },
+  { deep: true }
+);
+</script>
+
+<template>
+  <InnerLayoutWrapper>
+    <template #content>
+      <v-container fluid class="pa-4">
+        <!-- Header -->
+        <v-row>
+          <v-col cols="12">
+            <div class="d-flex align-center justify-space-between mb-4">
+              <div class="d-flex align-center">
+                <v-btn icon variant="text" @click="navigateBack" class="mr-2">
+                  <v-icon>mdi-arrow-left</v-icon>
+                </v-btn>
+                <div>
+                  <h1 class="text-h4 font-weight-bold">Order History</h1>
+                  <p class="text-subtitle-1 text-grey">
+                    View all processed orders
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <v-btn
+                  color="primary"
+                  variant="outlined"
+                  prepend-icon="mdi-download"
+                  @click="exportHistory"
+                >
+                  Export CSV
+                </v-btn>
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-refresh"
+                  @click="refreshHistory"
+                  :loading="loading"
+                >
+                  Refresh
+                </v-btn>
+              </div>
+            </div>
+          </v-col>
+        </v-row>
+
+        <!-- Filters (keeping your existing filter code) -->
+        <v-row class="mb-4">
+          <v-col cols="12">
+            <v-card>
+              <v-card-text>
+                <v-row>
+                  <v-col cols="12" sm="6" md="3">
+                    <v-select
+                      v-model="filters.status"
+                      :items="statusOptions"
+                      label="Status"
+                      variant="outlined"
+                      density="comfortable"
+                      hide-details
+                    ></v-select>
+                  </v-col>
+
+                  <v-col cols="12" sm="6" md="2">
+                    <v-text-field
+                      v-model="filters.tableNumber"
+                      label="Table Number"
+                      variant="outlined"
+                      density="comfortable"
+                      type="number"
+                      hide-details
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" sm="6" md="2">
+                    <v-text-field
+                      v-model="filters.dateFrom"
+                      label="Date From"
+                      variant="outlined"
+                      density="comfortable"
+                      type="date"
+                      hide-details
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" sm="6" md="2">
+                    <v-text-field
+                      v-model="filters.dateTo"
+                      label="Date To"
+                      variant="outlined"
+                      density="comfortable"
+                      type="date"
+                      hide-details
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" sm="12" md="3">
+                    <v-text-field
+                      v-model="filters.searchQuery"
+                      label="Search orders..."
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-magnify"
+                      hide-details
+                      clearable
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+
+                <v-row class="mt-2">
+                  <v-col cols="12" class="d-flex justify-end">
+                    <v-btn
+                      variant="text"
+                      prepend-icon="mdi-filter-off"
+                      @click="resetFilters"
+                    >
+                      Clear Filters
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Statistics Summary (keeping your existing stats) -->
+        <OrderStatistics
+          :confirmed-count="getStatusCount('confirmed')"
+          :preparing-count="getStatusCount('preparing')"
+          :completed-count="getStatusCount('completed')"
+          :cancelled-count="getStatusCount('cancelled')"
+        />
+
+        <!-- Orders Table -->
+        <v-row>
+          <v-col cols="12">
+            <v-card>
+              <v-card-title>
+                <div class="d-flex align-center justify-space-between">
+                  <span class="text-h6">Orders ({{ filteredOrders.length }})</span>
+                </div>
+              </v-card-title>
+
+              <v-divider></v-divider>
+
+              <!-- Empty State -->
+              <div
+                v-if="!loading && filteredOrders.length === 0"
+                class="text-center py-12"
+              >
+                <v-icon size="64" color="grey-lighten-1">
+                  mdi-file-document-outline
+                </v-icon>
+                <p class="text-h6 text-grey mt-4">No Orders Found</p>
+                <p class="text-body-2 text-grey">Try adjusting your filters</p>
+              </div>
+
+              <!-- Loading State -->
+              <div v-else-if="loading" class="text-center py-12">
+                <v-progress-circular
+                  indeterminate
+                  color="primary"
+                  size="48"
+                ></v-progress-circular>
+                <p class="text-body-2 text-grey mt-4">Loading order history...</p>
+              </div>
+
+              <!-- Orders Data Table -->
+              <v-data-table
+                v-else
+                :headers="tableHeaders"
+                :items="filteredOrders"
+                :items-per-page="10"
+                item-value="id"
+                class="elevation-0"
+              >
+                <!-- Order ID -->
+                <template v-slot:item.id="{ item }">
+                  <span class="font-weight-bold">#{{ item.id }}</span>
+                </template>
+
+                <!-- Table Number -->
+                <template v-slot:item.table_id="{ item }">
+                  <v-chip size="small" color="primary" variant="outlined">
+                    Table {{ item.table_id }}
+                  </v-chip>
+                </template>
+
+                <!-- Status -->
+                <template v-slot:item.status="{ item }">
+                  <v-chip
+                    :color="getStatusColor(item.status)"
+                    size="small"
+                    variant="flat"
+                  >
+                    <v-icon start size="14">
+                      {{ getStatusIcon(item.status) }}
+                    </v-icon>
+                    {{ getStatusText(item.status) }}
+                  </v-chip>
+                </template>
+
+                <!-- Items -->
+                <template v-slot:item.items="{ item }">
+                  <div class="py-2">
+                    <div
+                      v-for="orderItem in getOrderItems(item)"
+                      :key="orderItem.meal.id"
+                      class="text-caption"
+                    >
+                      {{ orderItem.meal.name }} ×{{ orderItem.quantity }}
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Total Amount -->
+                <template v-slot:item.total_amount="{ item }">
+                  <span class="font-weight-bold">
+                    {{ formatCurrency(item.total_amount) }}
+                  </span>
+                </template>
+
+                <!-- Created At -->
+                <template v-slot:item.created_at="{ item }">
+                  <div class="text-caption">
+                    {{ formatDate(item.created_at) }}
+                  </div>
+                </template>
+
+                <!-- Actions -->
+                <template v-slot:item.actions="{ item }">
+                  <div class="d-flex gap-1">
+                    <!-- View Details Button -->
+                    <v-btn
+                      icon
+                      variant="text"
+                      size="small"
+                      @click="viewOrderDetails(item)"
+                    >
+                      <v-icon>mdi-eye</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        View Details
+                      </v-tooltip>
+                    </v-btn>
+
+                    <!-- Complete Order Button (only show for ready/preparing orders) -->
+                    <v-btn
+                      v-if="canCompleteOrder(item)"
+                      icon
+                      variant="text"
+                      size="small"
+                      color="success"
+                      @click="showCompleteConfirmation(item)"
+                    >
+                      <v-icon>mdi-check-circle</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Mark as Completed
+                      </v-tooltip>
+                    </v-btn>
+                  </div>
+                </template>
+              </v-data-table>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Order Details Dialog -->
+       <OrderDetailsDialog
+          v-model="detailsDialog"
+          :order="selectedOrder"
+          :order-summary="orderSummary"
+          :can-complete="selectedOrder ? canCompleteOrder(selectedOrder) : false"
+          :processing="processingComplete"
+          @complete="completeOrderFromDialog"
+        />
+
+        <!-- Confirmation Dialog for Completing Order -->
+        <ConfirmCompleteDialog
+          v-model="confirmDialog"
+          :order="orderToComplete"
+          :processing="processingComplete"
+          @confirm="completeOrder"
+        />
+
+        <!-- Snackbar -->
+        <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="3000">
+          {{ snackbarText }}
+          <template v-slot:actions>
+            <v-btn variant="text" @click="snackbar = false">Close</v-btn>
+          </template>
+        </v-snackbar>
+      </v-container>
+    </template>
+  </InnerLayoutWrapper>
+</template>
+
+<style scoped>
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-1 {
+  gap: 4px;
+}
+</style>

@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue';
 
 // Define the base domain for the customer-facing menu application
 const BASE_DOMAIN = 'https://dhome-makers.vercel.app';
-const MENU_PATH = '/';
+const MENU_PATH = '/customer/menu';
 
 // LocalStorage key for persisting the table count
 const STORAGE_KEY = 'coffee_shop_table_count';
