@@ -19,22 +19,15 @@ onMounted(() => {
   if (storedReceipt) {
     try {
       order.value = JSON.parse(storedReceipt);
-      console.log("🧾 Receipt - loaded from sessionStorage:", order.value);
       // Clear after loading to prevent stale data
       sessionStorage.removeItem("receiptData");
     } catch (e) {
-      console.error("Error parsing receipt data:", e);
+      // Ignore parse errors
     }
   } else {
     // Fallback to window.history.state
     order.value = window.history.state?.order || null;
-    console.log("🧾 Receipt - loaded from history.state:", order.value);
   }
-
-  console.log("🧾 Receipt - window.history.state:", window.history.state);
-  console.log("🧾 Receipt - order.value:", order.value);
-  console.log("🧾 Receipt - order items:", order.value?.items);
-  console.log("🧾 Receipt - items length:", order.value?.items?.length);
 
   // Handle tableId as string or array
   const tableParam = route.query.table;

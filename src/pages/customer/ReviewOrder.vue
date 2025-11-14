@@ -53,12 +53,7 @@ onMounted(async () => {
 });
 
 // Watch for changes in cart items and display items
-watchEffect(() => {
-  console.log("Cart items changed:", cartItems.value);
-  console.log("Display items changed:", displayItems.value);
-  console.log("Display total:", displayTotal.value);
-  console.log("Table ID from context:", contextTableId.value);
-});
+// (console.log statements removed for production)
 
 // Methods
 const cancelOrder = () => {
@@ -75,8 +70,6 @@ const proceedToPayment = async () => {
       // 🔥 CRITICAL FIX: Get the actual table ID from context
       const actualTableId = getCurrentTableId();
 
-      console.log("📝 Placing order for table:", actualTableId);
-
       // Prepare receipt data BEFORE creating order (before cart is cleared)
       const receiptData: any = {
         items: groupedCartItems.value.map((groupedItem) => ({
@@ -88,15 +81,10 @@ const proceedToPayment = async () => {
         total: cartTotal.value,
       };
 
-      console.log("📋 Receipt data being passed:", receiptData);
-      console.log("📋 Items count:", receiptData.items.length);
-
       // Create order using composable with the ACTUAL table ID
       const order = await createOrder();
 
       if (order) {
-        console.log("✅ Order created successfully:", order);
-        console.log("✅ Order table_id:", order.table_id);
         // Update local state
         orderStatus.value = "pending";
 
@@ -121,7 +109,6 @@ const proceedToPayment = async () => {
       });
     }
   } catch (error) {
-    console.error("❌ Error processing order:", error);
     // Show error message and stay on current page
     alert("There was an error placing your order. Please try again.");
   } finally {
