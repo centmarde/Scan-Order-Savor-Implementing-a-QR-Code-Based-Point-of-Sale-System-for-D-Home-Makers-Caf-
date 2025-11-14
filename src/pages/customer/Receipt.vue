@@ -25,15 +25,7 @@ onMounted(() => {
   }
 });
 
-const downloadReceipt = async () => {
-  const receiptEl = document.getElementById("receipt-content");
-  if (!receiptEl) return;
-  const canvas = await html2canvas(receiptEl);
-  const link = document.createElement("a");
-  link.download = "receipt.png";
-  link.href = canvas.toDataURL();
-  link.click();
-};
+const downloadReceipt = async () => {};
 
 const goToWaiting = () => {
   router.push({
@@ -226,19 +218,7 @@ const lightenColor = (color: string, percent: number) => {
         </v-card>
 
         <!-- Action Buttons -->
-        <v-btn
-          color="white"
-          class="mb-3"
-          :style="{ color: primaryColor }"
-          @click="downloadReceipt"
-          size="large"
-          rounded="xl"
-          elevation="2"
-          style="min-width: 240px"
-        >
-          <v-icon left>mdi-download</v-icon>
-          Download Receipt
-        </v-btn>
+        <!-- Action Button -->
         <v-btn
           color="white"
           @click="goToWaiting"
