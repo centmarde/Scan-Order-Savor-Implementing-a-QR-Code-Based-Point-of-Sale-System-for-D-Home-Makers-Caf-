@@ -72,23 +72,34 @@ const proceedToPayment = async () => {
     if (cartItems.value.length > 0) {
       // 🔥 CRITICAL FIX: Get the actual table ID from context
       const actualTableId = getCurrentTableId();
-      
-      console.log('📝 Placing order for table:', actualTableId);
-      
+
+      console.log("📝 Placing order for table:", actualTableId);
+
       // Create order using composable with the ACTUAL table ID
       const order = await createOrder();
 
       if (order) {
         console.log("✅ Order created successfully:", order);
         console.log("✅ Order table_id:", order.table_id);
-        
         // Update local state
         orderStatus.value = "pending";
 
-        // Navigate to waiting page with table information
+        // Prepare receipt data
+        const receiptData = {
+          items: cartItems.value.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: 1, // If you have quantity, update accordingly
+          })),
+          total: displayTotal.value,
+        };
+
+        // Navigate to receipt page with order data and table id
         router.push({
-          path: "/customer/waiting",
+          path: "/customer/receipt",
           query: { table: actualTableId.toString() },
+          state: { order: receiptData },
         });
       }
     } else {
