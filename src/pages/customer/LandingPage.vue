@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { getInventoryImageUrl } from "@/utils/constants";
+import { APP_CONFIG } from "@/utils/constants";
+import { useMenu } from "@/composables/useMenu";
 import { useTheme } from "@/composables/useTheme";
-import { useTableContext } from "@/pages/admin/composables/useTableContext"; 
+import { useTableContext } from "@/pages/admin/composables/useTableContext";
 
 const router = useRouter();
 
@@ -17,16 +18,20 @@ const currentSlide = ref(0);
 const { tableId, initializeTable } = useTableContext();
 
 // Auto-advance carousel every 3 seconds
-let intervalId: number | undefined;
-onMounted(async () => {
-  // Initialize theme first
-  await initializeTheme();
-  
-  // Initialize table from URL query parameter
-  initializeTable(); // ← Captures table from URL
 
+let intervalId: number | undefined;
+import { computed } from "vue";
+const { menuItems, fetchMenuItems } = useMenu();
+
+onMounted(async () => {
+  await initializeTheme();
+  initializeTable();
+  await fetchMenuItems();
   intervalId = window.setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % carouselImages.length;
+    const len = carouselImages.value.length;
+    if (len > 0) {
+      currentSlide.value = (currentSlide.value + 1) % len;
+    }
   }, 5000);
 });
 
@@ -34,21 +39,13 @@ onUnmounted(() => {
   if (intervalId) window.clearInterval(intervalId);
 });
 
-// Carousel images
-const carouselImages = [
-  {
-    src: getInventoryImageUrl("adobo.jpg"),
-    alt: "Adobo Food",
-  },
-  {
-    src: getInventoryImageUrl("sinigang.jpg"),
-    alt: "Delicious Meal 2",
-  },
-  {
-    src: getInventoryImageUrl("caldereta.png"),
-    alt: "Healthy Food 3",
-  },
-];
+// Carousel images: first 3 menu item images
+const carouselImages = computed(() =>
+  menuItems.value.slice(0, 3).map((item) => ({
+    src: item.image || APP_CONFIG.DEFAULT_IMAGE,
+    alt: item.name || "Menu Image",
+  }))
+);
 
 /**
  * Navigate to the menu page
