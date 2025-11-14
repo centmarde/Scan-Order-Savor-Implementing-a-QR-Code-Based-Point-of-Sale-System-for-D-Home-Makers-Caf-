@@ -28,6 +28,8 @@ const {
   displayItems,
   displayTotal,
   itemCount,
+  groupedCartItems,
+  cartTotal,
   initializeTableId,
   loadCartData,
   fetchOrdersForTable,
@@ -75,6 +77,20 @@ const proceedToPayment = async () => {
 
       console.log("📝 Placing order for table:", actualTableId);
 
+      // Prepare receipt data BEFORE creating order (before cart is cleared)
+      const receiptData: any = {
+        items: groupedCartItems.value.map((groupedItem) => ({
+          id: groupedItem.item.id,
+          name: groupedItem.item.name,
+          price: groupedItem.item.price,
+          quantity: groupedItem.quantity,
+        })),
+        total: cartTotal.value,
+      };
+
+      console.log("📋 Receipt data being passed:", receiptData);
+      console.log("📋 Items count:", receiptData.items.length);
+
       // Create order using composable with the ACTUAL table ID
       const order = await createOrder();
 
@@ -84,22 +100,16 @@ const proceedToPayment = async () => {
         // Update local state
         orderStatus.value = "pending";
 
-        // Prepare receipt data
-        const receiptData = {
-          items: cartItems.value.map((item) => ({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: 1, // If you have quantity, update accordingly
-          })),
-          total: displayTotal.value,
-        };
+        // Add order ID to receipt data
+        receiptData.id = order.id;
+
+        // Store receipt data in sessionStorage for reliable transfer
+        sessionStorage.setItem("receiptData", JSON.stringify(receiptData));
 
         // Navigate to receipt page with order data and table id
         router.push({
           path: "/customer/receipt",
           query: { table: actualTableId.toString() },
-          state: { order: receiptData },
         });
       }
     } else {
