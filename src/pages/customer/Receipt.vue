@@ -41,73 +41,213 @@ const goToWaiting = () => {
     query: { table: tableId.value },
   });
 };
+
+// Format current date and time
+const getCurrentDateTime = () => {
+  const now = new Date();
+  const options: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  };
+  return now.toLocaleString("en-US", options);
+};
+
+// Function to lighten color for background
+const lightenColor = (color: string, percent: number) => {
+  const num = parseInt(color.replace("#", ""), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = (num >> 16) + amt;
+  const G = ((num >> 8) & 0x00ff) + amt;
+  const B = (num & 0x0000ff) + amt;
+  return (
+    "#" +
+    (
+      0x1000000 +
+      (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+      (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+      (B < 255 ? (B < 1 ? 0 : B) : 255)
+    )
+      .toString(16)
+      .slice(1)
+  );
+};
 </script>
 
 <template>
   <v-app>
-    <v-main style="background-color: #f5f3ef">
+    <v-main
+      :style="{
+        background: `linear-gradient(180deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
+      }"
+    >
       <v-container
         class="pa-4 d-flex flex-column align-center justify-center"
         style="min-height: 100vh"
       >
+        <!-- Receipt Card -->
         <v-card
           id="receipt-content"
-          class="pa-6 mb-6"
-          elevation="8"
+          class="pa-0 mb-6 receipt-card"
+          elevation="0"
           rounded="xl"
-          style="max-width: 420px; width: 100%"
+          style="
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+            overflow: visible;
+          "
         >
-          <h2
-            class="text-h5 font-weight-bold mb-2 text-center"
-            :style="{ color: primaryColor }"
+          <!-- Success Checkmark Circle -->
+          <div
+            class="success-badge"
+            :style="{
+              background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
+            }"
           >
-            Order Receipt
-          </h2>
-          <div class="text-center mb-4">
-            <v-chip color="primary" class="mr-2">
-              <v-icon start>mdi-table-furniture</v-icon>
-              Table {{ tableId }}
-            </v-chip>
-            <v-chip color="success">
-              <v-icon start>mdi-check-circle</v-icon>
-              Placed
-            </v-chip>
+            <v-icon color="white" size="32">mdi-check</v-icon>
           </div>
-          <v-divider class="mb-4" />
-          <div v-if="order && order.items && order.items.length">
-            <div
-              v-for="item in order.items"
-              :key="item.id"
-              class="d-flex justify-space-between mb-2"
+
+          <div class="pa-6 pt-12">
+            <!-- Title -->
+            <h2
+              class="text-h5 font-weight-bold mb-6 text-center"
+              :style="{ color: primaryColor, letterSpacing: '0.15em' }"
             >
-              <span
-                >{{ item.name }}
-                <span v-if="item.quantity > 1">x{{ item.quantity }}</span></span
+              ORDER RECEIPT
+            </h2>
+
+            <!-- Table Info -->
+            <div
+              class="text-center mb-6 pa-3 rounded-lg"
+              :style="{ backgroundColor: lightenColor(primaryColor, 45) }"
+            >
+              <div
+                class="text-h6 font-weight-bold"
+                :style="{ color: primaryColor }"
               >
-              <span
-                >{{ APP_CONFIG.CURRENCY
-                }}{{ (item.price * item.quantity).toFixed(2) }}</span
+                Table {{ tableId }}
+              </div>
+              <div class="text-caption text-grey-darken-1">
+                Order Placed Successfully
+              </div>
+            </div>
+
+            <v-divider class="mb-4" style="border-color: #e0e0e0" />
+
+            <!-- Items List -->
+            <div v-if="order && order.items && order.items.length">
+              <div class="mb-4">
+                <div
+                  v-for="item in order.items"
+                  :key="item.id"
+                  class="d-flex justify-space-between align-center mb-3"
+                >
+                  <div>
+                    <div class="font-weight-medium">{{ item.name }}</div>
+                    <div
+                      v-if="item.quantity > 1"
+                      class="text-caption text-grey"
+                    >
+                      Qty: {{ item.quantity }}
+                    </div>
+                  </div>
+                  <span class="font-weight-medium">
+                    {{ APP_CONFIG.CURRENCY
+                    }}{{ (item.price * item.quantity).toFixed(2) }}
+                  </span>
+                </div>
+              </div>
+
+              <v-divider class="my-4" style="border-color: #e0e0e0" />
+
+              <!-- Total Amount -->
+              <div class="mb-4">
+                <div class="d-flex justify-space-between mb-2">
+                  <span class="text-body-1">Amount</span>
+                  <span class="text-body-1">{{ order.total.toFixed(2) }}</span>
+                </div>
+                <div class="d-flex justify-space-between align-center">
+                  <span class="text-h6 font-weight-bold">Total Amount</span>
+                  <span
+                    class="text-h5 font-weight-bold"
+                    :style="{ color: primaryColor }"
+                  >
+                    {{ APP_CONFIG.CURRENCY }}{{ order.total.toFixed(2) }}
+                  </span>
+                </div>
+              </div>
+
+              <v-divider class="my-4" style="border-color: #e0e0e0" />
+
+              <!-- Reference Number and Date -->
+              <div class="text-center mb-4">
+                <div class="text-caption text-grey-darken-1 mb-1">
+                  Ref No.
+                  {{ order.id || Math.floor(Math.random() * 100000000) }}
+                </div>
+                <div class="text-caption text-grey">
+                  {{ getCurrentDateTime() }}
+                </div>
+              </div>
+
+              <!-- Environmental Message -->
+              <div
+                class="pa-3 rounded-lg"
+                style="
+                  background: linear-gradient(135deg, #7ef5b7 0%, #5fe9a5 100%);
+                "
               >
+                <div class="d-flex align-center mb-2">
+                  <v-icon color="success-darken-2" class="mr-2"
+                    >mdi-leaf</v-icon
+                  >
+                  <span
+                    class="text-body-2 font-weight-bold"
+                    style="color: #1b5e20"
+                  >
+                    Thank you for going digital!
+                  </span>
+                </div>
+                <div class="text-caption" style="color: #2e7d32">
+                  By choosing digital ordering, you reduce paper waste and help
+                  protect the environment.
+                </div>
+              </div>
             </div>
-            <v-divider class="my-3" />
-            <div class="d-flex justify-space-between font-weight-bold text-h6">
-              <span>Total</span>
-              <span>{{ APP_CONFIG.CURRENCY }}{{ order.total.toFixed(2) }}</span>
-            </div>
+            <div v-else class="text-center text-grey py-6">No items found.</div>
           </div>
-          <div v-else class="text-center text-grey">No items found.</div>
+
+          <!-- Zigzag Bottom Edge -->
+          <div class="zigzag-bottom"></div>
         </v-card>
+
+        <!-- Action Buttons -->
         <v-btn
-          color="primary"
+          color="white"
           class="mb-3"
+          :style="{ color: primaryColor }"
           @click="downloadReceipt"
           size="large"
           rounded="xl"
+          elevation="2"
+          style="min-width: 240px"
         >
           <v-icon left>mdi-download</v-icon>
           Download Receipt
         </v-btn>
-        <v-btn color="success" @click="goToWaiting" size="large" rounded="xl">
+        <v-btn
+          color="white"
+          @click="goToWaiting"
+          size="large"
+          rounded="xl"
+          elevation="2"
+          style="min-width: 240px"
+          :style="{ color: primaryColor }"
+        >
           <v-icon left>mdi-arrow-right</v-icon>
           Continue
         </v-btn>
@@ -117,8 +257,62 @@ const goToWaiting = () => {
 </template>
 
 <style scoped>
-#receipt-content {
-  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-  border: 1px solid rgba(139, 92, 42, 0.1);
+.receipt-card {
+  background: #ffffff;
+  position: relative;
+}
+
+.success-badge {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.zigzag-bottom {
+  height: 20px;
+  background: linear-gradient(
+      135deg,
+      transparent 33.33%,
+      #ffffff 33.33%,
+      #ffffff 66.67%,
+      transparent 66.67%
+    ),
+    linear-gradient(
+      45deg,
+      transparent 33.33%,
+      #ffffff 33.33%,
+      #ffffff 66.67%,
+      transparent 66.67%
+    );
+  background-size: 20px 40px;
+  background-position: 0 0, 0 0;
+  background-repeat: repeat-x;
+  position: relative;
+  width: 100%;
+}
+
+/* Alternative simpler zigzag pattern */
+.zigzag-bottom::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(-45deg, transparent 16px, #ffffff 0),
+    linear-gradient(45deg, transparent 16px, #ffffff 0);
+  background-repeat: repeat-x;
+  background-size: 32px 32px;
+  background-position: left bottom;
 }
 </style>
