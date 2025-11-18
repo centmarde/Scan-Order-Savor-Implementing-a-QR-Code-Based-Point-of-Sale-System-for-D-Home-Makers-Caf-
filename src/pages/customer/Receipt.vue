@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
 
@@ -12,6 +13,7 @@ const { primaryColor, secondaryColor } = useTheme();
 // Get order data from route state or query
 const order = ref<any>(null);
 const tableId = ref<string | number>("");
+const isExporting = ref(false);
 
 onMounted(() => {
   // Try to get order from sessionStorage first (more reliable)
@@ -37,7 +39,48 @@ onMounted(() => {
     tableId.value = tableParam || "";
   }
 });
-const downloadReceipt = async () => {};
+
+const exportToPDF = async () => {
+  try {
+    isExporting.value = true;
+    const element = document.getElementById("receipt-content");
+    if (!element) return;
+
+    // Capture the receipt as canvas with high quality
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+    });
+
+    // Calculate dimensions
+    const imgWidth = 210; // A4 width in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: imgHeight > imgWidth ? "portrait" : "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    // Add image to PDF
+    const imgData = canvas.toDataURL("image/png");
+    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+
+    // Generate filename with order details
+    const orderRef = order.value?.id || "receipt";
+    const filename = `receipt-${orderRef}-table-${tableId.value}.pdf`;
+
+    // Download the PDF
+    pdf.save(filename);
+  } catch (error) {
+    alert("Failed to export PDF. Please try again.");
+  } finally {
+    isExporting.value = false;
+  }
+};
 
 const goToWaiting = () => {
   router.push({
@@ -230,19 +273,38 @@ const lightenColor = (color: string, percent: number) => {
         </v-card>
 
         <!-- Action Buttons -->
-        <!-- Action Button -->
-        <v-btn
-          color="white"
-          @click="goToWaiting"
-          size="large"
-          rounded="xl"
-          elevation="2"
-          style="min-width: 240px"
-          :style="{ color: primaryColor }"
+        <div
+          class="d-flex flex-column ga-3"
+          style="width: 100%; max-width: 420px"
         >
-          <v-icon left>mdi-arrow-right</v-icon>
-          Continue
-        </v-btn>
+          <!-- Export PDF Button -->
+          <v-btn
+            color="white"
+            @click="exportToPDF"
+            size="large"
+            rounded="xl"
+            elevation="2"
+            :loading="isExporting"
+            :disabled="!order || !order.items || order.items.length === 0"
+            :style="{ color: primaryColor }"
+          >
+            <v-icon left>mdi-download</v-icon>
+            Export as PDF
+          </v-btn>
+
+          <!-- Continue Button -->
+          <v-btn
+            :color="primaryColor"
+            @click="goToWaiting"
+            size="large"
+            rounded="xl"
+            elevation="2"
+            style="color: white"
+          >
+            <v-icon left>mdi-arrow-right</v-icon>
+            Continue
+          </v-btn>
+        </div>
       </v-container>
     </v-main>
   </v-app>
