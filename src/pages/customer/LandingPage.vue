@@ -86,10 +86,11 @@ const navigateToEmployeeAccess = () => {
                   :src="image.src"
                   :alt="image.alt"
                   :height="$vuetify.display.xs ? 350 : 400"
+                  :width="$vuetify.display.xs ? 350 : 400"
                   class="mx-auto"
                   :style="{
-                    borderRadius: '16px',
-                    maxWidth: $vuetify.display.xs ? '100%' : '400px',
+                    borderRadius: '50%',
+                    maxWidth: $vuetify.display.xs ? '350px' : '400px',
                   }"
                   cover
                 />
