@@ -44,30 +44,50 @@ const exportToPDF = async () => {
   try {
     isExporting.value = true;
     const element = document.getElementById("receipt-content");
+    const badge = document.querySelector(".success-badge") as HTMLElement;
     if (!element) return;
+
+    // Temporarily hide the success badge for clean PDF
+    if (badge) badge.style.display = "none";
 
     // Capture the receipt as canvas with high quality
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 2.5,
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
     });
 
-    // Calculate dimensions
-    const imgWidth = 210; // A4 width in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    // Restore the badge
+    if (badge) badge.style.display = "";
 
-    // Create PDF
+    // Use thermal receipt size (80mm width) for better proportions
+    const receiptWidthMM = 80;
+    const aspectRatio = canvas.height / canvas.width;
+    const receiptHeightMM = receiptWidthMM * aspectRatio;
+
+    // Create PDF with custom size
     const pdf = new jsPDF({
-      orientation: imgHeight > imgWidth ? "portrait" : "portrait",
+      orientation: receiptHeightMM > receiptWidthMM ? "portrait" : "portrait",
       unit: "mm",
-      format: "a4",
+      format: [receiptWidthMM, receiptHeightMM],
+      compress: true,
     });
 
-    // Add image to PDF
-    const imgData = canvas.toDataURL("image/png");
-    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+    // Add image to PDF (full bleed, no margins)
+    const imgData = canvas.toDataURL("image/png", 1.0);
+    pdf.addImage(
+      imgData,
+      "PNG",
+      0,
+      0,
+      receiptWidthMM,
+      receiptHeightMM,
+      undefined,
+      "FAST"
+    );
 
     // Generate filename with order details
     const orderRef = order.value?.id || "receipt";
