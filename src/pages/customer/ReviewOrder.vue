@@ -28,6 +28,8 @@ const {
   displayItems,
   displayTotal,
   itemCount,
+  groupedCartItems,
+  cartTotal,
   initializeTableId,
   loadCartData,
   fetchOrdersForTable,
@@ -51,12 +53,7 @@ onMounted(async () => {
 });
 
 // Watch for changes in cart items and display items
-watchEffect(() => {
-  console.log("Cart items changed:", cartItems.value);
-  console.log("Display items changed:", displayItems.value);
-  console.log("Display total:", displayTotal.value);
-  console.log("Table ID from context:", contextTableId.value);
-});
+// (console.log statements removed for production)
 
 // Methods
 const cancelOrder = () => {
@@ -72,22 +69,34 @@ const proceedToPayment = async () => {
     if (cartItems.value.length > 0) {
       // 🔥 CRITICAL FIX: Get the actual table ID from context
       const actualTableId = getCurrentTableId();
-      
-      console.log('📝 Placing order for table:', actualTableId);
-      
+
+      // Prepare receipt data BEFORE creating order (before cart is cleared)
+      const receiptData: any = {
+        items: groupedCartItems.value.map((groupedItem) => ({
+          id: groupedItem.item.id,
+          name: groupedItem.item.name,
+          price: groupedItem.item.price,
+          quantity: groupedItem.quantity,
+        })),
+        total: cartTotal.value,
+      };
+
       // Create order using composable with the ACTUAL table ID
       const order = await createOrder();
 
       if (order) {
-        console.log("✅ Order created successfully:", order);
-        console.log("✅ Order table_id:", order.table_id);
-        
         // Update local state
         orderStatus.value = "pending";
 
-        // Navigate to waiting page with table information
+        // Add order ID to receipt data
+        receiptData.id = order.id;
+
+        // Store receipt data in sessionStorage for reliable transfer
+        sessionStorage.setItem("receiptData", JSON.stringify(receiptData));
+
+        // Navigate to receipt page with order data and table id
         router.push({
-          path: "/customer/waiting",
+          path: "/customer/receipt",
           query: { table: actualTableId.toString() },
         });
       }
@@ -100,7 +109,6 @@ const proceedToPayment = async () => {
       });
     }
   } catch (error) {
-    console.error("❌ Error processing order:", error);
     // Show error message and stay on current page
     alert("There was an error placing your order. Please try again.");
   } finally {

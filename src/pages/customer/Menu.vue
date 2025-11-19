@@ -1,4 +1,5 @@
-z<script setup lang="ts">
+z
+<script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router"; // <-- Import useRoute
 import { APP_CONFIG } from "@/utils/constants";
@@ -40,6 +41,14 @@ const cartTotal = computed(() => {
 const addToCart = (item: MenuItem) => {
   cartItems.value.push({ ...item });
   // You could add a toast notification here
+};
+
+const addItemToCartById = (itemId: number) => {
+  // Find the item in menuItems
+  const item = menuItems.value.find((i) => i.id === itemId);
+  if (item) {
+    cartItems.value.push({ ...item });
+  }
 };
 
 const removeFromCart = (itemId: number) => {
@@ -217,6 +226,7 @@ onMounted(async () => {
         @cancel-order="cancelOrder"
         @review-order="reviewOrder"
         @remove-item="removeFromCart"
+        @add-item="addItemToCartById"
       />
     </v-main>
   </v-app>
