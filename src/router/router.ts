@@ -53,6 +53,10 @@ const routes = setupLayouts([
     component: ReviewOrder,
   },
   {
+    path: "/customer/receipt",
+    component: () => import("@/pages/customer/Receipt.vue"),
+  },
+  {
     path: "/customer/waiting",
     component: WaitingPage,
   },

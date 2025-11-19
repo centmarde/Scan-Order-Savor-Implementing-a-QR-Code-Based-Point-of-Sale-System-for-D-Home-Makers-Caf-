@@ -12,11 +12,13 @@ interface Props {
 const props = defineProps<Props>();
 
 // Emits
+
 const emit = defineEmits<{
   viewCart: [];
   cancelOrder: [];
   reviewOrder: [];
   removeItem: [itemId: number];
+  addItem: [itemId: number];
 }>();
 
 // Theme colors
@@ -58,6 +60,10 @@ const reviewOrder = () => {
 
 const removeItem = (itemId: number) => {
   emit("removeItem", itemId);
+};
+
+const addItem = (itemId: number) => {
+  emit("addItem", itemId);
 };
 </script>
 
@@ -189,10 +195,19 @@ const removeItem = (itemId: number) => {
                     icon
                     size="small"
                     variant="text"
-                    class="ml-2"
+                    class="ml-1"
                     :style="{ color: '#dc3545' }"
                   >
                     <v-icon size="18">mdi-minus-circle</v-icon>
+                  </v-btn>
+                  <v-btn
+                    @click="addItem(groupedItem.item.id)"
+                    icon
+                    size="small"
+                    variant="text"
+                    :style="{ color: primaryColor }"
+                  >
+                    <v-icon size="18">mdi-plus-circle</v-icon>
                   </v-btn>
                 </div>
               </template>

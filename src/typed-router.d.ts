@@ -48,6 +48,7 @@ declare module 'vue-router/auto-routes' {
     '/cashier/dialogs/RejectOrderDialog': RouteRecordInfo<'/cashier/dialogs/RejectOrderDialog', '/cashier/dialogs/RejectOrderDialog', Record<never, never>, Record<never, never>>,
     '/customer/LandingPage': RouteRecordInfo<'/customer/LandingPage', '/customer/LandingPage', Record<never, never>, Record<never, never>>,
     '/customer/Menu': RouteRecordInfo<'/customer/Menu', '/customer/Menu', Record<never, never>, Record<never, never>>,
+    '/customer/Receipt': RouteRecordInfo<'/customer/Receipt', '/customer/Receipt', Record<never, never>, Record<never, never>>,
     '/customer/ReviewOrder': RouteRecordInfo<'/customer/ReviewOrder', '/customer/ReviewOrder', Record<never, never>, Record<never, never>>,
     '/customer/WaitingPage': RouteRecordInfo<'/customer/WaitingPage', '/customer/WaitingPage', Record<never, never>, Record<never, never>>,
     '/ForbiddenView': RouteRecordInfo<'/ForbiddenView', '/ForbiddenView', Record<never, never>, Record<never, never>>,
