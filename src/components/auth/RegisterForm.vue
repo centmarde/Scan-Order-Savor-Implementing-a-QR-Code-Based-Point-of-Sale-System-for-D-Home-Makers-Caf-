@@ -226,7 +226,7 @@ const roleOptions = computed(() => {
 
 // Check if student role is selected (role ID 2 is Student)
 const isStudentRole = computed(() => {
-  return registerForm.role === 2;
+  return registerForm.role === 9;
 });
 
 // Error handling

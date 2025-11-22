@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 import {
   formatCurrency,
   formatDate,
@@ -41,6 +42,7 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+const router = useRouter();
 
 const dialogModel = computed({
   get: () => props.modelValue,
@@ -49,6 +51,32 @@ const dialogModel = computed({
 
 const handleComplete = () => {
   emit("complete");
+};
+
+const handlePrintReceipt = () => {
+  if (!props.order) return;
+  
+  // Prepare receipt data matching the format Receipt.vue expects
+  const receiptData = {
+    id: props.order.id,
+    items: props.orderSummary.items.map(item => ({
+      id: item.meal.id,
+      name: item.meal.name,
+      price: item.meal.price,
+      quantity: item.quantity
+    })),
+    total: props.orderSummary.total
+  };
+  
+  // Store in sessionStorage for Receipt.vue to access
+  sessionStorage.setItem("receiptData", JSON.stringify(receiptData));
+  
+  // Navigate to receipt page in a new tab/window
+  const routeData = router.resolve({
+    path: '/receipt',
+    query: { table: props.order.table_id }
+  });
+  window.open(routeData.href, '_blank');
 };
 </script>
 
@@ -155,6 +183,16 @@ const handleComplete = () => {
       <v-divider></v-divider>
 
       <v-card-actions class="pa-4">
+        <!-- Print Receipt Button -->
+        <v-btn
+          color="info"
+          variant="flat"
+          prepend-icon="mdi-printer"
+          @click="handlePrintReceipt"
+        >
+          Print Receipt
+        </v-btn>
+        
         <!-- Complete Button (only show for ready/preparing orders) -->
         <v-btn
           v-if="canComplete"

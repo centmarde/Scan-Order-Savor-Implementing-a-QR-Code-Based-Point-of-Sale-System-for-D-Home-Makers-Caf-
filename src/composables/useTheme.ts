@@ -194,9 +194,9 @@ export function useTheme(): UseTheme {
   };
 
   // Individual color getters with fallbacks from base.ts theme
-  const primaryColor = computed(() => colors.value?.primary || "#8b5c2a");
-  const secondaryColor = computed(() => colors.value?.secondary || "#c19a6b");
-  const accentColor = computed(() => colors.value?.accent || "#a67c52");
+  const primaryColor = computed(() => colors.value?.primary || "#ff69b4");
+  const secondaryColor = computed(() => colors.value?.secondary || "#ff1493");
+  const accentColor = computed(() => colors.value?.accent || "#ff69b4");
   const backgroundColor = computed(() => colors.value?.background || "#FEFFFE");
   const surfaceColor = computed(() => colors.value?.surface || "#FFFFFF");
   // Force dark text colors for better visibility on light/tan backgrounds
