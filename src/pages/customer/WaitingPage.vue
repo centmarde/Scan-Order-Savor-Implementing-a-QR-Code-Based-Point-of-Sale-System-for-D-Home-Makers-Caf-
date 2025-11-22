@@ -43,7 +43,6 @@ const pulseAnimation = ref(true);
 const showFeedbackModal = ref(false);
 const feedbackSubmitted = ref(false);
 const previousOrderStatus = ref("");
-const salesUpdated = ref(false);
 
 // Polling interval for status updates
 let statusPollingInterval: number | null = null;
@@ -89,19 +88,9 @@ const fetchOrders = async () => {
       currentOrderStatus.value === "completed" &&
       previousOrderStatus.value !== "completed"
     ) {
-      // Update meal sales and deduct quantities when order is completed (only once)
-      if (fetchedOrder && !salesUpdated.value) {
-        try {
-          console.log(
-            "Order completed! Updating meal sales and deducting quantities..."
-          );
-          await orderDataStore.updateMealSales(fetchedOrder);
-          salesUpdated.value = true;
-          console.log("Meal sales and quantities updated successfully");
-        } catch (error) {
-          console.error("Error updating meal sales and quantities:", error);
-        }
-      }
+      // Note: Inventory and sales are already updated by completeOrderWithInventoryUpdate()
+      // when the cashier marks the order as completed. No need to update here.
+      console.log("Order completed! Inventory already updated by cashier.");
 
       // Show feedback modal if not already submitted
       if (!feedbackSubmitted.value) {
