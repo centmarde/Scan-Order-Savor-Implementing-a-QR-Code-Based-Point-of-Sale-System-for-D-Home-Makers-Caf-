@@ -445,7 +445,7 @@ watch(
                     >
                       <v-icon>mdi-eye</v-icon>
                       <v-tooltip activator="parent" location="top">
-                        View Details
+                        <span style="color: white">View Details</span>
                       </v-tooltip>
                     </v-btn>
 
@@ -460,7 +460,7 @@ watch(
                     >
                       <v-icon>mdi-check-circle</v-icon>
                       <v-tooltip activator="parent" location="top">
-                        Mark as Completed
+                        <span style="color: white">Mark as Completed</span>
                       </v-tooltip>
                     </v-btn>
                   </div>
