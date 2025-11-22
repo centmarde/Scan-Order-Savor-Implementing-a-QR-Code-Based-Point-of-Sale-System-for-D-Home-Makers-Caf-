@@ -526,14 +526,14 @@ onUnmounted(() => {
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn variant="text" @click="completeDialog = false">Cancel</v-btn>
+              <v-btn variant="text" @click="completeDialog = false">No</v-btn>
               <v-btn
                 color="success"
                 variant="flat"
                 @click="handleComplete"
                 :loading="processing"
               >
-                Mark Ready
+                Yes
               </v-btn>
             </v-card-actions>
           </v-card>
