@@ -140,6 +140,15 @@ const routes = setupLayouts([
       title: "Sales Dashboard",
     },
   },
+  // Receipt route (for printing from cashier/kitchen)
+  {
+    path: "/receipt",
+    name: "Receipt",
+    component: () => import("@/pages/customer/Receipt.vue"),
+    meta: {
+      title: "Order Receipt",
+    },
+  },
 
   // Error routes
   {

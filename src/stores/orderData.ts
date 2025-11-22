@@ -100,6 +100,28 @@ export const useOrderDataStore = defineStore("orderData", () => {
       loading.value = true;
       error.value = null;
 
+      // Group cart items by meal ID and count quantities
+      const groupedItems: {
+        [key: number]: { item: MenuItem; quantity: number };
+      } = {};
+
+      cartItems.forEach((item) => {
+        if (groupedItems[item.id]) {
+          groupedItems[item.id].quantity += 1;
+        } else {
+          groupedItems[item.id] = { item, quantity: 1 };
+        }
+      });
+
+      // Validate inventory availability before creating order
+      for (const [mealId, { item, quantity }] of Object.entries(groupedItems)) {
+        if (item.quantity !== undefined && item.quantity < quantity) {
+          throw new Error(
+            `Insufficient stock for "${item.name}". Available: ${item.quantity}, Requested: ${quantity}`
+          );
+        }
+      }
+
       // Calculate total amount
       const totalAmount = cartItems.reduce(
         (total, item) => total + item.price,
@@ -122,19 +144,6 @@ export const useOrderDataStore = defineStore("orderData", () => {
       if (orderError) {
         throw new Error(`Failed to create order: ${orderError.message}`);
       }
-
-      // Group cart items by meal ID and count quantities
-      const groupedItems: {
-        [key: number]: { item: MenuItem; quantity: number };
-      } = {};
-
-      cartItems.forEach((item) => {
-        if (groupedItems[item.id]) {
-          groupedItems[item.id].quantity += 1;
-        } else {
-          groupedItems[item.id] = { item, quantity: 1 };
-        }
-      });
 
       // Create order items
       const orderItemsData: Omit<OrderItemDB, "id" | "created_at">[] =
@@ -539,6 +548,49 @@ export const useOrderDataStore = defineStore("orderData", () => {
   };
 
   /**
+   * Complete an order and update meal sales/quantities
+   * This is a centralized method that should be called whenever an order is completed
+   */
+  const completeOrderWithInventoryUpdate = async (
+    orderId: number,
+    tableId: number
+  ): Promise<Order | null> => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      console.log(`Completing order ${orderId} with inventory update...`);
+
+      // Fetch the order with meal details before updating status
+      const orderWithMeals = await getLatestOrderByTableWithMeals(tableId);
+
+      // Verify this is the correct order
+      if (!orderWithMeals || orderWithMeals.id !== orderId) {
+        throw new Error("Order not found or mismatch. Cannot complete order.");
+      }
+
+      // Update order status to completed
+      const updatedOrder = await updateOrderStatus(orderId, "completed");
+
+      // Update meal sales and deduct quantities
+      console.log("Updating meal sales and quantities...");
+      await updateMealSales(orderWithMeals);
+      console.log("Inventory and sales updated successfully");
+
+      return updatedOrder;
+    } catch (err) {
+      console.error("Error in completeOrderWithInventoryUpdate:", err);
+      error.value =
+        err instanceof Error
+          ? err.message
+          : "Failed to complete order with inventory update";
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  /**
    * Get all orders for a specific table
    */
   const fetchOrdersByTable = async (tableId: number): Promise<Order[]> => {
@@ -623,6 +675,7 @@ export const useOrderDataStore = defineStore("orderData", () => {
     cancelOrder,
     updateOrderFeedback,
     updateMealSales,
+    completeOrderWithInventoryUpdate,
     fetchOrdersByTable,
 
     // Utilities

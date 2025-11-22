@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useCashierDataStore } from "@/stores/cashierData";
+import { useOrderDataStore } from "@/stores/orderData";
 import {
   formatCurrency,
   formatDate,
@@ -15,11 +16,11 @@ import OrderStatistics from "@/pages/cashier/components/OrderStatistics.vue";
 import OrderDetailsDialog from "@/pages/cashier/dialogs/OrderDetailsDialog.vue";
 import ConfirmCompleteDialog from "@/pages/cashier/dialogs/ConfirmCompleteDialog.vue";
 
-
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
 const router = useRouter();
 const cashierStore = useCashierDataStore();
+const orderDataStore = useOrderDataStore();
 
 // State
 const detailsDialog = ref(false);
@@ -94,15 +95,20 @@ const completeOrder = async (): Promise<void> => {
 
   try {
     processingComplete.value = true;
-    
-    // Update order status to completed
-    await cashierStore.updateOrderStatus(orderToComplete.value.id, "completed");
-    
+
+    // Use the centralized method that handles both status update and inventory/sales update
+    await orderDataStore.completeOrderWithInventoryUpdate(
+      orderToComplete.value.id,
+      orderToComplete.value.table_id
+    );
+
     // Refresh the order history
     await cashierStore.fetchOrderHistory();
-    
 
-    
+    snackbarText.value = `Order #${orderToComplete.value.id} completed successfully`;
+    snackbarColor.value = "success";
+    snackbar.value = true;
+
     confirmDialog.value = false;
     orderToComplete.value = null;
   } catch (error) {
@@ -120,11 +126,19 @@ const completeOrderFromDialog = async (): Promise<void> => {
 
   try {
     processingComplete.value = true;
-    
-    await cashierStore.updateOrderStatus(selectedOrder.value.id, "completed");
+
+    // Use the centralized method that handles both status update and inventory/sales update
+    await orderDataStore.completeOrderWithInventoryUpdate(
+      selectedOrder.value.id,
+      selectedOrder.value.table_id
+    );
+
     await cashierStore.fetchOrderHistory();
-    
-    
+
+    snackbarText.value = `Order #${selectedOrder.value.id} completed successfully`;
+    snackbarColor.value = "success";
+    snackbar.value = true;
+
     detailsDialog.value = false;
   } catch (error) {
     console.error("Error completing order:", error);
@@ -156,10 +170,12 @@ const exportHistory = (): void => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `order-history-${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `order-history-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     link.click();
     window.URL.revokeObjectURL(url);
-    
+
     snackbarText.value = "History exported successfully";
     snackbarColor.value = "success";
     snackbar.value = true;
@@ -323,7 +339,9 @@ watch(
             <v-card>
               <v-card-title>
                 <div class="d-flex align-center justify-space-between">
-                  <span class="text-h6">Orders ({{ filteredOrders.length }})</span>
+                  <span class="text-h6"
+                    >Orders ({{ filteredOrders.length }})</span
+                  >
                 </div>
               </v-card-title>
 
@@ -348,7 +366,9 @@ watch(
                   color="primary"
                   size="48"
                 ></v-progress-circular>
-                <p class="text-body-2 text-grey mt-4">Loading order history...</p>
+                <p class="text-body-2 text-grey mt-4">
+                  Loading order history...
+                </p>
               </div>
 
               <!-- Orders Data Table -->
@@ -425,7 +445,7 @@ watch(
                     >
                       <v-icon>mdi-eye</v-icon>
                       <v-tooltip activator="parent" location="top">
-                        View Details
+                        <span style="color: white">View Details</span>
                       </v-tooltip>
                     </v-btn>
 
@@ -440,7 +460,7 @@ watch(
                     >
                       <v-icon>mdi-check-circle</v-icon>
                       <v-tooltip activator="parent" location="top">
-                        Mark as Completed
+                        <span style="color: white">Mark as Completed</span>
                       </v-tooltip>
                     </v-btn>
                   </div>
@@ -451,11 +471,13 @@ watch(
         </v-row>
 
         <!-- Order Details Dialog -->
-       <OrderDetailsDialog
+        <OrderDetailsDialog
           v-model="detailsDialog"
           :order="selectedOrder"
           :order-summary="orderSummary"
-          :can-complete="selectedOrder ? canCompleteOrder(selectedOrder) : false"
+          :can-complete="
+            selectedOrder ? canCompleteOrder(selectedOrder) : false
+          "
           :processing="processingComplete"
           @complete="completeOrderFromDialog"
         />
