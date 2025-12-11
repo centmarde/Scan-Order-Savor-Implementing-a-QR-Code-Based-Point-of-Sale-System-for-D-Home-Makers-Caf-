@@ -4,7 +4,7 @@ import { useDisplay } from 'vuetify'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthUserStore } from '@/stores/authUser'
 // Ensure this import path matches where you placed navigation.ts
-import { navigationConfig } from '@/utils/navigation' 
+import { navigationConfig } from '@/utils/navigation'
 
 // Vuetify display composable for responsive design
 const { smAndDown } = useDisplay()
@@ -31,8 +31,8 @@ const myAccountGroupExpanded = ref(true)
 // Control cashier group expansion - make it persistent
 const cashierGroupExpanded = ref(true)
 
-// Control kitchen group expansion - make it persistent
-const kitchenGroupExpanded = ref(true)
+// Control server group expansion - make it persistent
+const serverGroupExpanded = ref(true)
 
 // Watch for route changes and keep admin group expanded if we're on an admin route
 watch(
@@ -63,7 +63,7 @@ const getGroupExpansion = (groupTitle: string) => {
 	if (groupTitle === 'My Organization') return organizationGroupExpanded
 	if (groupTitle === 'My Account') return myAccountGroupExpanded
 	if (groupTitle === 'Cashier Operations') return cashierGroupExpanded
-	if (groupTitle === 'Kitchen Operations') return kitchenGroupExpanded
+	if (groupTitle === 'Server Operations') return serverGroupExpanded
 	return ref(true)
 }
 

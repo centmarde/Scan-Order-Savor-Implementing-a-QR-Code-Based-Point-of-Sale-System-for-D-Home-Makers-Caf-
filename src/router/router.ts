@@ -21,7 +21,7 @@ import WaitingPage from "@/pages/customer/WaitingPage.vue";
 import CashierOrdersView from "@/pages/cashier/CashierOrdersView.vue";
 import CashierHistoryView from "@/pages/cashier/CashierHistoryView.vue";
 
-// Kitchen imports
+// Server imports
 import KitchenOrdersView from "@/pages/kitchen/KitchenOrdersView.vue";
 
 // Sales imports
@@ -117,15 +117,15 @@ const routes = setupLayouts([
     },
   },
 
-  // Kitchen routes
+  // Server routes
   {
-    path: "/kitchen",
-    name: "KitchenOrders",
+    path: "/server",
+    name: "ServerOrders",
     component: KitchenOrdersView,
     meta: {
       requiresAuth: true,
-      allowedRoles: [1, 4], // Admin and Kitchen Staff
-      title: "Kitchen - Order Management",
+      allowedRoles: [1, 4], // Admin and Server Staff
+      title: "Server - Order Management",
     },
   },
 
