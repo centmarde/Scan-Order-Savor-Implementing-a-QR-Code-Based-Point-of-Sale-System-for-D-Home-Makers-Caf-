@@ -46,10 +46,10 @@ const displayedOrders = computed(() => {
 const getOrderItemsSummary = (order: OrderWithMeals): string => {
   const summary = kitchenStore.getOrderSummary(order);
   if (summary.items.length === 0) return "No items";
-  
+
   const itemCount = summary.itemCount;
   const firstItem = summary.items[0];
-  
+
   if (summary.items.length === 1) {
     return `${firstItem.meal.name} ×${firstItem.quantity}`;
   } else {
@@ -62,7 +62,7 @@ const getOrderWaitTime = (createdAt: string | undefined): string => {
   const now = new Date();
   const created = new Date(createdAt);
   const diffMinutes = Math.floor((now.getTime() - created.getTime()) / (1000 * 60));
-  
+
   if (diffMinutes < 1) return "Just now";
   if (diffMinutes === 1) return "1 min ago";
   return `${diffMinutes} mins ago`;
@@ -73,7 +73,7 @@ const getWaitTimeColor = (createdAt: string | undefined): string => {
   const now = new Date();
   const created = new Date(createdAt);
   const diffMinutes = Math.floor((now.getTime() - created.getTime()) / (1000 * 60));
-  
+
   if (diffMinutes < 10) return "success";
   if (diffMinutes < 20) return "warning";
   return "error";
@@ -92,13 +92,13 @@ const confirmComplete = (order: OrderWithMeals): void => {
 
 const handleComplete = async (): Promise<void> => {
   if (!orderToProcess.value?.id) return;
-  
+
   try {
     processing.value = true;
     loadingOrderId.value = orderToProcess.value.id;
-    
+
     const success = await kitchenStore.completeOrder(orderToProcess.value.id);
-    
+
     if (success) {
       snackbarText.value = `Order #${orderToProcess.value.id} marked as ready`;
       snackbarColor.value = "success";
@@ -149,7 +149,7 @@ onUnmounted(() => {
           <v-col cols="12">
             <div class="d-flex align-center justify-space-between mb-4">
               <div>
-                <h1 class="text-h4 font-weight-bold">Kitchen Orders</h1>
+                <h1 class="text-h4 font-weight-bold">Server</h1>
                 <p class="text-subtitle-1 text-grey">
                   Prepare and manage orders
                 </p>
@@ -521,7 +521,7 @@ onUnmounted(() => {
           <v-card>
             <v-card-title>Mark Order as Ready?</v-card-title>
             <v-card-text>
-              Are you sure Order #{{ orderToProcess?.id }} for Table {{ orderToProcess?.table_id }} 
+              Are you sure Order #{{ orderToProcess?.id }} for Table {{ orderToProcess?.table_id }}
               is ready to be served?
             </v-card-text>
             <v-card-actions>

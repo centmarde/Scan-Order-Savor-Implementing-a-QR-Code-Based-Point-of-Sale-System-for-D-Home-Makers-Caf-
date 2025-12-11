@@ -78,15 +78,15 @@ export const navigationConfig: NavigationGroup[] = [
     ],
   },
   {
-    title: "Kitchen Operations",
+    title: "Server Operations",
     icon: "mdi-chef-hat",
-    permission: "kitchen.access",
+    permission: "server.access",
     children: [
       {
-        title: "Kitchen Orders",
+        title: "Server Orders",
         icon: "mdi-silverware-fork-knife",
-        route: "/kitchen",
-        permission: "kitchen.orders.view",
+        route: "/server",
+        permission: "server.orders.view",
       },
     ],
   },
@@ -193,10 +193,10 @@ export const getNavigationByRole = (roleId: number): NavigationGroup[] => {
       "cashier.orders.history",
     ],
     4: [
-      // Kitchen Staff - Kitchen operations only
+      // Server Staff - Server operations only
       "admin.dashboard.view",
-      "kitchen.access",
-      "kitchen.orders.view",
+      "server.access",
+      "server.orders.view",
     ],
   };
 
@@ -211,10 +211,10 @@ export const getCashierNavigation = (): NavigationGroup[] => {
   );
 };
 
-// Helper function to get kitchen-specific navigation
-export const getKitchenNavigation = (): NavigationGroup[] => {
+// Helper function to get server-specific navigation
+export const getServerNavigation = (): NavigationGroup[] => {
   return navigationConfig.filter(
-    (group) => group.title === "Kitchen Operations"
+    (group) => group.title === "Server Operations"
   );
 };
 
@@ -269,8 +269,8 @@ export const canAccessRoute = (route: string, roleId: number): boolean => {
       "cashier.access",
       "cashier.orders.view",
       "cashier.orders.history",
-      "kitchen.access",
-      "kitchen.orders.view",
+      "server.access",
+      "server.orders.view",
     ],
     2: ["admin.dashboard.view"],
     3: [
@@ -281,8 +281,8 @@ export const canAccessRoute = (route: string, roleId: number): boolean => {
     ],
     4: [
       "admin.dashboard.view",
-      "kitchen.access",
-      "kitchen.orders.view",
+      "server.access",
+      "server.orders.view",
     ],
   };
 
@@ -305,8 +305,8 @@ export const getDefaultLandingPage = (roleId: number): string => {
       return "/account/home";
     case 3: // Cashier
       return "/cashier";
-    case 4: // Kitchen Staff
-      return "/kitchen";
+    case 4: // Server Staff
+      return "/server";
     case 5: // Sales
       return "/sales";
     default:
