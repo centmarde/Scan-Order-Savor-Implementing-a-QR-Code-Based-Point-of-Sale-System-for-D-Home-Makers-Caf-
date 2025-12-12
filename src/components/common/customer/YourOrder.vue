@@ -5,6 +5,8 @@ import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
 import { useReviewOrder } from "@/composables/useReviewOrder";
 import { useTableContext } from "@/pages/admin/composables/useTableContext";
+import { useMenuDataStore } from "@/stores/menuData";
+import { useToast } from "vue-toastification";
 import StatusCard from "./StatusCard.vue";
 import type { MenuItem } from "@/stores/menuData";
 
@@ -21,6 +23,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Router and composables
 const router = useRouter();
+const menuDataStore = useMenuDataStore();
+const toast = useToast();
 
 // Theme setup
 const { initializeTheme, primaryColor, secondaryColor } = useTheme();
@@ -58,6 +62,15 @@ const emit = defineEmits<{
 const groupedCartItems = computed(() => composableGroupedCartItems.value);
 const cartTotal = computed(() => composableCartTotal.value);
 const itemCount = computed(() => composableItemCount.value);
+
+// Check if item has reached max quantity
+const isMaxQuantityReached = (itemId: number): boolean => {
+  const menuItem = menuDataStore.getItemById(itemId);
+  if (!menuItem) return true;
+
+  const currentQuantityInCart = cartItems.value.filter(item => item.id === itemId).length;
+  return currentQuantityInCart >= menuItem.quantity;
+};
 
 // Cart update listener function
 const handleCartUpdate = () => {
@@ -131,6 +144,22 @@ const removeItem = (itemId: number) => {
 };
 
 const addItem = (itemId: number) => {
+  // Get the menu item to check available quantity
+  const menuItem = menuDataStore.getItemById(itemId);
+  if (!menuItem) {
+    toast.error('Item not found');
+    return;
+  }
+
+  // Count current quantity in cart
+  const currentQuantityInCart = cartItems.value.filter(item => item.id === itemId).length;
+
+  // Check if adding one more would exceed available quantity
+  if (currentQuantityInCart >= menuItem.quantity) {
+    toast.warning(`Maximum quantity reached! Only ${menuItem.quantity} available in stock.`);
+    return;
+  }
+
   // Find the item from existing cart items to add another instance
   const existingItem = cartItems.value.find(item => item.id === itemId);
   if (existingItem) {
@@ -293,7 +322,8 @@ const handleStatusCardClick = (tableId: number | string | undefined) => {
                     icon
                     size="small"
                     variant="text"
-                    :style="{ color: primaryColor }"
+                    :disabled="isMaxQuantityReached(groupedItem.item.id)"
+                    :style="{ color: isMaxQuantityReached(groupedItem.item.id) ? '#9e9e9e' : primaryColor }"
                   >
                     <v-icon size="18">mdi-plus-circle</v-icon>
                   </v-btn>

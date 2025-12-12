@@ -27,6 +27,18 @@ const bestSellers = computed(() => {
     .slice(0, 3);
 });
 
+// Check if item has reached max quantity in cart
+const isMaxQuantityInCart = (itemId: number, maxQuantity: number): boolean => {
+  const cartItems = JSON.parse(sessionStorage.getItem('cartItems') || '[]');
+  const currentQuantityInCart = cartItems.filter((item: MenuItem) => item.id === itemId).length;
+  return currentQuantityInCart >= maxQuantity;
+};
+
+// Check if item can be added to cart
+const canAddToCart = (item: MenuItem): boolean => {
+  return item.quantity > 0 && !isMaxQuantityInCart(item.id, item.quantity);
+};
+
 // Methods
 const addToCart = (item: MenuItem) => {
   emit("addToCart", item);
@@ -51,11 +63,11 @@ const addToCart = (item: MenuItem) => {
         <v-card
           elevation="1"
           class="mb-3"
-          @click="item.quantity > 0 ? addToCart(item) : undefined"
+          @click="canAddToCart(item) ? addToCart(item) : undefined"
           rounded="xl"
-          :hover="item.quantity > 0"
-          :disabled="item.quantity === 0"
-          :class="{ 'opacity-60': item.quantity === 0 }"
+          :hover="canAddToCart(item)"
+          :disabled="!canAddToCart(item)"
+          :class="{ 'opacity-60': !canAddToCart(item) }"
         >
           <v-card-text class="pa-3">
             <div class="d-flex">
@@ -75,15 +87,15 @@ const addToCart = (item: MenuItem) => {
                   <v-chip
                     size="x-small"
                     variant="flat"
-                    :class="item.quantity === 0 ? 'text-white' : item.quantity <= 5 ? 'text-white' : 'text-grey-darken-1'"
+                    :class="item.quantity === 0 || isMaxQuantityInCart(item.id, item.quantity) ? 'text-white' : item.quantity <= 5 ? 'text-white' : 'text-grey-darken-1'"
                     :style="{
-                      backgroundColor: item.quantity === 0 ? '#f44336' : item.quantity <= 5 ? '#ff9800' : '#e0e0e0'
+                      backgroundColor: item.quantity === 0 ? '#f44336' : isMaxQuantityInCart(item.id, item.quantity) ? '#2196f3' : item.quantity <= 5 ? '#ff9800' : '#e0e0e0'
                     }"
                   >
                     <v-icon size="10" class="mr-1">
-                      {{ item.quantity === 0 ? 'mdi-close-circle' : 'mdi-package-variant' }}
+                      {{ item.quantity === 0 ? 'mdi-close-circle' : isMaxQuantityInCart(item.id, item.quantity) ? 'mdi-check-circle' : 'mdi-package-variant' }}
                     </v-icon>
-                    {{ item.quantity === 0 ? 'Out of Stock' : `${item.quantity} available` }}
+                    {{ item.quantity === 0 ? 'Out of Stock' : isMaxQuantityInCart(item.id, item.quantity) ? 'Max in Cart' : `${item.quantity} available` }}
                   </v-chip>
                 </div>
 
@@ -116,7 +128,7 @@ const addToCart = (item: MenuItem) => {
                   </v-chip>
                 </div>
                 <v-btn
-                  v-if="item.quantity > 0"
+                  v-if="canAddToCart(item)"
                   @click.stop="addToCart(item)"
                   icon
                   size="small"
