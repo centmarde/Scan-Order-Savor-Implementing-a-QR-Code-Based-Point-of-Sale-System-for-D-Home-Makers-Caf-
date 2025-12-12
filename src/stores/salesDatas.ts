@@ -56,15 +56,15 @@ export const useSalesDataStore = defineStore("salesData", () => {
     revenueGrowth: 0,
     ordersGrowth: 0,
   });
-  
+
   const topSellingItems = ref<TopSellingItem[]>([]);
   const categorySales = ref<CategorySales[]>([]);
   const salesTrend = ref<SalesTrendPoint[]>([]);
   const recentOrders = ref<any[]>([]);
-  
+
   const loading = ref(false);
   const error = ref<string | null>(null);
-  
+
   const currentPeriod = ref<string>("today");
   const startDate = ref<string>("");
   const endDate = ref<string>("");
@@ -144,6 +144,15 @@ export const useSalesDataStore = defineStore("salesData", () => {
       const end = new Date(to);
       end.setHours(23, 59, 59, 999);
 
+      console.log('Store: fetchSalesDataByRange called with:', {
+        from,
+        to,
+        start,
+        end,
+        startISO: start.toISOString(),
+        endISO: end.toISOString()
+      });
+
       startDate.value = start.toISOString();
       endDate.value = end.toISOString();
 
@@ -154,6 +163,8 @@ export const useSalesDataStore = defineStore("salesData", () => {
         fetchSalesTrend(start, end, "custom"),
         fetchRecentOrders(20),
       ]);
+
+      console.log('Store: Data fetched successfully, salesSummary:', salesSummary.value);
 
     } catch (err) {
       console.error("Error fetching sales data by range:", err);
@@ -169,6 +180,11 @@ export const useSalesDataStore = defineStore("salesData", () => {
    */
   const fetchSalesSummary = async (start: Date, end: Date): Promise<void> => {
     try {
+      console.log('fetchSalesSummary called with:', {
+        start: start.toISOString(),
+        end: end.toISOString()
+      });
+
       // Fetch current period orders
       const { data: currentOrders, error: currentError } = await supabase
         .from("orders")
@@ -176,6 +192,12 @@ export const useSalesDataStore = defineStore("salesData", () => {
         .in("status", ["completed", "ready"])
         .gte("created_at", start.toISOString())
         .lte("created_at", end.toISOString());
+
+      console.log('Database query result:', {
+        currentOrders: currentOrders,
+        currentError: currentError,
+        ordersCount: currentOrders?.length || 0
+      });
 
       if (currentError) throw currentError;
 
@@ -202,13 +224,13 @@ export const useSalesDataStore = defineStore("salesData", () => {
       // Fetch total items sold
       const orderIds = currentOrders?.map(o => o.id) || [];
       let totalItemsSold = 0;
-      
+
       if (orderIds.length > 0) {
         const { data: items } = await supabase
           .from("order_items")
           .select("quantity")
           .in("order_id", orderIds);
-        
+
         totalItemsSold = items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
       }
 
@@ -217,8 +239,8 @@ export const useSalesDataStore = defineStore("salesData", () => {
       const previousOrderCount = previousOrders?.length || 0;
 
       // Calculate growth percentages
-      const revenueGrowth = previousRevenue > 0 
-        ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 
+      const revenueGrowth = previousRevenue > 0
+        ? ((totalRevenue - previousRevenue) / previousRevenue) * 100
         : 0;
       const ordersGrowth = previousOrderCount > 0
         ? ((totalOrders - previousOrderCount) / previousOrderCount) * 100
@@ -386,7 +408,7 @@ export const useSalesDataStore = defineStore("salesData", () => {
 
       orders?.forEach((order) => {
         const date = new Date(order.created_at).toISOString().split("T")[0];
-        
+
         if (!trendMap.has(date)) {
           trendMap.set(date, {
             date,

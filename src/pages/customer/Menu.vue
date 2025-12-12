@@ -27,75 +27,17 @@ const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
 const { menuItems, loading, error, fetchMenuItems, clearError, hasItems } =
   useMenu();
 
-// Local cart state (could be moved to separate cart store later)
-const cartItems = ref<MenuItem[]>([]);
-
-// Computed properties
-const cartTotal = computed(() => {
-  return cartItems.value.reduce(
-    (total: number, item: MenuItem) => total + item.price,
-    0
-  );
-});
-
 const addToCart = (item: MenuItem) => {
-  cartItems.value.push({ ...item });
-  // You could add a toast notification here
-};
+  // Get existing cart from storage or create empty array
+  const existingCart = JSON.parse(sessionStorage.getItem('cartItems') || '[]');
+  existingCart.push({ ...item });
 
-const addItemToCartById = (itemId: number) => {
-  // Find the item in menuItems
-  const item = menuItems.value.find((i) => i.id === itemId);
-  if (item) {
-    cartItems.value.push({ ...item });
-  }
-};
+  // Save to both storage methods for persistence
+  sessionStorage.setItem('cartItems', JSON.stringify(existingCart));
+  localStorage.setItem('cartItems', JSON.stringify(existingCart));
 
-const removeFromCart = (itemId: number) => {
-  // Find the first occurrence of the item with this ID and remove it
-  const index = cartItems.value.findIndex((item) => item.id === itemId);
-  if (index !== -1) {
-    cartItems.value.splice(index, 1);
-  }
-};
-
-const viewCart = () => {
-  // Navigate to cart page (you'll need to create this)
-  router.push("/customer/cart");
-};
-
-const cancelOrder = () => {
-  // Clear all cart items
-  cartItems.value = [];
-};
-
-const reviewOrder = () => {
-  console.log("Navigating to review order with cart items:", cartItems.value);
-
-  // Store cart data in sessionStorage as backup
-  sessionStorage.setItem(
-    "reviewOrderCartItems",
-    JSON.stringify(cartItems.value)
-  );
-
-  // Also store in a more persistent way
-  sessionStorage.setItem("cartItems", JSON.stringify(cartItems.value));
-
-  // Navigate to review order page with cart data and table ID
-  const queryParams: Record<string, string> = {
-    hasCartItems: cartItems.value.length > 0 ? "true" : "false",
-    itemCount: cartItems.value.length.toString(),
-  };
-
-  // Include table ID if available
-  if (tableStore.currentTableId) {
-    queryParams.table = tableStore.currentTableId.toString();
-  }
-
-  router.push({
-    path: "/customer/review-order",
-    query: queryParams,
-  });
+  // Trigger YourOrder component to refresh by dispatching a custom event
+  window.dispatchEvent(new CustomEvent('cartUpdated'));
 };
 
 // Lifecycle
@@ -220,14 +162,7 @@ onMounted(async () => {
       </div>
 
       <!-- Your Order Section -->
-      <YourOrder
-        :cart-items="cartItems"
-        @view-cart="viewCart"
-        @cancel-order="cancelOrder"
-        @review-order="reviewOrder"
-        @remove-item="removeFromCart"
-        @add-item="addItemToCartById"
-      />
+      <YourOrder />
     </v-main>
   </v-app>
 </template>

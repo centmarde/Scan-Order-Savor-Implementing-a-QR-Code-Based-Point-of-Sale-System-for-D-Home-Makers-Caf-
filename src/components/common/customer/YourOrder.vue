@@ -1,69 +1,148 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { useRouter } from "vue-router";
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
+import { useReviewOrder } from "@/composables/useReviewOrder";
+import { useTableContext } from "@/pages/admin/composables/useTableContext";
+import StatusCard from "./StatusCard.vue";
 import type { MenuItem } from "@/stores/menuData";
 
 // Props
 interface Props {
-  cartItems: MenuItem[];
+  showStatusCard?: boolean; // Whether to show the status card
+  orderStatus?: string; // Order status for the status card
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  showStatusCard: false,
+  orderStatus: "pending",
+});
 
-// Emits
+// Router and composables
+const router = useRouter();
 
+// Theme setup
+const { initializeTheme, primaryColor, secondaryColor } = useTheme();
+
+// Table context - CRITICAL for getting the actual table ID
+const { tableId: contextTableId, getCurrentTableId } = useTableContext();
+
+// Review Order composable
+const {
+  loading,
+  loadingOrders,
+  cartItems,
+  ordersWithMeals,
+  tableId,
+  displayItems,
+  displayTotal,
+  itemCount: composableItemCount,
+  groupedCartItems: composableGroupedCartItems,
+  cartTotal: composableCartTotal,
+  initializeTableId,
+  loadCartData,
+  fetchOrdersForTable,
+  createOrder,
+} = useReviewOrder();
+
+// Local reactive data
+const orderStatus = ref(props.orderStatus);
+
+// Emits (keeping only statusCardClick for StatusCard functionality)
 const emit = defineEmits<{
-  viewCart: [];
-  cancelOrder: [];
-  reviewOrder: [];
-  removeItem: [itemId: number];
-  addItem: [itemId: number];
+  statusCardClick: [tableId: number | string | undefined]; // When status card is clicked
 }>();
 
-// Theme colors
-const { primaryColor, secondaryColor } = useTheme();
+// Computed properties - use the composable data
+const groupedCartItems = computed(() => composableGroupedCartItems.value);
+const cartTotal = computed(() => composableCartTotal.value);
+const itemCount = computed(() => composableItemCount.value);
 
-// Computed properties
-const groupedCartItems = computed(() => {
-  const grouped: { [key: number]: { item: MenuItem; quantity: number } } = {};
+// Cart update listener function
+const handleCartUpdate = () => {
+  loadCartData();
+};
 
-  props.cartItems.forEach((item) => {
-    if (grouped[item.id]) {
-      grouped[item.id].quantity += 1;
-    } else {
-      grouped[item.id] = { item, quantity: 1 };
-    }
-  });
+// Periodic check interval
+let cartCheckInterval: ReturnType<typeof setInterval>;
 
-  return Object.values(grouped);
+// Initialize component on mount
+onMounted(async () => {
+  await initializeTheme();
+
+  // Initialize table ID and load cart data
+  initializeTableId();
+  loadCartData();
+
+  // Fetch existing orders for this table
+  await fetchOrdersForTable();
+
+  // Listen for cart updates from Menu.vue
+  window.addEventListener('cartUpdated', handleCartUpdate);
+
+  // Set up periodic check as fallback (every 1 second)
+  cartCheckInterval = setInterval(() => {
+    loadCartData();
+  }, 1000);
 });
 
-const cartTotal = computed(() => {
-  return props.cartItems.reduce(
-    (total: number, item: MenuItem) => total + item.price,
-    0
-  );
+// Cleanup listener on unmount
+onUnmounted(() => {
+  window.removeEventListener('cartUpdated', handleCartUpdate);
+  if (cartCheckInterval) {
+    clearInterval(cartCheckInterval);
+  }
 });
 
-const itemCount = computed(() => props.cartItems.length);
+// Watch for changes in order status prop
+watch(() => props.orderStatus, (newStatus) => {
+  orderStatus.value = newStatus;
+});
 
 // Methods
-
 const cancelOrder = () => {
-  emit("cancelOrder");
+  // Clear cart items and navigate back to menu
+  cartItems.value = [];
+  // Save empty cart to persistence
+  sessionStorage.removeItem('cartItems');
+  localStorage.removeItem('cartItems');
+  router.push('/customer/menu');
 };
 
 const reviewOrder = () => {
-  emit("reviewOrder");
+  // Navigate to review order page
+  const actualTableId = getCurrentTableId();
+  router.push({
+    path: "/customer/review-order",
+    query: { table: actualTableId.toString() },
+  });
 };
 
 const removeItem = (itemId: number) => {
-  emit("removeItem", itemId);
+  // Find and remove one instance of the item
+  const itemIndex = cartItems.value.findIndex(item => item.id === itemId);
+  if (itemIndex !== -1) {
+    cartItems.value.splice(itemIndex, 1);
+    // Persist changes
+    sessionStorage.setItem('cartItems', JSON.stringify(cartItems.value));
+    localStorage.setItem('cartItems', JSON.stringify(cartItems.value));
+  }
 };
 
 const addItem = (itemId: number) => {
-  emit("addItem", itemId);
+  // Find the item from existing cart items to add another instance
+  const existingItem = cartItems.value.find(item => item.id === itemId);
+  if (existingItem) {
+    cartItems.value.push({ ...existingItem });
+    // Persist changes
+    sessionStorage.setItem('cartItems', JSON.stringify(cartItems.value));
+    localStorage.setItem('cartItems', JSON.stringify(cartItems.value));
+  }
+};
+
+const handleStatusCardClick = (tableId: number | string | undefined) => {
+  emit("statusCardClick", tableId);
 };
 </script>
 
@@ -73,6 +152,15 @@ const addItem = (itemId: number) => {
     class="position-sticky pb-4"
     style="bottom: 0; z-index: 10; background: #f5f3ef"
   >
+    <!-- Optional Status Card -->
+    <div v-if="showStatusCard" class="mx-4 mb-4">
+      <StatusCard
+        :order-status="orderStatus"
+        :cart-items="cartItems"
+        :table-id="contextTableId"
+        @click="handleStatusCardClick"
+      />
+    </div>
     <!-- Your Order Header -->
     <v-card
       class="mx-4 mb-4"

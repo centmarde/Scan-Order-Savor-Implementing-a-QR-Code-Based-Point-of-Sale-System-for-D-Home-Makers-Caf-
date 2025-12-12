@@ -20,19 +20,19 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
   const selectedOrder = ref<OrderWithMeals | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
-  
+
   // Real-time subscription
   let ordersSubscription: any = null;
 
   // Getters
   const preparingOrdersCount = computed(() => preparingOrders.value.length);
   const readyOrdersCount = computed(() => readyOrders.value.length);
-  
+
   const todayCompletedCount = computed(() => {
     // Count orders that were completed today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     return readyOrders.value.filter((order) => {
       const orderDate = new Date(order.created_at || "");
       return orderDate >= today;
@@ -43,14 +43,14 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
     // Calculate average prep time from completed orders
     // This is a placeholder - you can enhance this by tracking actual prep times
     if (readyOrders.value.length === 0) return 0;
-    
+
     const totalMinutes = readyOrders.value.reduce((sum, order) => {
       const created = new Date(order.created_at || "");
       const now = new Date();
       const minutes = Math.floor((now.getTime() - created.getTime()) / (1000 * 60));
       return sum + minutes;
     }, 0);
-    
+
     return Math.round(totalMinutes / readyOrders.value.length);
   });
 
@@ -67,11 +67,11 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
       loading.value = true;
       error.value = null;
 
-      // Fetch preparing orders
+      // Fetch preparing orders (including pending orders that need to be prepared)
       const { data: preparingData, error: preparingError } = await supabase
         .from("orders")
         .select("*")
-        .eq("status", "preparing")
+        .in("status", ["pending", "preparing"])
         .order("created_at", { ascending: true });
 
       if (preparingError) throw preparingError;
@@ -130,7 +130,7 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
    * Get order details
    */
   const getOrderDetails = (orderId: number): OrderWithMeals | null => {
-    const order = 
+    const order =
       preparingOrders.value.find((o) => o.id === orderId) ||
       readyOrders.value.find((o) => o.id === orderId);
 
@@ -183,6 +183,86 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
   };
 
   /**
+   * Delete an order and its related order items
+   */
+  const deleteOrder = async (orderId: number): Promise<boolean> => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      console.log(`Deleting order ${orderId} and its items`);
+
+      // Check if order exists first
+      const { data: orderExists, error: checkError } = await supabase
+        .from("orders")
+        .select("id, status, table_id")
+        .eq("id", orderId)
+        .single();
+
+      if (checkError) {
+        if (checkError.code === 'PGRST116') {
+          throw new Error(`Order ${orderId} not found`);
+        }
+        throw new Error(`Error checking order: ${checkError.message}`);
+      }
+
+      if (!orderExists) {
+        throw new Error(`Order ${orderId} not found`);
+      }
+
+      console.log(`Order ${orderId} found, status: ${orderExists.status}, table: ${orderExists.table_id}`);
+
+      // First delete order items (foreign key constraint)
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .delete()
+        .eq("order_id", orderId);
+
+      if (itemsError) {
+        console.error("Error deleting order items:", itemsError);
+        throw new Error(`Failed to delete order items: ${itemsError.message}`);
+      }
+
+      console.log(`Order items for order ${orderId} deleted successfully`);
+
+      // Then delete the order
+      const { error: orderError } = await supabase
+        .from("orders")
+        .delete()
+        .eq("id", orderId);
+
+      if (orderError) {
+        console.error("Error deleting order:", orderError);
+        throw new Error(`Failed to delete order: ${orderError.message}`);
+      }
+
+      console.log(`Order ${orderId} deleted successfully`);
+
+      // Remove order from local state
+      const preparingIndex = preparingOrders.value.findIndex(o => o.id === orderId);
+      if (preparingIndex !== -1) {
+        preparingOrders.value.splice(preparingIndex, 1);
+        console.log(`Removed order ${orderId} from preparing orders`);
+      }
+
+      const readyIndex = readyOrders.value.findIndex(o => o.id === orderId);
+      if (readyIndex !== -1) {
+        readyOrders.value.splice(readyIndex, 1);
+        console.log(`Removed order ${orderId} from ready orders`);
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Error deleting order:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete order";
+      error.value = errorMessage;
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  /**
    * Mark multiple orders as ready at once
    */
   const completeMultipleOrders = async (orderIds: number[]): Promise<boolean> => {
@@ -198,10 +278,10 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
       if (updateError) throw updateError;
 
       // Move orders from preparing to ready
-      const completedOrders = preparingOrders.value.filter((o) => 
+      const completedOrders = preparingOrders.value.filter((o) =>
         orderIds.includes(o.id!)
       );
-      
+
       completedOrders.forEach((order) => {
         order.status = "ready";
       });
@@ -209,7 +289,7 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
       preparingOrders.value = preparingOrders.value.filter(
         (o) => !orderIds.includes(o.id!)
       );
-      
+
       readyOrders.value.push(...completedOrders);
 
       console.log(`${orderIds.length} orders marked as ready`);
@@ -260,11 +340,11 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
           event: "*",
           schema: "public",
           table: "orders",
-          filter: "status=in.(preparing,ready)",
+          filter: "status=in.(pending,preparing,ready)",
         },
         async (payload) => {
           console.log("Kitchen order change detected:", payload);
-          
+
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
             // Refresh kitchen orders on insert or update
             await fetchKitchenOrders();
@@ -314,6 +394,7 @@ export const useKitchenDataStore = defineStore("kitchenData", () => {
     fetchKitchenOrders,
     getOrderDetails,
     completeOrder,
+    deleteOrder,
     completeMultipleOrders,
     getOrderSummary,
     subscribeToOrders,

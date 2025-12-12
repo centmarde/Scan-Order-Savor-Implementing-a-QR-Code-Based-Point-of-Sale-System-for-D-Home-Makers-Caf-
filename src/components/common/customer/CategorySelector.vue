@@ -146,15 +146,20 @@ const addToCart = (item: MenuItem) => {
                 {{ item.description }}
               </p>
 
-              <!-- Stock indicator -->
-              <div v-if="item.quantity > 0 && item.quantity <= 5" class="mb-2">
+              <!-- Quantity display for all items -->
+              <div class="mb-2">
                 <v-chip
                   size="x-small"
                   variant="flat"
-                  class="text-white"
-                  :style="{ backgroundColor: primaryColor }"
+                  :class="item.quantity === 0 ? 'text-white' : item.quantity <= 5 ? 'text-white' : 'text-grey-darken-1'"
+                  :style="{
+                    backgroundColor: item.quantity === 0 ? '#f44336' : item.quantity <= 5 ? '#ff9800' : '#e0e0e0'
+                  }"
                 >
-                  Only {{ item.quantity }} left
+                  <v-icon size="10" class="mr-1">
+                    {{ item.quantity === 0 ? 'mdi-close-circle' : 'mdi-package-variant' }}
+                  </v-icon>
+                  {{ item.quantity === 0 ? 'Out of Stock' : item.quantity <= 5 ? `Only ${item.quantity} left` : `${item.quantity} available` }}
                 </v-chip>
               </div>
 

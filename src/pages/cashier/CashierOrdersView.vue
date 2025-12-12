@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useCashierDataStore } from "@/stores/cashierData";
+import { useOrderDataStore } from "@/stores/orderData";
 import { formatCurrency, formatDate, getStatusColor, getStatusText, getImageUrl } from "@/utils/helpers";
 import type { OrderWithMeals } from "@/stores/orderData";
 import CashierStatistics from "@/pages/cashier/components/CashierStatistics.vue";
@@ -13,6 +14,7 @@ import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 
 const router = useRouter();
 const cashierStore = useCashierDataStore();
+const orderDataStore = useOrderDataStore();
 
 // State
 const detailsDialog = ref(false);
@@ -48,10 +50,10 @@ const orderSummary = computed(() => {
 const getOrderItemsSummary = (order: OrderWithMeals): string => {
   const summary = cashierStore.getOrderSummary(order);
   if (summary.items.length === 0) return "No items";
-  
+
   const itemCount = summary.itemCount;
   const firstItem = summary.items[0];
-  
+
   if (summary.items.length === 1) {
     return `${firstItem.meal.name} ×${firstItem.quantity}`;
   } else {
@@ -79,13 +81,13 @@ const confirmReject = (order: OrderWithMeals): void => {
 
 const handleApprove = async (): Promise<void> => {
   if (!orderToProcess.value?.id) return;
-  
+
   try {
     processing.value = true;
     loadingOrderId.value = orderToProcess.value.id;
-    
+
     const success = await cashierStore.approveOrder(orderToProcess.value.id);
-    
+
     if (success) {
       snackbarText.value = `Order #${orderToProcess.value.id} approved and sent to kitchen`;
       snackbarColor.value = "success";
@@ -105,16 +107,16 @@ const handleApprove = async (): Promise<void> => {
 
 const handleReject = async (): Promise<void> => {
   if (!orderToProcess.value?.id) return;
-  
+
   try {
     processing.value = true;
     loadingOrderId.value = orderToProcess.value.id;
-    
+
     const success = await cashierStore.rejectOrder(
       orderToProcess.value.id,
       rejectReason.value
     );
-    
+
     if (success) {
       snackbarText.value = `Order #${orderToProcess.value.id} rejected`;
       snackbarColor.value = "warning";
@@ -133,9 +135,73 @@ const handleReject = async (): Promise<void> => {
   }
 };
 
+const cleanupDuplicateOrders = async (): Promise<void> => {
+  try {
+    const orders = pendingOrders.value;
+    const ordersByTable: { [key: number]: OrderWithMeals[] } = {};
+
+    // Group orders by table_id
+    orders.forEach(order => {
+      if (!ordersByTable[order.table_id]) {
+        ordersByTable[order.table_id] = [];
+      }
+      ordersByTable[order.table_id].push(order);
+    });
+
+    // Find and delete duplicates (keep most recent)
+    const ordersToDelete: number[] = [];
+
+    Object.entries(ordersByTable).forEach(([tableId, tableOrders]) => {
+      if (tableOrders.length > 1) {
+        // Sort by created_at descending (most recent first)
+        const sortedOrders = [...tableOrders].sort((a, b) => {
+          return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
+        });
+
+        // Mark all but the first (most recent) for deletion
+        const duplicatesToDelete = sortedOrders.slice(1);
+        duplicatesToDelete.forEach(order => {
+          if (order.id) {
+            ordersToDelete.push(order.id);
+            console.log(`Marking duplicate order ${order.id} for table ${tableId} for deletion`);
+          }
+        });
+      }
+    });
+
+    // Delete duplicate orders
+    if (ordersToDelete.length > 0) {
+      for (const orderId of ordersToDelete) {
+        try {
+          // Use cancelOrder from orderDataStore to mark as cancelled and remove from pending
+          await orderDataStore.cancelOrder(orderId);
+          console.log(`Successfully deleted duplicate order ${orderId}`);
+        } catch (error) {
+          console.error(`Failed to delete duplicate order ${orderId}:`, error);
+        }
+      }
+
+// Reload the component to refresh the orders list
+      await cashierStore.fetchPendingOrders();
+
+      // Show notification if duplicates were cleaned up
+      snackbarText.value = `Cleaned up ${ordersToDelete.length} duplicate order(s)`;
+      snackbarColor.value = "info";
+      snackbar.value = true;
+    }
+  } catch (error) {
+    console.error("Error cleaning up duplicate orders:", error);
+    snackbarText.value = "Failed to clean up duplicate orders";
+    snackbarColor.value = "error";
+    snackbar.value = true;
+  }
+};
+
 const refreshOrders = async (): Promise<void> => {
   try {
     await cashierStore.fetchPendingOrders();
+    // Auto-cleanup duplicates after fetching
+    await cleanupDuplicateOrders();
     // snackbarText.value = "Orders refreshed";
     // snackbarColor.value = "success";
     // snackbar.value = true;
@@ -153,6 +219,8 @@ const navigateToHistory = (): void => {
 // Lifecycle
 onMounted(async () => {
   await cashierStore.fetchPendingOrders();
+  // Auto-cleanup duplicates on initial load
+  await cleanupDuplicateOrders();
   cashierStore.subscribeToOrders();
 });
 

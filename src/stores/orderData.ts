@@ -90,7 +90,7 @@ export const useOrderDataStore = defineStore("orderData", () => {
   };
 
   /**
-   * Create a new order with items
+   * Create a new order with items or update existing pending order for the table
    */
   const createOrderWithItems = async (
     cartItems: MenuItem[],
@@ -113,7 +113,7 @@ export const useOrderDataStore = defineStore("orderData", () => {
         }
       });
 
-      // Validate inventory availability before creating order
+      // Validate inventory availability before creating/updating order
       for (const [mealId, { item, quantity }] of Object.entries(groupedItems)) {
         if (item.quantity !== undefined && item.quantity < quantity) {
           throw new Error(
@@ -128,24 +128,75 @@ export const useOrderDataStore = defineStore("orderData", () => {
         0
       );
 
-      // Create the main order
-      const orderData: CreateOrderWithItemsData = {
-        status: "pending",
-        total_amount: totalAmount,
-        table_id: tableId,
-      };
-
-      const { data: orderResult, error: orderError } = await supabase
+      // Check for existing pending order for this table
+      const { data: existingOrder, error: checkError } = await supabase
         .from("orders")
-        .insert(orderData)
-        .select()
-        .single();
+        .select("*")
+        .eq("table_id", tableId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (orderError) {
-        throw new Error(`Failed to create order: ${orderError.message}`);
+      if (checkError) {
+        throw new Error(`Failed to check existing orders: ${checkError.message}`);
       }
 
-      // Create order items
+      let orderResult: Order;
+
+      if (existingOrder) {
+        // Update existing pending order
+        console.log(`Updating existing pending order ${existingOrder.id} for table ${tableId}`);
+
+        // Delete existing order items for this order
+        const { error: deleteItemsError } = await supabase
+          .from("order_items")
+          .delete()
+          .eq("order_id", existingOrder.id);
+
+        if (deleteItemsError) {
+          throw new Error(`Failed to delete existing order items: ${deleteItemsError.message}`);
+        }
+
+        // Update the order with new total
+        const { data: updatedOrder, error: updateError } = await supabase
+          .from("orders")
+          .update({
+            total_amount: totalAmount,
+            created_at: new Date().toISOString() // Update timestamp to reflect new order time
+          })
+          .eq("id", existingOrder.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          throw new Error(`Failed to update order: ${updateError.message}`);
+        }
+
+        orderResult = updatedOrder;
+      } else {
+        // Create new order
+        console.log(`Creating new order for table ${tableId}`);
+        const orderData: CreateOrderWithItemsData = {
+          status: "pending",
+          total_amount: totalAmount,
+          table_id: tableId,
+        };
+
+        const { data: newOrder, error: orderError } = await supabase
+          .from("orders")
+          .insert(orderData)
+          .select()
+          .single();
+
+        if (orderError) {
+          throw new Error(`Failed to create order: ${orderError.message}`);
+        }
+
+        orderResult = newOrder;
+      }
+
+      // Create new order items
       const orderItemsData: Omit<OrderItemDB, "id" | "created_at">[] =
         Object.values(groupedItems).map(({ item, quantity }) => ({
           order_id: orderResult.id!,
@@ -158,23 +209,33 @@ export const useOrderDataStore = defineStore("orderData", () => {
         .insert(orderItemsData);
 
       if (itemsError) {
-        // Clean up the order if order items failed
-        await supabase.from("orders").delete().eq("id", orderResult.id);
+        // Clean up if order items failed
+        if (!existingOrder) {
+          // Only delete if it's a new order, don't delete existing orders
+          await supabase.from("orders").delete().eq("id", orderResult.id);
+        }
         throw new Error(`Failed to create order items: ${itemsError.message}`);
       }
 
-      // Add the new order to local state
-      orders.value.unshift(orderResult);
+      // Update local state
+      const orderIndex = orders.value.findIndex(order => order.id === orderResult.id);
+      if (orderIndex !== -1) {
+        // Update existing order in local state
+        orders.value[orderIndex] = orderResult;
+      } else {
+        // Add new order to local state
+        orders.value.unshift(orderResult);
+      }
 
       console.log(
-        "Order and order items created successfully:",
+        `Order ${existingOrder ? 'updated' : 'created'} successfully:`,
         orderResult.id
       );
       return orderResult;
     } catch (err) {
-      console.error("Create order with items error:", err);
+      console.error("Create/update order with items error:", err);
       error.value =
-        err instanceof Error ? err.message : "Failed to create order";
+        err instanceof Error ? err.message : "Failed to create/update order";
       throw err;
     } finally {
       loading.value = false;

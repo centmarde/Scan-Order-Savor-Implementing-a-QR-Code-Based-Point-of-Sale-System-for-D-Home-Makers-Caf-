@@ -68,6 +68,26 @@ const totalItemCount = computed(() => {
   );
 });
 
+// Convert order items to cart items format for StatusCard
+const orderCartItems = computed(() => {
+  if (!currentOrder.value?.order_items_db) return [];
+
+  const cartItems: any[] = [];
+  currentOrder.value.order_items_db.forEach(orderItem => {
+    // Add multiple entries for quantity (to match cart format)
+    for (let i = 0; i < orderItem.quantity; i++) {
+      cartItems.push({
+        id: orderItem.meal?.id || orderItem.id,
+        name: orderItem.meal?.name || 'Unknown Item',
+        price: orderItem.meal?.price || 0,
+        image: orderItem.meal?.image || '/default-image.jpg'
+      });
+    }
+  });
+
+  return cartItems;
+});
+
 // Fetch latest order from database
 const fetchOrders = async () => {
   try {
@@ -223,7 +243,8 @@ const getOrderIds = (): number[] => {
         <!-- Order Status Card -->
         <StatusCard
           :order-status="currentOrderStatus"
-          :item-count="totalItemCount"
+          :cart-items="orderCartItems"
+          :table-id="tableId"
         />
 
         <!-- Main Waiting Content -->

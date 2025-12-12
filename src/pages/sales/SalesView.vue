@@ -1,18 +1,26 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, shallowRef } from "vue";
 import { useRouter } from "vue-router";
 import { useSalesDataStore } from "@/stores/salesDatas";
-import { formatCurrency, formatDate } from "@/utils/helpers";
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
+import SalesSummaryCards from "./components/SalesSummaryCards.vue";
+import SalesChartsRow from "./components/SalesChartsRow.vue";
+import TopSellingItems from "./components/TopSellingItems.vue";
+import RecentOrders from "./components/RecentOrders.vue";
+import CategorySalesDetails from "./components/CategorySalesDetails.vue";
+
 
 const router = useRouter();
 const salesStore = useSalesDataStore();
 
 // State
-const selectedPeriod = ref<"today" | "week" | "month" | "year">("today");
-const dateRange = ref<[string, string] | null>(null);
+const selectedPeriod = ref<string>("custom");
+const dateRange = shallowRef<[Date, Date] | null>(null);
+const appliedDateRange = shallowRef<[Date, Date] | null>(null);
 const showFilters = ref(false);
 const selectedCategory = ref<string>("all");
+
+
 
 // Computed
 const loading = computed(() => salesStore.loading);
@@ -22,32 +30,114 @@ const salesTrend = computed(() => salesStore.salesTrend);
 const categorySales = computed(() => salesStore.categorySales);
 
 const recentOrdersLimited = computed(() => {
-    // Takes the full array from the store and returns only the first 5 orders
-    return salesStore.recentOrders.slice(0, 5);
+  // Filter orders by applied date range
+  let orders = salesStore.recentOrders;
+
+  if (appliedDateRange.value && appliedDateRange.value.length >= 2) {
+    const startDate = new Date(appliedDateRange.value[0]);
+    const endDate = new Date(appliedDateRange.value[1]);
+
+    // Set time to start and end of day for proper comparison
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    orders = orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate >= startDate && orderDate <= endDate;
+    });
+  }
+
+  // Return only the first 5 orders
+  return orders.slice(0, 5);
 });
 
 const periodLabel = computed(() => {
-  switch (selectedPeriod.value) {
-    case "today": return "Today";
-    case "week": return "This Week";
-    case "month": return "This Month";
-    case "year": return "This Year";
-    default: return "Custom";
+  console.log('=== periodLabel COMPUTING ===');
+  console.log('appliedDateRange.value:', appliedDateRange.value);
+
+  if (appliedDateRange.value && appliedDateRange.value.length >= 2) {
+    const firstDate = appliedDateRange.value[0];
+    const lastDate = appliedDateRange.value[1];
+    console.log('appliedDateRange[0] (start):', firstDate);
+    console.log('appliedDateRange[1] (end):', lastDate);
+
+    const formatOptions: Intl.DateTimeFormatOptions = {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    };
+    const fromDateStr = firstDate.toLocaleDateString('en-US', formatOptions);
+    const toDateStr = lastDate.toLocaleDateString('en-US', formatOptions);
+    const result = `${fromDateStr} to ${toDateStr}`;
+
+    console.log('periodLabel result:', result);
+    return result;
   }
+  console.log('periodLabel returning: Custom');
+  return "Custom";
 });
 
 // Methods
-const setPeriod = async (period: "today" | "week" | "month" | "year"): Promise<void> => {
+const setPeriod = async (period: string): Promise<void> => {
   selectedPeriod.value = period;
   dateRange.value = null;
-  await salesStore.fetchSalesData(period);
+  await salesStore.fetchSalesData(period as any);
 };
 
 const applyDateRange = async (): Promise<void> => {
-  if (dateRange.value && dateRange.value[0] && dateRange.value[1]) {
-    await salesStore.fetchSalesDataByRange(dateRange.value[0], dateRange.value[1]);
-    selectedPeriod.value = "today"; // Reset to indicate custom
+  if (dateRange.value && dateRange.value.length >= 2) {
+    console.log('=== applyDateRange START ===');
+    console.log('Raw dateRange.value:', dateRange.value);
+    console.log('Array length:', dateRange.value.length);
+    console.log('First date [0]:', dateRange.value[0], 'Type:', typeof dateRange.value[0]);
+    console.log('Last date [length-1]:', dateRange.value[dateRange.value.length - 1], 'Type:', typeof dateRange.value[dateRange.value.length - 1]);
+
+    // Get first and last dates from the range array
+    const startDate = new Date(dateRange.value[0]);
+    const endDate = new Date(dateRange.value[dateRange.value.length - 1]);
+    console.log('After new Date() conversion:');
+    console.log('startDate:', startDate, startDate.toISOString());
+    console.log('endDate:', endDate, endDate.toISOString());
+
+    // Ensure dates are in correct order
+    const [start, end] = startDate <= endDate ? [startDate, endDate] : [endDate, startDate];
+
+    // Store the applied date range for display purposes
+    appliedDateRange.value = [new Date(start), new Date(end)];
+
+    console.log('appliedDateRange.value SET TO:', appliedDateRange.value);
+    console.log('appliedDateRange[0]:', appliedDateRange.value[0].toISOString());
+    console.log('appliedDateRange[1]:', appliedDateRange.value[1].toISOString());
+
+    // Format dates for API call
+    const startDateStr = start.toISOString().split('T')[0];
+    const endDateStr = end.toISOString().split('T')[0];
+
+    console.log('API call strings:', {
+      startDate: startDateStr,
+      endDate: endDateStr,
+      daysDifference: Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+    });
+
+    await salesStore.fetchSalesDataByRange(startDateStr, endDateStr);
+    selectedPeriod.value = "custom";
+
+    console.log('After API call - appliedDateRange.value:', appliedDateRange.value);
+    console.log('=== applyDateRange END ===');
   }
+};
+
+const onDateRangeChange = (range: [Date, Date] | null) => {
+  console.log('=== onDateRangeChange CALLED ===');
+  console.log('Received range:', range);
+  if (range) {
+    console.log('range[0]:', range[0], 'Type:', typeof range[0]);
+    console.log('range[1]:', range[1], 'Type:', typeof range[1]);
+  }
+
+  dateRange.value = range;
+  console.log('dateRange.value SET TO:', dateRange.value);
+  console.log('=== onDateRangeChange END ===');
 };
 
 const exportReport = (): void => {
@@ -61,21 +151,20 @@ const exportReport = (): void => {
   window.URL.revokeObjectURL(url);
 };
 
-const getGrowthColor = (growth: number): string => {
-  if (growth > 0) return "success";
-  if (growth < 0) return "error";
-  return "grey";
-};
 
-const getGrowthIcon = (growth: number): string => {
-  if (growth > 0) return "mdi-trending-up";
-  if (growth < 0) return "mdi-trending-down";
-  return "mdi-minus";
-};
+
+
 
 // Lifecycle
 onMounted(async () => {
-  await salesStore.fetchSalesData("today");
+  // Only load default data if no date range is set
+  if (!dateRange.value || dateRange.value.length < 2) {
+    // Start with today's data as default
+    const today = new Date();
+    const startDate = today.toISOString().split('T')[0];
+    const endDate = today.toISOString().split('T')[0];
+    await salesStore.fetchSalesDataByRange(startDate, endDate);
+  }
 });
 </script>
 
@@ -120,36 +209,27 @@ onMounted(async () => {
             <v-card>
               <v-card-text>
                 <div class="d-flex align-center gap-2">
-                  <v-btn-toggle
-                    v-model="selectedPeriod"
-                    mandatory
-                    color="primary"
-                    variant="outlined"
-                    divided
-                  >
-                    <v-btn value="today" @click="setPeriod('today')">Today</v-btn>
-                    <v-btn value="week" @click="setPeriod('week')">This Week</v-btn>
-                    <v-btn value="month" @click="setPeriod('month')">This Month</v-btn>
-                    <v-btn value="year" @click="setPeriod('year')">This Year</v-btn>
-                  </v-btn-toggle>
-
-                  <v-spacer></v-spacer>
-
                   <div class="d-flex align-center gap-2">
-                    <v-text-field
+                    <!-- Date Range Picker -->
+                    <v-date-input
                       v-model="dateRange"
-                      type="date"
-                      label="Custom Range"
+                      label="Date Range"
+                      multiple="range"
                       variant="outlined"
                       density="compact"
                       hide-details
-                      style="max-width: 300px"
-                    ></v-text-field>
+                      prepend-inner-icon="mdi-calendar"
+                      :max="new Date()"
+                      style="min-width: 300px;"
+                      @update:model-value="onDateRangeChange"
+                    ></v-date-input>
+
+                    <!-- Apply Button -->
                     <v-btn
                       color="primary"
                       variant="flat"
                       @click="applyDateRange"
-                      :disabled="!dateRange"
+                      :disabled="!dateRange || dateRange.length < 2"
                     >
                       Apply
                     </v-btn>
@@ -161,243 +241,40 @@ onMounted(async () => {
         </v-row>
 
         <!-- Summary Cards -->
-        <v-row class="mb-4">
-          <v-col cols="12" sm="6" md="3">
-            <v-card>
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <v-avatar color="green-lighten-4" size="48">
-                    <v-icon color="green" size="28">mdi-currency-php</v-icon>
-                  </v-avatar>
-                  <v-chip
-                    :color="getGrowthColor(salesSummary.revenueGrowth)"
-                    size="small"
-                    variant="flat"
-                  >
-                    <v-icon start size="14">{{ getGrowthIcon(salesSummary.revenueGrowth) }}</v-icon>
-                    {{ Math.abs(salesSummary.revenueGrowth).toFixed(1) }}%
-                  </v-chip>
-                </div>
-                <div class="text-h4 font-weight-bold">
-                  {{ formatCurrency(salesSummary.totalRevenue) }}
-                </div>
-                <div class="text-caption text-grey">Total Revenue</div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card>
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <v-avatar color="blue-lighten-4" size="48">
-                    <v-icon color="blue" size="28">mdi-receipt</v-icon>
-                  </v-avatar>
-                  <v-chip
-                    :color="getGrowthColor(salesSummary.ordersGrowth)"
-                    size="small"
-                    variant="flat"
-                  >
-                    <v-icon start size="14">{{ getGrowthIcon(salesSummary.ordersGrowth) }}</v-icon>
-                    {{ Math.abs(salesSummary.ordersGrowth).toFixed(1) }}%
-                  </v-chip>
-                </div>
-                <div class="text-h4 font-weight-bold">
-                  {{ salesSummary.totalOrders }}
-                </div>
-                <div class="text-caption text-grey">Total Orders</div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card>
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <v-avatar color="orange-lighten-4" size="48">
-                    <v-icon color="orange" size="28">mdi-chart-line</v-icon>
-                  </v-avatar>
-                </div>
-                <div class="text-h4 font-weight-bold">
-                  {{ formatCurrency(salesSummary.averageOrderValue) }}
-                </div>
-                <div class="text-caption text-grey">Average Order Value</div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card>
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <v-avatar color="purple-lighten-4" size="48">
-                    <v-icon color="purple" size="28">mdi-silverware-fork-knife</v-icon>
-                  </v-avatar>
-                </div>
-                <div class="text-h4 font-weight-bold">
-                  {{ salesSummary.totalItemsSold }}
-                </div>
-                <div class="text-caption text-grey">Items Sold</div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+        <SalesSummaryCards
+          :sales-summary="salesSummary"
+          :date-range="appliedDateRange"
+          :period-label="periodLabel"
+        />
 
         <!-- Charts Row -->
+        <SalesChartsRow
+          :sales-trend="salesTrend"
+          :category-sales="categorySales"
+          :period-label="periodLabel"
+          :date-range="appliedDateRange"
+        />
+
+        <!-- Top Selling Items and Recent Orders -->
         <v-row class="mb-4">
-          <!-- Sales Trend Chart -->
-          <v-col cols="12" md="8">
-            <v-card>
-              <v-card-title>Sales Trend - {{ periodLabel }}</v-card-title>
-              <v-divider></v-divider>
-              <v-card-text>
-                <div class="chart-container" style="height: 300px">
-                  <canvas ref="salesChart"></canvas>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <!-- Category Breakdown -->
-          <v-col cols="12" md="4">
-            <v-card>
-              <v-card-title>Sales by Category</v-card-title>
-              <v-divider></v-divider>
-              <v-card-text>
-                <div class="chart-container" style="height: 300px">
-                  <canvas ref="categoryChart"></canvas>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <!-- Top Selling Items -->
-        <v-row class="mb-4">
-          <v-col cols="12" md="6">
-            <v-card>
-              <v-card-title class="d-flex align-center justify-space-between">
-                <span>Top Selling Items</span>
-                <v-chip color="primary" size="small">{{ periodLabel }}</v-chip>
-              </v-card-title>
-              <v-divider></v-divider>
-
-              <v-list>
-                <v-list-item
-                  v-for="(item, index) in topSellingItems"
-                  :key="item.id"
-                >
-                  <template v-slot:prepend>
-                    <v-avatar size="40" class="mr-3">
-                      <span class="text-h6 font-weight-bold">{{ index + 1 }}</span>
-                    </v-avatar>
-                  </template>
-
-                  <v-list-item-title class="font-weight-medium">
-                    {{ item.name }}
-                  </v-list-item-title>
-
-                  <v-list-item-subtitle>
-                    {{ item.quantitySold }} sold • {{ formatCurrency(item.revenue) }}
-                  </v-list-item-subtitle>
-
-                  <template v-slot:append>
-                    <div class="text-right">
-                      <div class="text-body-2 font-weight-bold">
-                        {{ formatCurrency(item.revenue) }}
-                      </div>
-                      <v-progress-linear
-                        :model-value="(item.revenue / topSellingItems[0]?.revenue) * 100"
-                        color="primary"
-                        height="4"
-                        class="mt-1"
-                      ></v-progress-linear>
-                    </div>
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-card>
-          </v-col>
-
-          <!-- Recent Orders -->
-          <v-col cols="12" md="6">
-            <v-card>
-              <v-card-title>Recent Orders</v-card-title>
-              <v-divider></v-divider>
-
-              <v-list>
-                <v-list-item
-                  v-for="order in recentOrdersLimited"
-                  :key="order.id"
-                >
-                  <template v-slot:prepend>
-                    <v-avatar color="primary-lighten-4" size="40">
-                      <span class="text-primary">#{{ order.id }}</span>
-                    </v-avatar>
-                  </template>
-
-                  <v-list-item-title>
-                    Table {{ order.table_id }}
-                  </v-list-item-title>
-
-                  <v-list-item-subtitle>
-                    {{ formatDate(order.created_at) }} • {{ order.itemCount }} items
-                  </v-list-item-subtitle>
-
-                  <template v-slot:append>
-                    <div class="text-right">
-                      <div class="text-body-2 font-weight-bold">
-                        {{ formatCurrency(order.total_amount) }}
-                      </div>
-                      <v-chip
-                        :color="order.status === 'completed' ? 'success' : 'orange'"
-                        size="x-small"
-                        class="mt-1"
-                      >
-                        {{ order.status }}
-                      </v-chip>
-                    </div>
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-card>
-          </v-col>
+          <TopSellingItems
+            :top-selling-items="topSellingItems"
+            :period-label="periodLabel"
+            :date-range="appliedDateRange"
+          />
+          <RecentOrders
+            :recent-orders-limited="recentOrdersLimited"
+            :date-range="appliedDateRange"
+            :period-label="periodLabel"
+          />
         </v-row>
 
         <!-- Category Sales Details -->
-        <v-row>
-          <v-col cols="12">
-            <v-card>
-              <v-card-title>Sales by Category - Detailed View</v-card-title>
-              <v-divider></v-divider>
-
-              <v-table>
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th class="text-right">Items Sold</th>
-                    <th class="text-right">Revenue</th>
-                    <th class="text-right">Avg Price</th>
-                    <th class="text-right">% of Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="category in categorySales" :key="category.name">
-                    <td class="font-weight-medium">{{ category.name }}</td>
-                    <td class="text-right">{{ category.itemsSold }}</td>
-                    <td class="text-right">{{ formatCurrency(category.revenue) }}</td>
-                    <td class="text-right">{{ formatCurrency(category.avgPrice) }}</td>
-                    <td class="text-right">
-                      <v-chip color="primary" size="small" variant="flat">
-                        {{ category.percentage.toFixed(1) }}%
-                      </v-chip>
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </v-card>
-          </v-col>
-        </v-row>
+        <CategorySalesDetails
+          :category-sales="categorySales"
+          :date-range="appliedDateRange"
+          :period-label="periodLabel"
+        />
       </v-container>
     </template>
   </InnerLayoutWrapper>
@@ -408,8 +285,13 @@ onMounted(async () => {
   gap: 8px;
 }
 
-.chart-container {
-  position: relative;
-  width: 100%;
+/* Enhanced date picker styling */
+.v-date-picker :deep(.v-date-picker-month__day) {
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.v-date-picker :deep(.v-date-picker-month__day:hover:not(.v-date-picker-month__day--disabled)) {
+  background-color: rgba(var(--v-theme-primary), 0.08);
+  transform: scale(1.02);
 }
 </style>
