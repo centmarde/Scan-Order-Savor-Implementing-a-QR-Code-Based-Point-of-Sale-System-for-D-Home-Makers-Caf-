@@ -58,6 +58,7 @@ interface TopSellingItem {
 interface Props {
   topSellingItems: TopSellingItem[];
   periodLabel: string;
+  dateRange?: [Date, Date] | null;
 }
 
 defineProps<Props>();

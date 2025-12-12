@@ -81,24 +81,14 @@ interface Props {
   salesTrend: SalesTrendPoint[];
   categorySales: CategorySale[];
   periodLabel: string;
-  fromDate?: Date | null;
-  toDate?: Date | null;
+  dateRange?: [Date, Date] | null;
 }
 
 const props = defineProps<Props>();
 
 // Computed
 const getChartTitle = computed(() => {
-  if (props.fromDate && props.toDate) {
-    const formatOptions: Intl.DateTimeFormatOptions = {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    };
-    const fromDateStr = props.fromDate.toLocaleDateString('en-US', formatOptions);
-    const toDateStr = props.toDate.toLocaleDateString('en-US', formatOptions);
-    return `${fromDateStr} to ${toDateStr}`;
-  }
+  // periodLabel now contains the formatted date range
   return props.periodLabel;
 });
 
@@ -134,13 +124,76 @@ const createSalesChart = async (): Promise<void> => {
       return;
     }
 
-    const chartData = props.salesTrend.length > 0 ? props.salesTrend : [
-      { date: new Date().toISOString(), revenue: 1500, orders: 8 },
-      { date: new Date(Date.now() - 86400000).toISOString(), revenue: 1200, orders: 6 },
-      { date: new Date(Date.now() - 2*86400000).toISOString(), revenue: 1800, orders: 10 },
-      { date: new Date(Date.now() - 3*86400000).toISOString(), revenue: 1000, orders: 5 },
-      { date: new Date(Date.now() - 4*86400000).toISOString(), revenue: 2200, orders: 12 }
-    ];
+    const chartData = props.salesTrend || [];
+
+    // Show empty state if no data
+    if (chartData.length === 0) {
+      // Create empty chart
+      salesChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Revenue',
+            data: [],
+            borderColor: 'rgb(25, 118, 210)',
+            backgroundColor: 'rgba(25, 118, 210, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          }, {
+            label: 'Orders',
+            data: [],
+            borderColor: 'rgb(76, 175, 80)',
+            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true
+            },
+            tooltip: {
+              displayColors: false,
+              callbacks: {
+                title: () => 'No data available for selected date range',
+                label: () => ''
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Revenue (₱)'
+              }
+            },
+            y1: {
+              display: true,
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Orders'
+              }
+            }
+          }
+        }
+      });
+      return;
+    }
 
     salesChartInstance = new Chart(ctx, {
       type: 'line',
@@ -256,12 +309,36 @@ const createCategoryChart = async (): Promise<void> => {
       return;
     }
 
-    const chartData = props.categorySales.length > 0 ? props.categorySales : [
-      { name: 'Coffee', revenue: 1200, itemsSold: 45, avgPrice: 26.67, percentage: 40 },
-      { name: 'Pastries', revenue: 800, itemsSold: 32, avgPrice: 25, percentage: 27 },
-      { name: 'Beverages', revenue: 600, itemsSold: 24, avgPrice: 25, percentage: 20 },
-      { name: 'Snacks', revenue: 400, itemsSold: 16, avgPrice: 25, percentage: 13 }
-    ];
+    const chartData = props.categorySales || [];
+
+    // Show empty state if no data
+    if (chartData.length === 0) {
+      // Create empty chart
+      categoryChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['No data'],
+          datasets: [{
+            data: [1],
+            backgroundColor: ['rgb(230, 230, 230)'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              enabled: false
+            }
+          }
+        }
+      });
+      return;
+    }
 
     const colors = [
       'rgb(255, 99, 132)',

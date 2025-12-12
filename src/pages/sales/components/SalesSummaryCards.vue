@@ -1,5 +1,22 @@
 <template>
   <v-row class="mb-4">
+    <!-- Date Range Indicator -->
+    <v-col cols="12" v-if="showDateRangeIndicator">
+      <v-alert
+        type="info"
+        variant="tonal"
+        density="compact"
+        class="mb-3"
+      >
+        <template v-slot:prepend>
+          <v-icon>mdi-calendar-range</v-icon>
+        </template>
+        <span class="text-body-2">
+          Showing data for: <strong>{{ getDateRangeLabel }}</strong>
+        </span>
+      </v-alert>
+    </v-col>
+
     <v-col cols="12" sm="6" md="3">
       <v-card>
         <v-card-text>
@@ -85,6 +102,8 @@
 <script setup lang="ts">
 import { formatCurrency } from "@/utils/helpers";
 
+import { computed } from "vue";
+
 interface SalesSummary {
   totalRevenue: number;
   totalOrders: number;
@@ -96,9 +115,29 @@ interface SalesSummary {
 
 interface Props {
   salesSummary: SalesSummary;
+  dateRange?: [Date, Date] | null;
+  periodLabel?: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+const showDateRangeIndicator = computed(() => {
+  return props.dateRange && props.dateRange.length >= 2;
+});
+
+const getDateRangeLabel = computed(() => {
+  if (props.dateRange && props.dateRange.length >= 2) {
+    const formatOptions: Intl.DateTimeFormatOptions = {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    };
+    const fromDateStr = props.dateRange[0].toLocaleDateString('en-US', formatOptions);
+    const toDateStr = props.dateRange[1].toLocaleDateString('en-US', formatOptions);
+    return `${fromDateStr} to ${toDateStr}`;
+  }
+  return props.periodLabel || 'Custom';
+});
 
 const getGrowthColor = (growth: number): string => {
   if (growth > 0) return "success";

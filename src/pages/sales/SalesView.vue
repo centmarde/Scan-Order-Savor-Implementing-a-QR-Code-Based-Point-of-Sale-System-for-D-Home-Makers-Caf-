@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, shallowRef } from "vue";
 import { useRouter } from "vue-router";
 import { useSalesDataStore } from "@/stores/salesDatas";
-import { formatCurrency } from "@/utils/helpers";
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
 import SalesSummaryCards from "./components/SalesSummaryCards.vue";
 import SalesChartsRow from "./components/SalesChartsRow.vue";
@@ -15,11 +14,9 @@ const router = useRouter();
 const salesStore = useSalesDataStore();
 
 // State
-const selectedPeriod = ref<"today" | "week" | "month" | "year">("today");
-const fromDate = ref<Date | null>(null);
-const toDate = ref<Date | null>(null);
-const fromDateMenu = ref(false);
-const toDateMenu = ref(false);
+const selectedPeriod = ref<string>("custom");
+const dateRange = shallowRef<[Date, Date] | null>(null);
+const appliedDateRange = shallowRef<[Date, Date] | null>(null);
 const showFilters = ref(false);
 const selectedCategory = ref<string>("all");
 
@@ -33,71 +30,114 @@ const salesTrend = computed(() => salesStore.salesTrend);
 const categorySales = computed(() => salesStore.categorySales);
 
 const recentOrdersLimited = computed(() => {
-    // Takes the full array from the store and returns only the first 5 orders
-    return salesStore.recentOrders.slice(0, 5);
+  // Filter orders by applied date range
+  let orders = salesStore.recentOrders;
+
+  if (appliedDateRange.value && appliedDateRange.value.length >= 2) {
+    const startDate = new Date(appliedDateRange.value[0]);
+    const endDate = new Date(appliedDateRange.value[1]);
+
+    // Set time to start and end of day for proper comparison
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    orders = orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate >= startDate && orderDate <= endDate;
+    });
+  }
+
+  // Return only the first 5 orders
+  return orders.slice(0, 5);
 });
 
 const periodLabel = computed(() => {
-  switch (selectedPeriod.value) {
-    case "today": return "Today";
-    case "week": return "This Week";
-    case "month": return "This Month";
-    case "year": return "This Year";
-    default: return "Custom";
-  }
-});
+  console.log('=== periodLabel COMPUTING ===');
+  console.log('appliedDateRange.value:', appliedDateRange.value);
 
-const fromDateDisplay = computed(() => {
-  if (fromDate.value) {
+  if (appliedDateRange.value && appliedDateRange.value.length >= 2) {
+    const firstDate = appliedDateRange.value[0];
+    const lastDate = appliedDateRange.value[1];
+    console.log('appliedDateRange[0] (start):', firstDate);
+    console.log('appliedDateRange[1] (end):', lastDate);
+
     const formatOptions: Intl.DateTimeFormatOptions = {
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     };
-    return fromDate.value.toLocaleDateString('en-US', formatOptions);
-  }
-  return "Select from date";
-});
+    const fromDateStr = firstDate.toLocaleDateString('en-US', formatOptions);
+    const toDateStr = lastDate.toLocaleDateString('en-US', formatOptions);
+    const result = `${fromDateStr} to ${toDateStr}`;
 
-const toDateDisplay = computed(() => {
-  if (toDate.value) {
-    const formatOptions: Intl.DateTimeFormatOptions = {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    };
-    return toDate.value.toLocaleDateString('en-US', formatOptions);
+    console.log('periodLabel result:', result);
+    return result;
   }
-  return "Select to date";
+  console.log('periodLabel returning: Custom');
+  return "Custom";
 });
 
 // Methods
-const setPeriod = async (period: "today" | "week" | "month" | "year"): Promise<void> => {
+const setPeriod = async (period: string): Promise<void> => {
   selectedPeriod.value = period;
-  fromDate.value = null;
-  toDate.value = null;
-  await salesStore.fetchSalesData(period);
+  dateRange.value = null;
+  await salesStore.fetchSalesData(period as any);
 };
 
 const applyDateRange = async (): Promise<void> => {
-  if (fromDate.value && toDate.value) {
-    // Ensure fromDate is before toDate
-    const [start, end] = [fromDate.value, toDate.value].sort((a, b) => a.getTime() - b.getTime());
-    const startDate = start.toISOString().split('T')[0];
-    const endDate = end.toISOString().split('T')[0];
-    await salesStore.fetchSalesDataByRange(startDate, endDate);
-    selectedPeriod.value = "today"; // Reset to indicate custom
-    fromDateMenu.value = false;
-    toDateMenu.value = false;
+  if (dateRange.value && dateRange.value.length >= 2) {
+    console.log('=== applyDateRange START ===');
+    console.log('Raw dateRange.value:', dateRange.value);
+    console.log('Array length:', dateRange.value.length);
+    console.log('First date [0]:', dateRange.value[0], 'Type:', typeof dateRange.value[0]);
+    console.log('Last date [length-1]:', dateRange.value[dateRange.value.length - 1], 'Type:', typeof dateRange.value[dateRange.value.length - 1]);
+
+    // Get first and last dates from the range array
+    const startDate = new Date(dateRange.value[0]);
+    const endDate = new Date(dateRange.value[dateRange.value.length - 1]);
+    console.log('After new Date() conversion:');
+    console.log('startDate:', startDate, startDate.toISOString());
+    console.log('endDate:', endDate, endDate.toISOString());
+
+    // Ensure dates are in correct order
+    const [start, end] = startDate <= endDate ? [startDate, endDate] : [endDate, startDate];
+
+    // Store the applied date range for display purposes
+    appliedDateRange.value = [new Date(start), new Date(end)];
+
+    console.log('appliedDateRange.value SET TO:', appliedDateRange.value);
+    console.log('appliedDateRange[0]:', appliedDateRange.value[0].toISOString());
+    console.log('appliedDateRange[1]:', appliedDateRange.value[1].toISOString());
+
+    // Format dates for API call
+    const startDateStr = start.toISOString().split('T')[0];
+    const endDateStr = end.toISOString().split('T')[0];
+
+    console.log('API call strings:', {
+      startDate: startDateStr,
+      endDate: endDateStr,
+      daysDifference: Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+    });
+
+    await salesStore.fetchSalesDataByRange(startDateStr, endDateStr);
+    selectedPeriod.value = "custom";
+
+    console.log('After API call - appliedDateRange.value:', appliedDateRange.value);
+    console.log('=== applyDateRange END ===');
   }
 };
 
-const onFromDateChange = (date: Date | null) => {
-  fromDate.value = date;
-};
+const onDateRangeChange = (range: [Date, Date] | null) => {
+  console.log('=== onDateRangeChange CALLED ===');
+  console.log('Received range:', range);
+  if (range) {
+    console.log('range[0]:', range[0], 'Type:', typeof range[0]);
+    console.log('range[1]:', range[1], 'Type:', typeof range[1]);
+  }
 
-const onToDateChange = (date: Date | null) => {
-  toDate.value = date;
+  dateRange.value = range;
+  console.log('dateRange.value SET TO:', dateRange.value);
+  console.log('=== onDateRangeChange END ===');
 };
 
 const exportReport = (): void => {
@@ -117,7 +157,14 @@ const exportReport = (): void => {
 
 // Lifecycle
 onMounted(async () => {
-  await salesStore.fetchSalesData("today");
+  // Only load default data if no date range is set
+  if (!dateRange.value || dateRange.value.length < 2) {
+    // Start with today's data as default
+    const today = new Date();
+    const startDate = today.toISOString().split('T')[0];
+    const endDate = today.toISOString().split('T')[0];
+    await salesStore.fetchSalesDataByRange(startDate, endDate);
+  }
 });
 </script>
 
@@ -162,123 +209,27 @@ onMounted(async () => {
             <v-card>
               <v-card-text>
                 <div class="d-flex align-center gap-2">
-                  <v-btn-toggle
-                    v-model="selectedPeriod"
-                    mandatory
-                    color="primary"
-                    variant="outlined"
-                    divided
-                  >
-                    <v-btn value="today" @click="setPeriod('today')">Today</v-btn>
-                    <v-btn value="week" @click="setPeriod('week')">This Week</v-btn>
-                    <v-btn value="month" @click="setPeriod('month')">This Month</v-btn>
-                    <v-btn value="year" @click="setPeriod('year')">This Year</v-btn>
-                  </v-btn-toggle>
-
-                  <v-spacer></v-spacer>
-
                   <div class="d-flex align-center gap-2">
-                    <!-- From Date Picker -->
-                    <v-menu
-                      v-model="fromDateMenu"
-                      :close-on-content-click="false"
-                      transition="scale-transition"
-                      offset-y
-                      min-width="auto"
-                    >
-                      <template v-slot:activator="{ props }">
-                        <v-text-field
-                          v-bind="props"
-                          :value="fromDateDisplay"
-                          label="From Date"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          readonly
-                          prepend-inner-icon="mdi-calendar"
-                          style="width: 200px; min-width: 200px;"
-                        ></v-text-field>
-                      </template>
-                      <v-date-picker
-                        v-model="fromDate"
-                        color="primary"
-                        show-adjacent-months
-                        :max="toDate ? toDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]"
-                        @update:model-value="onFromDateChange"
-                      >
-                        <template v-slot:actions>
-                          <v-btn
-                            variant="text"
-                            @click="fromDateMenu = false"
-                          >
-                            Cancel
-                          </v-btn>
-                          <v-btn
-                            color="primary"
-                            variant="flat"
-                            @click="fromDateMenu = false"
-                            :disabled="!fromDate"
-                          >
-                            OK
-                          </v-btn>
-                        </template>
-                      </v-date-picker>
-                    </v-menu>
-
-                    <!-- To Date Picker -->
-                    <v-menu
-                      v-model="toDateMenu"
-                      :close-on-content-click="false"
-                      transition="scale-transition"
-                      offset-y
-                      min-width="auto"
-                    >
-                      <template v-slot:activator="{ props }">
-                        <v-text-field
-                          v-bind="props"
-                          :value="toDateDisplay"
-                          label="To Date"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          readonly
-                          prepend-inner-icon="mdi-calendar"
-                          style="width: 200px; min-width: 200px;"
-                        ></v-text-field>
-                      </template>
-                      <v-date-picker
-                        v-model="toDate"
-                        color="primary"
-                        show-adjacent-months
-                        :min="fromDate ? fromDate.toISOString().split('T')[0] : undefined"
-                        :max="new Date().toISOString().split('T')[0]"
-                        @update:model-value="onToDateChange"
-                      >
-                        <template v-slot:actions>
-                          <v-btn
-                            variant="text"
-                            @click="toDateMenu = false"
-                          >
-                            Cancel
-                          </v-btn>
-                          <v-btn
-                            color="primary"
-                            variant="flat"
-                            @click="toDateMenu = false"
-                            :disabled="!toDate"
-                          >
-                            OK
-                          </v-btn>
-                        </template>
-                      </v-date-picker>
-                    </v-menu>
+                    <!-- Date Range Picker -->
+                    <v-date-input
+                      v-model="dateRange"
+                      label="Date Range"
+                      multiple="range"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      prepend-inner-icon="mdi-calendar"
+                      :max="new Date()"
+                      style="min-width: 300px;"
+                      @update:model-value="onDateRangeChange"
+                    ></v-date-input>
 
                     <!-- Apply Button -->
                     <v-btn
                       color="primary"
                       variant="flat"
                       @click="applyDateRange"
-                      :disabled="!fromDate || !toDate"
+                      :disabled="!dateRange || dateRange.length < 2"
                     >
                       Apply
                     </v-btn>
@@ -290,15 +241,18 @@ onMounted(async () => {
         </v-row>
 
         <!-- Summary Cards -->
-        <SalesSummaryCards :sales-summary="salesSummary" />
+        <SalesSummaryCards
+          :sales-summary="salesSummary"
+          :date-range="appliedDateRange"
+          :period-label="periodLabel"
+        />
 
         <!-- Charts Row -->
         <SalesChartsRow
           :sales-trend="salesTrend"
           :category-sales="categorySales"
           :period-label="periodLabel"
-          :from-date="fromDate"
-          :to-date="toDate"
+          :date-range="appliedDateRange"
         />
 
         <!-- Top Selling Items and Recent Orders -->
@@ -306,12 +260,21 @@ onMounted(async () => {
           <TopSellingItems
             :top-selling-items="topSellingItems"
             :period-label="periodLabel"
+            :date-range="appliedDateRange"
           />
-          <RecentOrders :recent-orders-limited="recentOrdersLimited" />
+          <RecentOrders
+            :recent-orders-limited="recentOrdersLimited"
+            :date-range="appliedDateRange"
+            :period-label="periodLabel"
+          />
         </v-row>
 
         <!-- Category Sales Details -->
-        <CategorySalesDetails :category-sales="categorySales" />
+        <CategorySalesDetails
+          :category-sales="categorySales"
+          :date-range="appliedDateRange"
+          :period-label="periodLabel"
+        />
       </v-container>
     </template>
   </InnerLayoutWrapper>

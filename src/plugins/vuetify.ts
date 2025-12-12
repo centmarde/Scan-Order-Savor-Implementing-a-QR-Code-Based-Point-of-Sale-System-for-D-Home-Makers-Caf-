@@ -6,6 +6,7 @@
 
 // Composables
 import { createVuetify } from 'vuetify'
+import { VDateInput } from 'vuetify/labs/VDateInput'
 
 // Styles
 import '@mdi/font/css/materialdesignicons.css'
@@ -17,6 +18,9 @@ import { createDynamicThemes } from '@/themes/base'
 // Create vuetify instance with minimal initial configuration
 // Themes will be loaded dynamically from external-page.json via base.ts
 const vuetify = createVuetify({
+  components: {
+    VDateInput,
+  },
   theme: {
     defaultTheme: 'light',
     themes: {
