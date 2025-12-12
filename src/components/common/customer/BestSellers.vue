@@ -51,9 +51,11 @@ const addToCart = (item: MenuItem) => {
         <v-card
           elevation="1"
           class="mb-3"
-          @click="addToCart(item)"
+          @click="item.quantity > 0 ? addToCart(item) : undefined"
           rounded="xl"
-          hover
+          :hover="item.quantity > 0"
+          :disabled="item.quantity === 0"
+          :class="{ 'opacity-60': item.quantity === 0 }"
         >
           <v-card-text class="pa-3">
             <div class="d-flex">
@@ -67,6 +69,24 @@ const addToCart = (item: MenuItem) => {
                 <p class="text-caption mb-2" :style="{ color: '#555555' }">
                   {{ item.description }}
                 </p>
+
+                <!-- Quantity display -->
+                <div class="mb-2">
+                  <v-chip
+                    size="x-small"
+                    variant="flat"
+                    :class="item.quantity === 0 ? 'text-white' : item.quantity <= 5 ? 'text-white' : 'text-grey-darken-1'"
+                    :style="{
+                      backgroundColor: item.quantity === 0 ? '#f44336' : item.quantity <= 5 ? '#ff9800' : '#e0e0e0'
+                    }"
+                  >
+                    <v-icon size="10" class="mr-1">
+                      {{ item.quantity === 0 ? 'mdi-close-circle' : 'mdi-package-variant' }}
+                    </v-icon>
+                    {{ item.quantity === 0 ? 'Out of Stock' : `${item.quantity} available` }}
+                  </v-chip>
+                </div>
+
                 <span
                   class="text-h6 font-weight-bold"
                   :style="{ color: primaryColor }"
@@ -96,6 +116,7 @@ const addToCart = (item: MenuItem) => {
                   </v-chip>
                 </div>
                 <v-btn
+                  v-if="item.quantity > 0"
                   @click.stop="addToCart(item)"
                   icon
                   size="small"
@@ -103,6 +124,16 @@ const addToCart = (item: MenuItem) => {
                   :style="{ backgroundColor: primaryColor, color: 'white' }"
                 >
                   <v-icon size="20">mdi-plus</v-icon>
+                </v-btn>
+                <v-btn
+                  v-else
+                  disabled
+                  icon
+                  size="small"
+                  variant="outlined"
+                  :style="{ borderColor: '#ccc', color: '#ccc' }"
+                >
+                  <v-icon size="20">mdi-close</v-icon>
                 </v-btn>
               </div>
             </div>

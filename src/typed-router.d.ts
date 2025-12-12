@@ -56,6 +56,11 @@ declare module 'vue-router/auto-routes' {
     '/kitchen/KitchenOrdersView': RouteRecordInfo<'/kitchen/KitchenOrdersView', '/kitchen/KitchenOrdersView', Record<never, never>, Record<never, never>>,
     '/NotFound': RouteRecordInfo<'/NotFound', '/NotFound', Record<never, never>, Record<never, never>>,
     '/otherTab/Page1View': RouteRecordInfo<'/otherTab/Page1View', '/otherTab/Page1View', Record<never, never>, Record<never, never>>,
+    '/sales/components/CategorySalesDetails': RouteRecordInfo<'/sales/components/CategorySalesDetails', '/sales/components/CategorySalesDetails', Record<never, never>, Record<never, never>>,
+    '/sales/components/RecentOrders': RouteRecordInfo<'/sales/components/RecentOrders', '/sales/components/RecentOrders', Record<never, never>, Record<never, never>>,
+    '/sales/components/SalesChartsRow': RouteRecordInfo<'/sales/components/SalesChartsRow', '/sales/components/SalesChartsRow', Record<never, never>, Record<never, never>>,
+    '/sales/components/SalesSummaryCards': RouteRecordInfo<'/sales/components/SalesSummaryCards', '/sales/components/SalesSummaryCards', Record<never, never>, Record<never, never>>,
+    '/sales/components/TopSellingItems': RouteRecordInfo<'/sales/components/TopSellingItems', '/sales/components/TopSellingItems', Record<never, never>, Record<never, never>>,
     '/sales/SalesView': RouteRecordInfo<'/sales/SalesView', '/sales/SalesView', Record<never, never>, Record<never, never>>,
   }
 }

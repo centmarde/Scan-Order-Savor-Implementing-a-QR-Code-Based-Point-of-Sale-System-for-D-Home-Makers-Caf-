@@ -2,17 +2,28 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useSalesDataStore } from "@/stores/salesDatas";
-import { formatCurrency, formatDate } from "@/utils/helpers";
+import { formatCurrency } from "@/utils/helpers";
 import InnerLayoutWrapper from "@/layouts/InnerLayoutWrapper.vue";
+import SalesSummaryCards from "./components/SalesSummaryCards.vue";
+import SalesChartsRow from "./components/SalesChartsRow.vue";
+import TopSellingItems from "./components/TopSellingItems.vue";
+import RecentOrders from "./components/RecentOrders.vue";
+import CategorySalesDetails from "./components/CategorySalesDetails.vue";
+
 
 const router = useRouter();
 const salesStore = useSalesDataStore();
 
 // State
 const selectedPeriod = ref<"today" | "week" | "month" | "year">("today");
-const dateRange = ref<[string, string] | null>(null);
+const fromDate = ref<Date | null>(null);
+const toDate = ref<Date | null>(null);
+const fromDateMenu = ref(false);
+const toDateMenu = ref(false);
 const showFilters = ref(false);
 const selectedCategory = ref<string>("all");
+
+
 
 // Computed
 const loading = computed(() => salesStore.loading);
@@ -36,18 +47,57 @@ const periodLabel = computed(() => {
   }
 });
 
+const fromDateDisplay = computed(() => {
+  if (fromDate.value) {
+    const formatOptions: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    };
+    return fromDate.value.toLocaleDateString('en-US', formatOptions);
+  }
+  return "Select from date";
+});
+
+const toDateDisplay = computed(() => {
+  if (toDate.value) {
+    const formatOptions: Intl.DateTimeFormatOptions = {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    };
+    return toDate.value.toLocaleDateString('en-US', formatOptions);
+  }
+  return "Select to date";
+});
+
 // Methods
 const setPeriod = async (period: "today" | "week" | "month" | "year"): Promise<void> => {
   selectedPeriod.value = period;
-  dateRange.value = null;
+  fromDate.value = null;
+  toDate.value = null;
   await salesStore.fetchSalesData(period);
 };
 
 const applyDateRange = async (): Promise<void> => {
-  if (dateRange.value && dateRange.value[0] && dateRange.value[1]) {
-    await salesStore.fetchSalesDataByRange(dateRange.value[0], dateRange.value[1]);
+  if (fromDate.value && toDate.value) {
+    // Ensure fromDate is before toDate
+    const [start, end] = [fromDate.value, toDate.value].sort((a, b) => a.getTime() - b.getTime());
+    const startDate = start.toISOString().split('T')[0];
+    const endDate = end.toISOString().split('T')[0];
+    await salesStore.fetchSalesDataByRange(startDate, endDate);
     selectedPeriod.value = "today"; // Reset to indicate custom
+    fromDateMenu.value = false;
+    toDateMenu.value = false;
   }
+};
+
+const onFromDateChange = (date: Date | null) => {
+  fromDate.value = date;
+};
+
+const onToDateChange = (date: Date | null) => {
+  toDate.value = date;
 };
 
 const exportReport = (): void => {
@@ -61,17 +111,9 @@ const exportReport = (): void => {
   window.URL.revokeObjectURL(url);
 };
 
-const getGrowthColor = (growth: number): string => {
-  if (growth > 0) return "success";
-  if (growth < 0) return "error";
-  return "grey";
-};
 
-const getGrowthIcon = (growth: number): string => {
-  if (growth > 0) return "mdi-trending-up";
-  if (growth < 0) return "mdi-trending-down";
-  return "mdi-minus";
-};
+
+
 
 // Lifecycle
 onMounted(async () => {
@@ -136,20 +178,107 @@ onMounted(async () => {
                   <v-spacer></v-spacer>
 
                   <div class="d-flex align-center gap-2">
-                    <v-text-field
-                      v-model="dateRange"
-                      type="date"
-                      label="Custom Range"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      style="max-width: 300px"
-                    ></v-text-field>
+                    <!-- From Date Picker -->
+                    <v-menu
+                      v-model="fromDateMenu"
+                      :close-on-content-click="false"
+                      transition="scale-transition"
+                      offset-y
+                      min-width="auto"
+                    >
+                      <template v-slot:activator="{ props }">
+                        <v-text-field
+                          v-bind="props"
+                          :value="fromDateDisplay"
+                          label="From Date"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          readonly
+                          prepend-inner-icon="mdi-calendar"
+                          style="width: 200px; min-width: 200px;"
+                        ></v-text-field>
+                      </template>
+                      <v-date-picker
+                        v-model="fromDate"
+                        color="primary"
+                        show-adjacent-months
+                        :max="toDate ? toDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]"
+                        @update:model-value="onFromDateChange"
+                      >
+                        <template v-slot:actions>
+                          <v-btn
+                            variant="text"
+                            @click="fromDateMenu = false"
+                          >
+                            Cancel
+                          </v-btn>
+                          <v-btn
+                            color="primary"
+                            variant="flat"
+                            @click="fromDateMenu = false"
+                            :disabled="!fromDate"
+                          >
+                            OK
+                          </v-btn>
+                        </template>
+                      </v-date-picker>
+                    </v-menu>
+
+                    <!-- To Date Picker -->
+                    <v-menu
+                      v-model="toDateMenu"
+                      :close-on-content-click="false"
+                      transition="scale-transition"
+                      offset-y
+                      min-width="auto"
+                    >
+                      <template v-slot:activator="{ props }">
+                        <v-text-field
+                          v-bind="props"
+                          :value="toDateDisplay"
+                          label="To Date"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          readonly
+                          prepend-inner-icon="mdi-calendar"
+                          style="width: 200px; min-width: 200px;"
+                        ></v-text-field>
+                      </template>
+                      <v-date-picker
+                        v-model="toDate"
+                        color="primary"
+                        show-adjacent-months
+                        :min="fromDate ? fromDate.toISOString().split('T')[0] : undefined"
+                        :max="new Date().toISOString().split('T')[0]"
+                        @update:model-value="onToDateChange"
+                      >
+                        <template v-slot:actions>
+                          <v-btn
+                            variant="text"
+                            @click="toDateMenu = false"
+                          >
+                            Cancel
+                          </v-btn>
+                          <v-btn
+                            color="primary"
+                            variant="flat"
+                            @click="toDateMenu = false"
+                            :disabled="!toDate"
+                          >
+                            OK
+                          </v-btn>
+                        </template>
+                      </v-date-picker>
+                    </v-menu>
+
+                    <!-- Apply Button -->
                     <v-btn
                       color="primary"
                       variant="flat"
                       @click="applyDateRange"
-                      :disabled="!dateRange"
+                      :disabled="!fromDate || !toDate"
                     >
                       Apply
                     </v-btn>
@@ -161,243 +290,28 @@ onMounted(async () => {
         </v-row>
 
         <!-- Summary Cards -->
-        <v-row class="mb-4">
-          <v-col cols="12" sm="6" md="3">
-            <v-card>
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <v-avatar color="green-lighten-4" size="48">
-                    <v-icon color="green" size="28">mdi-currency-php</v-icon>
-                  </v-avatar>
-                  <v-chip
-                    :color="getGrowthColor(salesSummary.revenueGrowth)"
-                    size="small"
-                    variant="flat"
-                  >
-                    <v-icon start size="14">{{ getGrowthIcon(salesSummary.revenueGrowth) }}</v-icon>
-                    {{ Math.abs(salesSummary.revenueGrowth).toFixed(1) }}%
-                  </v-chip>
-                </div>
-                <div class="text-h4 font-weight-bold">
-                  {{ formatCurrency(salesSummary.totalRevenue) }}
-                </div>
-                <div class="text-caption text-grey">Total Revenue</div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card>
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <v-avatar color="blue-lighten-4" size="48">
-                    <v-icon color="blue" size="28">mdi-receipt</v-icon>
-                  </v-avatar>
-                  <v-chip
-                    :color="getGrowthColor(salesSummary.ordersGrowth)"
-                    size="small"
-                    variant="flat"
-                  >
-                    <v-icon start size="14">{{ getGrowthIcon(salesSummary.ordersGrowth) }}</v-icon>
-                    {{ Math.abs(salesSummary.ordersGrowth).toFixed(1) }}%
-                  </v-chip>
-                </div>
-                <div class="text-h4 font-weight-bold">
-                  {{ salesSummary.totalOrders }}
-                </div>
-                <div class="text-caption text-grey">Total Orders</div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card>
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <v-avatar color="orange-lighten-4" size="48">
-                    <v-icon color="orange" size="28">mdi-chart-line</v-icon>
-                  </v-avatar>
-                </div>
-                <div class="text-h4 font-weight-bold">
-                  {{ formatCurrency(salesSummary.averageOrderValue) }}
-                </div>
-                <div class="text-caption text-grey">Average Order Value</div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" sm="6" md="3">
-            <v-card>
-              <v-card-text>
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <v-avatar color="purple-lighten-4" size="48">
-                    <v-icon color="purple" size="28">mdi-silverware-fork-knife</v-icon>
-                  </v-avatar>
-                </div>
-                <div class="text-h4 font-weight-bold">
-                  {{ salesSummary.totalItemsSold }}
-                </div>
-                <div class="text-caption text-grey">Items Sold</div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
+        <SalesSummaryCards :sales-summary="salesSummary" />
 
         <!-- Charts Row -->
+        <SalesChartsRow
+          :sales-trend="salesTrend"
+          :category-sales="categorySales"
+          :period-label="periodLabel"
+          :from-date="fromDate"
+          :to-date="toDate"
+        />
+
+        <!-- Top Selling Items and Recent Orders -->
         <v-row class="mb-4">
-          <!-- Sales Trend Chart -->
-          <v-col cols="12" md="8">
-            <v-card>
-              <v-card-title>Sales Trend - {{ periodLabel }}</v-card-title>
-              <v-divider></v-divider>
-              <v-card-text>
-                <div class="chart-container" style="height: 300px">
-                  <canvas ref="salesChart"></canvas>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <!-- Category Breakdown -->
-          <v-col cols="12" md="4">
-            <v-card>
-              <v-card-title>Sales by Category</v-card-title>
-              <v-divider></v-divider>
-              <v-card-text>
-                <div class="chart-container" style="height: 300px">
-                  <canvas ref="categoryChart"></canvas>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <!-- Top Selling Items -->
-        <v-row class="mb-4">
-          <v-col cols="12" md="6">
-            <v-card>
-              <v-card-title class="d-flex align-center justify-space-between">
-                <span>Top Selling Items</span>
-                <v-chip color="primary" size="small">{{ periodLabel }}</v-chip>
-              </v-card-title>
-              <v-divider></v-divider>
-
-              <v-list>
-                <v-list-item
-                  v-for="(item, index) in topSellingItems"
-                  :key="item.id"
-                >
-                  <template v-slot:prepend>
-                    <v-avatar size="40" class="mr-3">
-                      <span class="text-h6 font-weight-bold">{{ index + 1 }}</span>
-                    </v-avatar>
-                  </template>
-
-                  <v-list-item-title class="font-weight-medium">
-                    {{ item.name }}
-                  </v-list-item-title>
-
-                  <v-list-item-subtitle>
-                    {{ item.quantitySold }} sold • {{ formatCurrency(item.revenue) }}
-                  </v-list-item-subtitle>
-
-                  <template v-slot:append>
-                    <div class="text-right">
-                      <div class="text-body-2 font-weight-bold">
-                        {{ formatCurrency(item.revenue) }}
-                      </div>
-                      <v-progress-linear
-                        :model-value="(item.revenue / topSellingItems[0]?.revenue) * 100"
-                        color="primary"
-                        height="4"
-                        class="mt-1"
-                      ></v-progress-linear>
-                    </div>
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-card>
-          </v-col>
-
-          <!-- Recent Orders -->
-          <v-col cols="12" md="6">
-            <v-card>
-              <v-card-title>Recent Orders</v-card-title>
-              <v-divider></v-divider>
-
-              <v-list>
-                <v-list-item
-                  v-for="order in recentOrdersLimited"
-                  :key="order.id"
-                >
-                  <template v-slot:prepend>
-                    <v-avatar color="primary-lighten-4" size="40">
-                      <span class="text-primary">#{{ order.id }}</span>
-                    </v-avatar>
-                  </template>
-
-                  <v-list-item-title>
-                    Table {{ order.table_id }}
-                  </v-list-item-title>
-
-                  <v-list-item-subtitle>
-                    {{ formatDate(order.created_at) }} • {{ order.itemCount }} items
-                  </v-list-item-subtitle>
-
-                  <template v-slot:append>
-                    <div class="text-right">
-                      <div class="text-body-2 font-weight-bold">
-                        {{ formatCurrency(order.total_amount) }}
-                      </div>
-                      <v-chip
-                        :color="order.status === 'completed' ? 'success' : 'orange'"
-                        size="x-small"
-                        class="mt-1"
-                      >
-                        {{ order.status }}
-                      </v-chip>
-                    </div>
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-card>
-          </v-col>
+          <TopSellingItems
+            :top-selling-items="topSellingItems"
+            :period-label="periodLabel"
+          />
+          <RecentOrders :recent-orders-limited="recentOrdersLimited" />
         </v-row>
 
         <!-- Category Sales Details -->
-        <v-row>
-          <v-col cols="12">
-            <v-card>
-              <v-card-title>Sales by Category - Detailed View</v-card-title>
-              <v-divider></v-divider>
-
-              <v-table>
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th class="text-right">Items Sold</th>
-                    <th class="text-right">Revenue</th>
-                    <th class="text-right">Avg Price</th>
-                    <th class="text-right">% of Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="category in categorySales" :key="category.name">
-                    <td class="font-weight-medium">{{ category.name }}</td>
-                    <td class="text-right">{{ category.itemsSold }}</td>
-                    <td class="text-right">{{ formatCurrency(category.revenue) }}</td>
-                    <td class="text-right">{{ formatCurrency(category.avgPrice) }}</td>
-                    <td class="text-right">
-                      <v-chip color="primary" size="small" variant="flat">
-                        {{ category.percentage.toFixed(1) }}%
-                      </v-chip>
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </v-card>
-          </v-col>
-        </v-row>
+        <CategorySalesDetails :category-sales="categorySales" />
       </v-container>
     </template>
   </InnerLayoutWrapper>
@@ -408,8 +322,13 @@ onMounted(async () => {
   gap: 8px;
 }
 
-.chart-container {
-  position: relative;
-  width: 100%;
+/* Enhanced date picker styling */
+.v-date-picker :deep(.v-date-picker-month__day) {
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.v-date-picker :deep(.v-date-picker-month__day:hover:not(.v-date-picker-month__day--disabled)) {
+  background-color: rgba(var(--v-theme-primary), 0.08);
+  transform: scale(1.02);
 }
 </style>
