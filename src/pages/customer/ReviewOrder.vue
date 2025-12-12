@@ -136,7 +136,11 @@ const proceedToPayment = async () => {
         </v-card>
 
         <!-- Order Status Card -->
-        <StatusCard :order-status="orderStatus" :item-count="itemCount" />
+        <StatusCard
+          :order-status="orderStatus"
+          :cart-items="cartItems"
+          :table-id="contextTableId"
+        />
 
         <!-- Order Items List -->
         <OrderItems

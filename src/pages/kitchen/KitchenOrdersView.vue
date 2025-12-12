@@ -12,6 +12,7 @@ const kitchenStore = useKitchenDataStore();
 // State
 const detailsDialog = ref(false);
 const completeDialog = ref(false);
+const deleteDialog = ref(false);
 const orderToProcess = ref<OrderWithMeals | null>(null);
 const processing = ref(false);
 const loadingOrderId = ref<number | null>(null);
@@ -28,6 +29,7 @@ const readyCount = computed(() => kitchenStore.readyOrdersCount);
 const todayCompletedCount = computed(() => kitchenStore.todayCompletedCount);
 const loading = computed(() => kitchenStore.loading);
 const selectedOrder = computed(() => kitchenStore.selectedOrder);
+const storeError = computed(() => kitchenStore.error);
 
 const averagePrepTime = computed(() => {
   return kitchenStore.averagePrepTime;
@@ -90,6 +92,12 @@ const confirmComplete = (order: OrderWithMeals): void => {
   detailsDialog.value = false;
 };
 
+const confirmDelete = (order: OrderWithMeals): void => {
+  orderToProcess.value = order;
+  deleteDialog.value = true;
+  detailsDialog.value = false;
+};
+
 const handleComplete = async (): Promise<void> => {
   if (!orderToProcess.value?.id) return;
 
@@ -108,6 +116,47 @@ const handleComplete = async (): Promise<void> => {
     }
   } catch (error) {
     snackbarText.value = "Failed to complete order";
+    snackbarColor.value = "error";
+    snackbar.value = true;
+  } finally {
+    processing.value = false;
+    loadingOrderId.value = null;
+  }
+};
+
+const handleDelete = async (): Promise<void> => {
+  if (!orderToProcess.value?.id || processing.value) return;
+
+  const orderId = orderToProcess.value.id;
+  const orderNumber = orderToProcess.value.id;
+
+  try {
+    processing.value = true;
+    loadingOrderId.value = orderId;
+
+    console.log(`Starting delete process for order ${orderId}`);
+
+    const success = await kitchenStore.deleteOrder(orderId);
+
+    if (success) {
+      snackbarText.value = `Order #${orderNumber} deleted successfully`;
+      snackbarColor.value = "success";
+      snackbar.value = true;
+      deleteDialog.value = false;
+      orderToProcess.value = null;
+      console.log(`Order ${orderId} deleted successfully`);
+    } else {
+      // Show the actual error from the store
+      const errorMsg = storeError.value || "Failed to delete order";
+      snackbarText.value = errorMsg;
+      snackbarColor.value = "error";
+      snackbar.value = true;
+      console.error(`Failed to delete order ${orderId}:`, errorMsg);
+    }
+  } catch (error) {
+    console.error(`Error deleting order ${orderId}:`, error);
+    const errorMsg = error instanceof Error ? error.message : "Failed to delete order";
+    snackbarText.value = errorMsg;
     snackbarColor.value = "error";
     snackbar.value = true;
   } finally {
@@ -179,7 +228,7 @@ onUnmounted(() => {
                     <div class="text-h5 font-weight-bold">
                       {{ preparingCount }}
                     </div>
-                    <div class="text-caption text-grey">Preparing</div>
+                    <div class="text-caption text-grey">To Prepare</div>
                   </div>
                 </div>
               </v-card-text>
@@ -248,7 +297,7 @@ onUnmounted(() => {
               <v-tabs v-model="activeTab" bg-color="primary" dark>
                 <v-tab value="preparing">
                   <v-icon start>mdi-chef-hat</v-icon>
-                  Preparing ({{ preparingCount }})
+                  To Prepare ({{ preparingCount }})
                 </v-tab>
                 <v-tab value="ready">
                   <v-icon start>mdi-check-circle</v-icon>
@@ -271,7 +320,7 @@ onUnmounted(() => {
                     </v-icon>
                     <p class="text-h6 text-grey mt-4">No Orders to Prepare</p>
                     <p class="text-body-2 text-grey">
-                      Waiting for approved orders from cashier
+                      New orders will appear here automatically
                     </p>
                   </div>
 
@@ -293,8 +342,14 @@ onUnmounted(() => {
                     >
                       <v-list-item @click="viewOrderDetails(order)">
                         <template v-slot:prepend>
-                          <v-avatar color="orange-lighten-4" size="56">
-                            <span class="text-h6 text-orange">
+                          <v-avatar
+                            :color="order.status === 'pending' ? 'blue-lighten-4' : 'orange-lighten-4'"
+                            size="56"
+                          >
+                            <span
+                              class="text-h6"
+                              :class="order.status === 'pending' ? 'text-blue' : 'text-orange'"
+                            >
                               #{{ order.id }}
                             </span>
                           </v-avatar>
@@ -324,20 +379,31 @@ onUnmounted(() => {
 
                         <template v-slot:append>
                           <div class="d-flex flex-column align-end">
-                            <v-chip
-                              color="orange"
-                              variant="flat"
-                              size="small"
-                              class="mb-2"
-                            >
-                              Preparing
-                            </v-chip>
+                            <div class="d-flex align-center gap-1 mb-2">
+                              <v-btn
+                                color="error"
+                                variant="outlined"
+                                size="small"
+                                @click.stop="confirmDelete(order)"
+                                :loading="loadingOrderId === order.id"
+                                icon="mdi-delete"
+                              >
+                              </v-btn>
+                              <v-chip
+                                :color="order.status === 'pending' ? 'blue' : 'orange'"
+                                variant="flat"
+                                size="small"
+                              >
+                                {{ order.status === 'pending' ? 'New Order' : 'Preparing' }}
+                              </v-chip>
+                            </div>
                             <v-btn
                               color="success"
                               variant="flat"
                               size="small"
                               @click.stop="confirmComplete(order)"
                               :loading="loadingOrderId === order.id"
+                              block
                             >
                               Mark Ready
                             </v-btn>
@@ -502,7 +568,15 @@ onUnmounted(() => {
 
             <v-divider></v-divider>
 
-            <v-card-actions class="pa-4" v-if="selectedOrder.status === 'preparing'">
+            <v-card-actions class="pa-4" v-if="selectedOrder.status === 'pending' || selectedOrder.status === 'preparing'">
+              <v-btn
+                color="error"
+                variant="outlined"
+                @click="confirmDelete(selectedOrder)"
+                prepend-icon="mdi-delete"
+              >
+                Delete Order
+              </v-btn>
               <v-spacer></v-spacer>
               <v-btn
                 color="success"
@@ -534,6 +608,33 @@ onUnmounted(() => {
                 :loading="processing"
               >
                 Yes
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <!-- Confirm Delete Dialog -->
+        <v-dialog v-model="deleteDialog" max-width="400">
+          <v-card>
+            <v-card-title class="text-error">Delete Order?</v-card-title>
+            <v-card-text>
+              Are you sure you want to delete Order #{{ orderToProcess?.id }} for Table {{ orderToProcess?.table_id }}?
+              <br><br>
+              <v-alert type="warning" variant="tonal" class="mt-2">
+                This action cannot be undone. The order and all its items will be permanently deleted.
+              </v-alert>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
+              <v-btn
+                color="error"
+                variant="flat"
+                @click="handleDelete"
+                :loading="processing"
+                :disabled="processing"
+              >
+                Delete
               </v-btn>
             </v-card-actions>
           </v-card>

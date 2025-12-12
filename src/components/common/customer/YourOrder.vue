@@ -2,14 +2,21 @@
 import { computed } from "vue";
 import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
+import StatusCard from "./StatusCard.vue";
 import type { MenuItem } from "@/stores/menuData";
 
 // Props
 interface Props {
   cartItems: MenuItem[];
+  showStatusCard?: boolean; // Whether to show the status card
+  orderStatus?: string; // Order status for the status card
+  tableId?: number | string; // Table ID for navigation
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  showStatusCard: false,
+  orderStatus: "pending",
+});
 
 // Emits
 
@@ -19,6 +26,7 @@ const emit = defineEmits<{
   reviewOrder: [];
   removeItem: [itemId: number];
   addItem: [itemId: number];
+  statusCardClick: [tableId: number | string | undefined]; // When status card is clicked
 }>();
 
 // Theme colors
@@ -65,6 +73,10 @@ const removeItem = (itemId: number) => {
 const addItem = (itemId: number) => {
   emit("addItem", itemId);
 };
+
+const handleStatusCardClick = (tableId: number | string | undefined) => {
+  emit("statusCardClick", tableId);
+};
 </script>
 
 <template>
@@ -73,6 +85,15 @@ const addItem = (itemId: number) => {
     class="position-sticky pb-4"
     style="bottom: 0; z-index: 10; background: #f5f3ef"
   >
+    <!-- Optional Status Card -->
+    <div v-if="showStatusCard" class="mx-4 mb-4">
+      <StatusCard
+        :order-status="orderStatus"
+        :cart-items="cartItems"
+        :table-id="tableId"
+        @click="handleStatusCardClick"
+      />
+    </div>
     <!-- Your Order Header -->
     <v-card
       class="mx-4 mb-4"
