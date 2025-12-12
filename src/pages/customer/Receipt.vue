@@ -312,6 +312,19 @@ const lightenColor = (color: string, percent: number) => {
             Export as PDF
           </v-btn>
 
+          <!-- Back to Menu Button -->
+          <v-btn
+            color="white"
+            @click="() => router.push('/customer/menu')"
+            size="large"
+            rounded="xl"
+            elevation="2"
+            :style="{ color: primaryColor }"
+          >
+            <v-icon left>mdi-arrow-left</v-icon>
+            Back to Menu
+          </v-btn>
+
           <!-- Continue Button -->
           <v-btn
             :color="primaryColor"

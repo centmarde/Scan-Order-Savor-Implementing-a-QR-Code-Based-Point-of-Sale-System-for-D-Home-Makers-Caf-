@@ -49,10 +49,26 @@ const handleCardClick = () => {
   // Emit click event for parent components to handle if needed
   emit("click", props.tableId);
 
-  // Navigate to review order page if table ID is provided
-  if (props.tableId) {
+  // Navigate directly to receipt page if table ID is provided
+  if (props.tableId && props.cartItems.length > 0) {
+    // Prepare receipt data from cart items
+    const receiptData = {
+      items: props.cartItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: 1, // Assuming quantity of 1 for each cart item
+      })),
+      total: cartTotal.value,
+      id: Math.floor(Math.random() * 100000000), // Generate a random order ID
+    };
+
+    // Store receipt data in sessionStorage for reliable transfer
+    sessionStorage.setItem("receiptData", JSON.stringify(receiptData));
+
+    // Navigate to receipt page
     router.push({
-      path: "/customer/review-order",
+      path: "/customer/receipt",
       query: { table: props.tableId.toString() },
     });
   }
@@ -77,7 +93,7 @@ const handleCardClick = () => {
     @keyup.enter="handleCardClick"
     :tabindex="isClickable ? 0 : -1"
     role="button"
-    :aria-label="isClickable && tableId ? `View order details for table ${tableId}` : undefined"
+    :aria-label="isClickable && tableId ? `View receipt for table ${tableId}` : undefined"
   >
     <v-card-text class="pa-3">
       <div class="d-flex align-center justify-space-between mb-2">
@@ -86,7 +102,7 @@ const handleCardClick = () => {
             mdi-receipt
           </v-icon>
           <h2 class="text-h6 font-weight-bold" :style="{ color: '#2D2D2D' }">
-            Review Your Order
+            View Receipt
           </h2>
         </div>
 
