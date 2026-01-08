@@ -183,14 +183,14 @@ onMounted(async () => {
                 </p>
               </div>
               <div class="d-flex gap-2">
-                <v-btn
+              <!--   <v-btn
                   color="primary"
                   variant="outlined"
                   prepend-icon="mdi-filter"
                   @click="showFilters = !showFilters"
                 >
                   Filters
-                </v-btn>
+                </v-btn> -->
                 <v-btn
                   color="success"
                   prepend-icon="mdi-download"
@@ -218,7 +218,7 @@ onMounted(async () => {
                       variant="outlined"
                       density="compact"
                       hide-details
-                      prepend-inner-icon="mdi-calendar"
+
                       :max="new Date()"
                       style="min-width: 300px;"
                       @update:model-value="onDateRangeChange"

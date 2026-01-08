@@ -6,6 +6,7 @@ import { APP_CONFIG } from "@/utils/constants";
 import { useTheme } from "@/composables/useTheme";
 import { useMenu } from "@/composables/useMenu";
 import { useTableStore } from "@/stores/tableStores"; // <-- Import new store
+import { useToast } from "vue-toastification";
 import type { MenuItem } from "@/stores/menuData";
 
 import Navbar from "@/components/common/customer/Navbar.vue";
@@ -18,6 +19,7 @@ const route = useRoute(); // <-- Initialize useRoute
 
 // Initialize the new table store
 const tableStore = useTableStore();
+const toast = useToast();
 
 // Theme setup
 const { initializeTheme, primaryColor, secondaryColor, backgroundColor } =
@@ -30,6 +32,16 @@ const { menuItems, loading, error, fetchMenuItems, clearError, hasItems } =
 const addToCart = (item: MenuItem) => {
   // Get existing cart from storage or create empty array
   const existingCart = JSON.parse(sessionStorage.getItem('cartItems') || '[]');
+
+  // Count current quantity of this item in cart
+  const currentQuantityInCart = existingCart.filter((cartItem: MenuItem) => cartItem.id === item.id).length;
+
+  // Check if adding one more would exceed available quantity
+  if (currentQuantityInCart >= item.quantity) {
+    toast.warning(`Maximum quantity reached! Only ${item.quantity} available in stock.`);
+    return;
+  }
+
   existingCart.push({ ...item });
 
   // Save to both storage methods for persistence
